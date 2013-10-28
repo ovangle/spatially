@@ -1,0 +1,11 @@
+name: spatially
+version: 0.0.1
+author: Thomas Stephenson
+description: A sample web application
+homepage: www.github.com/dart-spatially
+dependencies:
+  meta: any
+  range: any
+  tuple:
+    path: /home/ovangle/dart/tuple
+  unittest: any
