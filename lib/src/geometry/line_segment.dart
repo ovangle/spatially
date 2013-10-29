@@ -56,7 +56,7 @@ class LineSegment extends Geometry implements Linear {
     return -cmp;
   }
   
-  double distanceToPoint(Point p) {
+  double distanceTo(Geometry geom) {
     if (geom is Point) {
       final a = _aCoeff; final b = _bCoeff; final c = _cCoeff;
       return (a * geom.x + b * geom.y + c).abs() 
@@ -120,11 +120,11 @@ class LineSegment extends Geometry implements Linear {
     final a2 = lseg._aCoeff; final b2 = lseg._bCoeff; final c2 = lseg._cCoeff;
     final discr = a1 * b2 - a2 * b1;
     
-    bool intersectionEncloses(Point pt) =>
-        encloses(pt, tolerance: tolerance)
+    bool intersectionEncloses(Point pt) => 
+        encloses(pt, tolerance: tolerance) 
         && lseg.encloses(pt, tolerance: tolerance);
     
-    if (utils.compareDoubles(discr, 0.0, tolerance) == 0) {
+    if (utils.compareDoubles(discr, 0.0, 1e-15) == 0) {
       // the lines are approximately parallel.
       var isectLeft, isectRight;
      
@@ -168,24 +168,14 @@ class LineSegment extends Geometry implements Linear {
    * Intersecting with other [Geometry] types can return a [GeometryList]
    * of [Point]s and [LineSegment]s.
    */
-  Geometry intersection(Geometry geom, {double tolerance: 1e-15}) {
+  Geometry intersection(Geometry geom) {
     if (geom is Point) {
-      if (encloses(geom, tolerance: tolerance)) return geom; 
+      if (encloses(geom)) return geom; 
     }
     if (geom is LineSegment) {
-      return _segmentIntersection(geom, tolerance: tolerance);
+      return _segmentIntersection(geom);
     }
-    if (geom is Linestring) {
-      GeometryList intersections = new GeometryList();
-      for (var seg in geom.segments) {
-        var isect = intersection(seg, tolerance: tolerance);
-        if (isect != null) {
-          intersections.add(isect);
-        }
-      }
-      return intersections;
-    }
-    return geom.intersection(this, tolerance: tolerance);
+    return geom.intersection(this);
   }
   
   bool encloses(Geometry geom, {double tolerance: 1e-15}) {
@@ -202,6 +192,17 @@ class LineSegment extends Geometry implements Linear {
       }
     }
     return false;
+  }
+  
+  
+  bool intersects(Geometry geom, {double tolerance: 1e-15}) {
+    if (geom is Point) {
+      return !encloses(geom, tolerance: tolerance);
+    }
+    if (geom is LineSegment) {
+      return _segmentIntersection(geom, tolerance: tolerance) != null;
+    }
+    return geom.intersects(this, tolerance: tolerance);
   }
   
   /**
