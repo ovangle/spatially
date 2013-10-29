@@ -76,12 +76,9 @@ class Point extends Geometry implements Nodal {
   Point simplify({double tolerance: 1e-15}) => this;
 
   bool equalTo(Geometry geom, {double tolerance: 1e-15}) {
-    if (geom is Point) {
-      final p = geom as Point;
-      return utils.compareDoubles(x, p.x, tolerance) == 0
-          && utils.compareDoubles(y, p.y, tolerance) == 0;
-    }
-    return false;
+    return geom is Point
+        && utils.compareDoubles(x, geom.x, tolerance) == 0
+        && utils.compareDoubles(y, geom.y, tolerance) == 0;
   }
   
   bool encloses(Geometry geom, {double tolerance: 1e-15}) {

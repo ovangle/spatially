@@ -20,7 +20,7 @@ class LineSegment extends Geometry implements Linear {
   
   LineSegment(Point this.start, Point this.end);
   
-  LineSegment reversed() => new LineSegment(end, start);
+  LineSegment get reversed => new LineSegment(end, start);
   
   Bounds get bounds =>
       new Bounds(
@@ -56,28 +56,25 @@ class LineSegment extends Geometry implements Linear {
     return -cmp;
   }
   
-  double distanceTo(Geometry other) {
-    if (other is Point) {
-      var p = (other as Point);
+  double distanceTo(Geometry geom) {
+    if (geom is Point) {
       final a = _aCoeff; final b = _bCoeff; final c = _cCoeff;
-      return (a * p.x + b * p.y + c).abs() 
+      return (a * geom.x + b * geom.y + c).abs() 
            / math.sqrt(a * a + b * b);
     }
-    if (other is LineSegment) {
-      final lseg = other as LineSegment;
-      if (intersects(other)) return 0.0;
-      return [ distanceTo(lseg.start),
-               distanceTo(lseg.end),
-               lseg.distanceTo(start),
-               lseg.distanceTo(end)]
+    if (geom is LineSegment) {
+      if (intersects(geom)) return 0.0;
+      return [ distanceTo(geom.start),
+               distanceTo(geom.end),
+               geom.distanceTo(start),
+               geom.distanceTo(end)]
              .fold(double.INFINITY, math.min);
     }
-    if (other is Linestring) {
-      var lstr = (other as Linestring);
-      return lstr.segments
+    if (geom is Linestring) {
+      return geom.segments
                  .fold(double.INFINITY, (dist, seg) => math.min(dist, this.distanceTo(seg)));
     }
-    return other.distanceTo(this);
+    return geom.distanceTo(this);
   }
   
   LineSegment translate({double dx: 0.0, 
@@ -101,11 +98,10 @@ class LineSegment extends Geometry implements Linear {
         end.scale(ratio, origin: origin));
   }
  
-  bool equalTo(Geometry other, {double tolerance: 1e-15}) {
-    if (other is LineSegment) {
-      var lseg = other as LineSegment;
-      return lseg.start.equalTo(start, tolerance: tolerance)
-          && lseg.end.equalTo(end, tolerance: tolerance);
+  bool equalTo(Geometry geom, {double tolerance: 1e-15}) {
+    if (geom is LineSegment) {
+      return geom.start.equalTo(start, tolerance: tolerance)
+          && geom.end.equalTo(end, tolerance: tolerance);
     }
     return false;
   }
@@ -181,7 +177,7 @@ class LineSegment extends Geometry implements Linear {
     }
     if (geom is Linestring) {
       GeometryList intersections = new GeometryList();
-      for (var seg in (geom as Linestring).segments) {
+      for (var seg in geom.segments) {
         var isect = intersection(seg, tolerance: tolerance);
         if (isect != null) {
           intersections.add(isect);
@@ -198,11 +194,10 @@ class LineSegment extends Geometry implements Linear {
       return bounds.contains(geom, tolerance: tolerance);
     }
     if (geom is LineSegment) {
-      var lseg = geom as LineSegment;
-      return encloses(lseg.start) && encloses(lseg.end);
+      return encloses(geom.start) && encloses(geom.end);
     }
     if (geom is Linestring) {
-      for (var p in (geom as Linestring)) {
+      for (var p in geom) {
         return encloses(p);
       }
     }
@@ -224,8 +219,8 @@ class LineSegment extends Geometry implements Linear {
           || geom.equalTo(end, tolerance: tolerance);
     }
     if (geom is Linear) {
-      return touches((geom as Linear).start, tolerance: tolerance)
-          || touches((geom as Linear).end, tolerance: tolerance);
+      return touches(geom.start, tolerance: tolerance)
+          || touches(geom.end, tolerance: tolerance);
     }
     if (geom is Planar || geom is GeometryList) {
       return geom.touches(this, tolerance: tolerance);

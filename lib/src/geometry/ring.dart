@@ -165,7 +165,7 @@ class Ring extends GeometryCollection<Point> implements Planar {
     }
     if (geom is Linestring) {
       var intersections = new GeometryList<LineSegment>();
-      for (var seg in (geom as Linestring).segments) {
+      for (var seg in geom.segments) {
         final segIntersection = intersection(seg, tolerance: tolerance);
         if (segIntersection is LineSegment) 
           intersections.add(segIntersection);
@@ -271,20 +271,20 @@ class Ring extends GeometryCollection<Point> implements Planar {
     if (geom is Linestring) {
       //FIXME: There should be O(n*logn) algo here
       //Complexity: O(n^2)
-      return (geom as Linestring).segments
+      return geom.segments
              .every((s) => _enclosesLineSegment(s, tolerance: tolerance));
     }
     if (geom is Ring) {
       //FIXME: There should be O(n*logn) algo here.
       //Complexity: O(n^2);
-      return (geom as Ring).boundary.segments
+      return geom.boundary.segments
              .every((s) => _enclosesLineSegment(s, tolerance: tolerance));
     }
     if (geom is GeometryList) {
-      return (geom as GeometryList).every((c) => encloses(c, tolerance: tolerance));
+      return geom.every((c) => encloses(c, tolerance: tolerance));
     }
     if (geom is Polygon) {
-      return encloses((geom as Polygon).outer);
+      return encloses(geom.outer);
     }
     throw "Unexpected geometry type: ${geom.runtimeType}";
   }
@@ -292,19 +292,17 @@ class Ring extends GeometryCollection<Point> implements Planar {
   bool intersects(Geometry geom, {double tolerance: 1e-15}) {
     //There are some significant speedups to be made by overriding this here.
     if (geom is Nodal) {
-      return _enclosesPoint((geom as Nodal).toPoint(), tolerance: tolerance);
+      return _enclosesPoint(geom.toPoint(), tolerance: tolerance);
     }
     if (geom is LineSegment) {
-      final lseg = geom as LineSegment;
-      final enclosesStart = _enclosesPoint(lseg.start);
-      final enclosesEnd   = _enclosesPoint(lseg.end);
+      final enclosesStart = _enclosesPoint(geom.start);
+      final enclosesEnd   = _enclosesPoint(geom.end);
       if (enclosesStart || enclosesEnd) return true;
       //We could still intersect the segment if any of the boundary segments intersect the segment
-      return boundary.segments.any((s) => lseg.intersects(s, tolerance: tolerance));
+      return boundary.segments.any((s) => geom.intersects(s, tolerance: tolerance));
     }
     if (geom is Linestring) {
-      final lstr = geom as Linestring;
-      return lstr.segments.any((s) => intersects(s, tolerance: tolerance));
+      return geom.segments.any((s) => intersects(s, tolerance: tolerance));
     }
     if (geom is Ring) {
       //If the geometry is a ring, it intersects the current ring iff:
@@ -313,13 +311,12 @@ class Ring extends GeometryCollection<Point> implements Planar {
       
       //(2) should be easier to check? It's O(n * logn)
       //Whereas enclosing is O(n^2) and needs to be revisited.
-      final bndary = (geom as Ring).boundary;
+      final bndary = geom.boundary;
       return boundary.intersects(bndary, tolerance: tolerance)
           || encloses(bndary, tolerance: tolerance);
     }
     if (geom is GeometryList) {
-      return (geom as GeometryList)
-          .any((g) => intersects(g, tolerance: tolerance));
+      return geom.any((g) => intersects(g, tolerance: tolerance));
     }
     return geom.intersects(this, tolerance: tolerance);
   }

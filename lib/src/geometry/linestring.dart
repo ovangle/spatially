@@ -124,7 +124,7 @@ class Linestring extends GeometryCollection<Point>
     }
     if (geom is Linestring) {
       Set segs = segments.toSet();
-      segs = segs.union((geom as Linestring).segments.toSet());
+      segs = segs.union(geom.segments.toSet());
       final intersections = new GeometryList.from(alg.bentleyOttmanIntersections(segs, ignoreAdjacencies: true));
       if (intersections.isEmpty) {
         return null;
@@ -168,8 +168,7 @@ class Linestring extends GeometryCollection<Point>
       return segments.any((s) => s.encloses(geom));
     }
     if (geom is Linestring) {
-      final lstr = geom as Linestring;
-      return lstr.segments.every((s) => encloses(s));
+      return geom.segments.every((s) => encloses(s));
     }
     return geom.encloses(this, tolerance: tolerance);
   }
@@ -189,8 +188,8 @@ class Linestring extends GeometryCollection<Point>
           || (end.equalTo(geom, tolerance: tolerance));
     }
     if (geom is Linear) {
-      return touches((geom as Linear).start, tolerance: tolerance)
-          || touches((geom as Linear).end, tolerance: tolerance);
+      return touches(geom.start, tolerance: tolerance)
+          || touches(geom.end, tolerance: tolerance);
     }
     if (geom is Planar || geom is GeometryList) {
       return geom.touches(this, tolerance: tolerance);

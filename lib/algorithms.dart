@@ -7,7 +7,7 @@ library algorithms;
  * implementations of algorithms exposed via the [geometry.dart] API.
  */
 
-import 'dart:math';
+import 'dart:math' hide Point;
 import 'dart:collection';
 
 import 'package:tuple/tuple.dart';

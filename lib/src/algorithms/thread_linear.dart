@@ -19,7 +19,7 @@ Linestring threadLinear(List<Linear> lines) {
         currStart = lines[i].start;
       }
       if (lines[i].start.equalTo(currStart)) {
-        result.insert(0, lines[i].reversed());
+        result.insert(0, lines[i].reversed);
         toRemove.add(i);
         currStart = lines[i].end;
       }
@@ -29,7 +29,7 @@ Linestring threadLinear(List<Linear> lines) {
         currEnd = lines[i].end;
       }
       if (lines[i].end.equalTo(currStart)) {
-        result.add(lines[i].reversed());
+        result.add(lines[i].reversed);
         toRemove.add(i);
         currEnd = lines[i].start;
       }

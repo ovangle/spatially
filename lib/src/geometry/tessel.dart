@@ -187,9 +187,9 @@ class Tessel extends Geometry implements Planar {
     if (geom is Linestring) {
       var intersections = 
           new GeometryList.from(
-              (geom as Linestring).segments
-              .map((s) => _segmentIntersection(s, tolerance: tolerance))
-              .where((isect) => isect != null)
+              geom.segments
+                  .map((s) => _segmentIntersection(s, tolerance: tolerance))
+                  .where((isect) => isect != null)
           ).simplify(tolerance: tolerance);
       return (intersections.length == 1) ? intersections.single : intersections;
     }
@@ -290,19 +290,16 @@ class Tessel extends Geometry implements Planar {
     }
     if (geom is Point) return encloses(geom);
     if (geom is LineSegment) {
-      var lseg = geom as LineSegment;
-      return encloses(lseg.start, tolerance: tolerance)
-          || encloses(lseg.end, tolerance: tolerance);
+      return encloses(geom.start, tolerance: tolerance)
+          || encloses(geom.end, tolerance: tolerance);
     }
     if (geom is Linestring) {
-      var lstr = geom as Linestring;
-      return lstr.segments.any((seg) => intersects(seg, tolerance: tolerance));
+      return geom.segments.any((seg) => intersects(seg, tolerance: tolerance));
     }
     if (geom is Tessel) {
-      var tes = geom as Tessel;
-      return encloses(tes.a, tolerance: tolerance)
-          || encloses(tes.b, tolerance: tolerance)
-          || encloses(tes.c, tolerance: tolerance);
+      return encloses(geom.a, tolerance: tolerance)
+          || encloses(geom.b, tolerance: tolerance)
+          || encloses(geom.c, tolerance: tolerance);
     }
     return geom.intersects(this, tolerance: tolerance);
   }
@@ -323,29 +320,26 @@ class Tessel extends Geometry implements Planar {
   
   bool encloses(Geometry geom, {double tolerance: 1e-15}) {
     if (geom is Nodal) 
-      return _enclosesPoint((geom as Nodal).toPoint(), tolerance: tolerance);
+      return _enclosesPoint(geom.toPoint(), tolerance: tolerance);
     
     if (geom is Linear) {
-      var lstr = (geom as Linear).toLinestring();
-      return lstr.every((v) => encloses(v, tolerance: tolerance));
+      return geom
+          .toLinestring()
+          .every((v) => encloses(v, tolerance: tolerance));
     }
     
     if (geom is Tessel) {
-      var tes = geom as Tessel;
-      return encloses(tes.a, tolerance: tolerance)
-          && encloses(tes.b, tolerance: tolerance)
-          && encloses(tes.c, tolerance: tolerance);
+      return encloses(geom.boundary, tolerance: tolerance);
     }
     
     if (!mbrIntersects(geom)) return false;
     
     if (geom is GeometryCollection) {
-      var components = geom as GeometryCollection;
-      return components.every((g) => encloses(g, tolerance: tolerance));
+      return geom.every((g) => encloses(g, tolerance: tolerance));
     }
     
     if (geom is Polygon) {
-      return encloses((geom as Polygon).outer, tolerance: tolerance);
+      return encloses(geom.outer, tolerance: tolerance);
     }
     
     throw new Exception("Unknown geometry type: ${geom.runtimeType}");
@@ -364,26 +358,14 @@ class Tessel extends Geometry implements Planar {
   
   Polygon toPolygon() => new Polygon(outer: new Ring([a,b,c]));
   
+  //TODO: Add {bool permuted} argument to match against permuted tessels
+  //      Do same for linesegment
   bool equalTo(Geometry geom, {double tolerance: 1e-15}) {
     if (geom is Tessel) {
-      var tes = geom as Tessel;
-      //TODO: Should permutations of the vertices compare equal?
-      //      Do we ever care about the orientation of a tessel?
-      if (tes.a.equalTo(a, tolerance: tolerance)) {
-        return tes.b.equalTo(b, tolerance: tolerance)
-            && tes.c.equalTo(c, tolerance: tolerance);
-      }
-      if (tes.a.equalTo(b, tolerance: tolerance)) {
-        return tes.b.equalTo(c, tolerance: tolerance)
-            && tes.c.equalTo(a, tolerance: tolerance);
-      }
-      if (tes.a.equalTo(c, tolerance: tolerance)) {
-        return tes.b.equalTo(a, tolerance: tolerance)
-            && tes.c.equalTo(b, tolerance: tolerance);
-      }
-      return false;
+      return geom.a.equalTo(a, tolerance: tolerance)
+          && geom.b.equalTo(b, tolerance: tolerance)
+          && geom.c.equalTo(c, tolerance: tolerance);
     }
-    //TODO: Should we compare to a Ring with three vertices?
     return false;
   }
   
@@ -392,28 +374,26 @@ class Tessel extends Geometry implements Planar {
       return boundary.segments.any((s) => s.encloses(geom, tolerance: tolerance));
     }
     if (geom is LineSegment) {
-      final lseg = (geom as LineSegment);
       //If the intersection lies along any edge then it touches the tessel.
       for (var seg in boundary.segments) {
-        if (seg.intersection(lseg, tolerance: tolerance) is LineSegment) {
+        if (seg.intersection(geom, tolerance: tolerance) is LineSegment) {
           return true;
         }
       }
       //Otherwise, the segment must either start or end at the boundary
       //but cannot both start and end at the boundary (because then it would need
       //to lie inside the geometry.
-      if (boundary.encloses(lseg.start, tolerance: tolerance)) {
-        return !boundary.encloses(lseg.end, tolerance: tolerance);
+      if (boundary.encloses(geom.start, tolerance: tolerance)) {
+        return !boundary.encloses(geom.end, tolerance: tolerance);
       }
-      if (boundary.encloses(lseg.end, tolerance: tolerance)) {
-        return !boundary.encloses(lseg.start, tolerance: tolerance);
+      if (boundary.encloses(geom.end, tolerance: tolerance)) {
+        return !boundary.encloses(geom.start, tolerance: tolerance);
       }
       return false;
     }
     if (geom is Linestring) {
-      final lstr = geom as Linestring;
       bool foundTouch = false;
-      for (var seg in lstr.segments) {
+      for (var seg in geom.segments) {
         final boundaryIntersection = boundary.intersection(seg, tolerance: tolerance);
         
         if (boundaryIntersection is Point) {
@@ -447,8 +427,7 @@ class Tessel extends Geometry implements Planar {
       return foundTouch;
     }
     if (geom is Tessel) {
-      var tesl = geom as Tessel;
-      var isect = _tesselIntersection(tesl, tolerance: tolerance);
+      var isect = _tesselIntersection(geom, tolerance: tolerance);
       return (isect is Point || isect is LineSegment);
     }
     if (geom is GeometryList) {
@@ -458,17 +437,7 @@ class Tessel extends Geometry implements Planar {
   bool operator ==(Object other) {
     if (other is Tessel) {
       //Two tessels compare equal if they can be permuted to match the other tessel.
-      var tes = other as Tessel;
-      if (tes.a == a) {
-        return tes.b == b && tes.c == c;
-      }
-      if (tes.a == b) {
-        return tes.c == a && tes.b == c;
-      }
-      if (tes.a == c) {
-        return tes.b == a && tes.c == b;
-      }
-      return false;
+      return other.a == a && other.b == b && other.c == c;
     }
     return false;
   }

@@ -298,7 +298,7 @@ class _EventQueue extends SplayTreeMap<Tuple3<Point,int,int>, Map<String,dynamic
 }
 
 class _Sweepline extends SplayTreeMap<LineSegment, LineSegment> {
-  static Comparator<Point> _compareKeys(double tolerance) {
+  static Comparator<LineSegment> _compareKeys(double tolerance) {
     return (k1, k2) {
       final cmp_1y = util.compareDoubles(k1.left.y, k2.left.y, tolerance);
       if (cmp_1y != 0) return cmp_1y;

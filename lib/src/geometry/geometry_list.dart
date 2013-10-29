@@ -3,7 +3,7 @@ part of geometry;
 /**
  * A [GeometryList] is a possibly heterogeneous, mutable collection of geometries.
  */
-class GeometryList<T> extends GeometryCollection<T> with ListMixin<T> {
+class GeometryList<T extends Geometry> extends GeometryCollection<T> with ListMixin<T> {
    
       
   GeometryList<T> get mutableCopy {
@@ -63,11 +63,11 @@ class GeometryList<T> extends GeometryCollection<T> with ListMixin<T> {
 
   
   GeometryList<T> translate({double dx: 0.0, double dy: 0.0}) 
-      => new GeometryList<T>.from(map((g) => g.translate(dx: dx, dy: dy)));
+      => new GeometryList<T>.from(map((g) => (g as Geometry).translate(dx: dx, dy: dy)));
   
   GeometryList<T> scale(double ratio, {Point origin : null}) {
     if (origin == null) origin = centroid;
-    return new GeometryList<T>.from(map((g) => g.scale(ratio, origin: origin)));
+    return new GeometryList<T>.from(map((g) => (g as Geometry).scale(ratio, origin: origin)));
   }
   
   GeometryList<T> rotate(double dt, {Point origin : null}) {
@@ -184,14 +184,14 @@ Iterable<Geometry> _mergeNodal(Nodal node, Geometry geom, double tolerance) {
     
 Iterable<Geometry> _mergeLinear(Linear line, Geometry geom, double tolerance) {
   if (geom is Nodal) {
-    Point p = (geom as Nodal).toPoint();
-    if (line.encloses(p, tolerance: tolerance)) {
+    Point p = geom.toPoint();
+    if (line.encloses(geom, tolerance: tolerance)) {
       return [line];
     }
   }
   if (geom is Linear) {
     Linestring lstr1 = line.toLinestring();
-    Linestring lstr2 = (geom as Linear).toLinestring();
+    Linestring lstr2 = geom.toLinestring();
     if (lstr1.end.equalTo(lstr2.start, tolerance: tolerance)) {
       return [lstr1.concat(lstr2)];
     }
@@ -206,16 +206,16 @@ Iterable<Geometry> _mergeLinear(Linear line, Geometry geom, double tolerance) {
 
 Iterable<Geometry> _mergePlanar(Planar plane, Geometry geom, double tolerance) {
   if (geom is Nodal) {
-    if (plane.encloses((geom as Nodal).toPoint(), tolerance: tolerance)) 
+    if (plane.encloses(geom.toPoint(), tolerance: tolerance)) 
       return [geom];
   }
   if (geom is Linear) {
-    if (plane.encloses((geom as Linear).toLinestring(), tolerance: tolerance))
+    if (plane.encloses(geom.toLinestring(), tolerance: tolerance))
       return [geom];
   }
   if (geom is Planar) {
     final poly1 = plane.toPolygon();
-    final poly2 = (geom as Planar).toPolygon();
+    final poly2 = geom.toPolygon();
     if (poly1.intersects(poly2, tolerance: tolerance)) {
       return poly1.union(poly2, tolerance: tolerance);
     }

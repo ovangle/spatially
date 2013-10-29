@@ -168,8 +168,8 @@ class Bounds {
   
   bool operator ==(Object o) {
     if (o is Bounds) {
-      return (o as Bounds).bottomLeft == bottomLeft
-          && (o as Bounds).topRight   == topRight;
+      return o.bottomLeft == bottomLeft
+          && o.topRight   == topRight;
     }
     return false;
   }

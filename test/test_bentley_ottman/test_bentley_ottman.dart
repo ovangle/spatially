@@ -2,8 +2,8 @@ library test_bentley_ottman;
 
 import 'package:unittest/unittest.dart';
 
-import 'package:layers/geometry.dart';
-import 'package:layers/algorithms.dart';
+import 'package:spatially/geometry.dart';
+import 'package:spatially/algorithms.dart';
 
 void main() {
   testSet1();

@@ -1,7 +1,7 @@
 library test_vicenty;
 
 import 'package:unittest/unittest.dart';
-import 'package:layers/algorithms.dart';
+import 'package:spatially/algorithms.dart';
 
 void main() {
   test("Distance from <0,0> to <1,1>",

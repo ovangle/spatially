@@ -19,6 +19,7 @@ part 'src/geometry/point.dart';
 part 'src/geometry/polygon.dart';
 part 'src/geometry/ring.dart';
 part 'src/geometry/tessel.dart';
+part 'src/geometry/geometry_validator.dart';
 
 abstract class Geometry {
   
@@ -183,8 +184,10 @@ abstract class Planar extends Geometry {
    * Rotates the boundary of the geometry so the [:i:]th vertex is at
    * position `0`.
    * If [:i:] is not provided, defaults to `1`.
+   * Rotating by `length - 1` will restore the ring to it's original position and
+   * any further permutation is equivalent to rotating modulo `length - 1` times
    */
-  Planar permuted([int i = 1]);
+  Planar permute([int i = 1]);
   
   /**
    * Splits the [Planar] into a set of [Tessel]s, which partition the [Planar] geometry.

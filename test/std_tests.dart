@@ -1,6 +1,6 @@
 library std_geom_tests;
 
-import 'dart:math';
+import 'dart:math' as math;
 import 'package:unittest/unittest.dart';
 
 import 'package:spatially/geometry.dart';
@@ -62,28 +62,28 @@ testRotate(String test_lib, Geometry geom) {
   //Test depends on O not being centroid.
   assert(geom.centroid != O);
   final geomCentroid = geom.centroid;
-  final geom1 = geom.rotate(PI/4, origin: O);
-  final rotatedCentroid = geom.centroid.rotate(PI / 4, origin: O);
+  final geom1 = geom.rotate(math.PI/4, origin: O);
+  final rotatedCentroid = geom.centroid.rotate(math.PI / 4, origin: O);
   test("$test_lib: Rotating geometry rotates centroid",
       () => expect(geom1.centroid, geometryEquals(rotatedCentroid, 1e-15)));
   
-  final geom2 = geom1.rotate(-PI/4, origin: O);
+  final geom2 = geom1.rotate(-math.PI/4, origin: O);
   test("$test_lib: Inverse rotation restores geometry",
       () => expect(geom2, geometryEquals(geom, 1e-15)));
   
 
-  final geom3 = geom.rotate(-PI/6);
+  final geom3 = geom.rotate(-math.PI/6);
   test("$test_lib: Rotating about centroid preserves the centroid",
       () => expect(geom3.centroid, geometryEquals(geomCentroid, 1e-15)));
   
   
-  final geom5 = geom.rotate(PI / 6);
-  final geom6 = geom.rotate(PI/6, origin: geomCentroid);
+  final geom5 = geom.rotate(math.PI / 6);
+  final geom6 = geom.rotate(math.PI/6, origin: geomCentroid);
   test("$test_lib: If no origin is provided for rotation, defaults to centroid",
       () => expect(geom5, 
                   geometryEquals(geom6, 1e-15)));
   
-  final geom4 = geom.rotate(2 * PI);
+  final geom4 = geom.rotate(2 * math.PI);
   test("$test_lib: Rotating by 2*PI about any point preserves the geometry",
       () => expect(geom4, geometryEquals(geom, 1e-14)));
 }
