@@ -10,7 +10,6 @@ library algorithms;
 import 'dart:math';
 import 'dart:collection';
 
-import 'package:layers/geometry.dart';
 import 'package:tuple/tuple.dart';
 import 'utils.dart' as util;
 

@@ -2,7 +2,7 @@ library test_linesegment;
 
 import 'package:unittest/unittest.dart';
 
-import 'package:layers/geometry.dart';
+import 'package:spatially/geometry.dart';
 
 import 'std_tests.dart';
 

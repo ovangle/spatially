@@ -17,18 +17,20 @@ class Linestring extends GeometryCollection<Point>
   
   /**
    * Creates a linestring from an iterable of [Point]s.
-   * If dart checked mode is active, raises an [InvalidGeometry]
-   * if:
-   * 1. the [Linestring] has length <= 2,
    */
-  Linestring(Iterable<Point> vertices) : super(vertices, false) {
-    assert(() { //#ifdef DEBUG
-    if (vertices.length < 2) {
-      throw new InvalidGeometry("Linestring with fewer than 2 vertices");
-    }
-    Set<LineSegment> segs = new Set.from(segments);
-    return true;
-}()); // #endif
+  Linestring([Iterable<Point> vertices]) : super((vertices != null) ? vertices : [], false);
+  
+  /**
+   * Constructs a [Linestring] from a list of adjacent lines, connected by their endpoints.
+   * Throws an [InvalidGeometry] if there are two non-contiguous segments in the list.
+   * 
+   * If [:reverse:] is `true`, then elements of [:lines:] will be reversed as necessary
+   * to ensure that the resulting linestring is valid.
+   */
+  factory Linestring.fromLines(Iterable<Linear> lines, {bool reverse: false}) {
+    return lines.fold(
+        new Linestring(), 
+        (lstr, seg) => lstr.concat(seg, reverse: reverse));
   }
   
   Linestring append(Nodal p) {
@@ -41,15 +43,17 @@ class Linestring extends GeometryCollection<Point>
    * Concatenates a [Linear] geometry onto the end of this geometry
    * Raises an [InvalidGeometry] if the start point of the line is not
    * equal to the endpoint of the linestring.
+   * 
+   * If [:reverse:] is `true`, then [:line:] may be reversed in an attempt
+   * to ensure that it remains adjacent to the endpoint.
    */
   Linestring concat(Linear line, {double tolerance: 1e-15, bool reverse: false}) {
+    if (isEmpty) {
+      return line.toLinestring();
+    }
     var lstr = this;
-    if (reverse) {
-      if (line.end.equalTo(end, tolerance: tolerance)) {
-        line = line.reversed();
-      } else if (start.equalTo(line.start, tolerance: tolerance)) {
-        lstr = lstr.reversed();
-      }
+    if (reverse && line.end.equalTo(end, tolerance: tolerance)) {
+      line = line.reversed;
     }
     if (!line.start.equalTo(lstr.end, tolerance: tolerance)) {
       throw new InvalidGeometry("Cannot concatenate non-contiguous linear geometry $line");
@@ -59,22 +63,7 @@ class Linestring extends GeometryCollection<Point>
     return new Linestring(verts);
   }
   
-  /**
-   * Constructs a [Linestring] from a list of segments, connected by their endpoints.
-   * Throws an [InvalidGeometry] if there are two non-contiguous segments in the list.
-   */
-  factory Linestring.fromSegments(Iterable<LineSegment> segments) {
-    List<Point> vertices = new List<Point>();
-    for (var seg in segments) {
-      if (vertices.isEmpty) {
-        vertices.add(seg.start);
-      } else if (vertices.last != seg.start) {
-        throw new InvalidGeometry("All segments in linestring must be connected end to start");
-      }
-      vertices.add(seg.end);
-    }
-    return new Linestring(vertices);
-  }
+  
   
   Iterable<Point> get vertices => this;
   
@@ -113,7 +102,7 @@ class Linestring extends GeometryCollection<Point>
    *   any part of their length; or
    * --A [Point] if the the segment intersects another segment at a single point
    */
-  GeometryList intersection(Geometry geom, {double tolerance: 1e-15}) {
+  Geometry intersection(Geometry geom, {double tolerance: 1e-15}) {
     if (!mbrIntersects(geom, tolerance: tolerance)) return null;
     if (geom is Point) {
       for (var seg in segments) {
@@ -125,12 +114,24 @@ class Linestring extends GeometryCollection<Point>
     if (geom is LineSegment) {
       Set segs = segments.toSet();
       segs.add(geom);
-      return new GeometryList.from(alg.bentleyOttmanIntersections(segs, ignoreAdjacencies: true));
+      final intersections = new GeometryList.from(alg.bentleyOttmanIntersections(segs, ignoreAdjacencies: true));
+      if (intersections.isEmpty) {
+        return null;
+      } else if (intersections.length == 1) {
+        return intersections.single;
+      }
+      return intersections;
     }
     if (geom is Linestring) {
       Set segs = segments.toSet();
       segs = segs.union((geom as Linestring).segments.toSet());
-      return new GeometryList.from(alg.bentleyOttmanIntersections(segs, ignoreAdjacencies: true));
+      final intersections = new GeometryList.from(alg.bentleyOttmanIntersections(segs, ignoreAdjacencies: true));
+      if (intersections.isEmpty) {
+        return null;
+      } else if (intersections.length == 1) {
+        return intersections.single;
+      }
+      return intersections;
     }
     return geom.intersection(this);
   }
@@ -199,7 +200,7 @@ class Linestring extends GeometryCollection<Point>
   
   Linestring toLinestring() => this;
   
-  Linestring reversed() => new Linestring(_geometries.reversed);
+  Linestring get reversed => new Linestring(_geometries.reversed);
   
   /**
    * Returns a new linestring where:

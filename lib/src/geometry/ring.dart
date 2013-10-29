@@ -22,7 +22,8 @@ class Ring extends GeometryCollection<Point> implements Planar {
     for (var i in range(1, segments.length)) {
       final i_adjacent = segments.elementAt(i - 1).end.equalTo(segments.elementAt(i).start);
       if (!i_adjacent) {
-        throw new InvalidGeometry("All segments in $segments must be adjacent");
+        throw new InvalidGeometry("All segments must be adjacent.\n\tSegments:\n\t\t"
+                                  "${segments.join("\n\t\t")}");
       }
     }
     if (segments.first.start != segments.last.end) {
@@ -53,13 +54,13 @@ class Ring extends GeometryCollection<Point> implements Planar {
     return new Ring(map((v) => v.scale(ratio, origin: origin)));
   }
   
-  Ring permuted([int i = 1]) {
+  Ring permute([int i = 1]) {
     i = i % (length - 1);
     if (i == 0) return this;
     //remove the duplicated vertex;
-    var boundary = this.boundary.skip(1);
+    var boundary = this.boundary.take(length - 1);
     var rotatedBoundary = 
-        [this.boundary.skip(i), this.boundary.take(i)]
+        [boundary.skip(i), boundary.take(i)]
         .expand((i) => i).toList();
     //And close the linestring.
     rotatedBoundary.add(rotatedBoundary[0]);
@@ -353,7 +354,21 @@ class Ring extends GeometryCollection<Point> implements Planar {
   }
   
   Ring simplify({double tolerance: 1e-15}) {
-    return new Ring(boundary.simplify(tolerance: tolerance));
+    var simplifyBoundary = boundary.simplify(tolerance: tolerance);
+    //We can further simplify the ring if the points around the start of the ring
+    //are colinear
+    while (colinear(simplifyBoundary[simplifyBoundary.length - 2], 
+                    simplifyBoundary[0], 
+                    simplifyBoundary[1])) {
+      //remove the endpoints
+      simplifyBoundary = 
+          new Linestring(simplifyBoundary
+              .take(simplifyBoundary.length - 1)
+              .skip(1));
+      //And close the boundary
+      simplifyBoundary = simplifyBoundary.append(simplifyBoundary.first); 
+    }
+    return new Ring(simplifyBoundary);
   }
   
   Polygon toPolygon() => new Polygon(outer: this);

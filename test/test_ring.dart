@@ -27,7 +27,7 @@ void main() {
   testEncloses();
   testIntersection();
   testTesselation();
-  
+  testSimplify();
 }
 
 void testPermuted() {
@@ -41,20 +41,20 @@ void testPermuted() {
                                new Point(x: 0.0, y: 0.0),
                                new Point(x: 3.0, y: 0.0)]); 
   test("test_ring: permute defaults to 1",
-      () => expect(cShape.permuted(), geometryEquals(cShape1, 1e-15)));
-  final cShape4    = new Ring([new Point(x: 2.0, y: 1.0),
-                               new Point(x: 2.0, y: 2.0),
+      () => expect(cShape.permute(), geometryEquals(cShape1, 1e-15)));
+  final cShape4    = new Ring([new Point(x: 2.0, y: 2.0),
                                new Point(x: 3.0, y: 2.0),
                                new Point(x: 3.0, y: 3.0),
                                new Point(x: 0.0, y: 3.0),
                                new Point(x: 0.0, y: 0.0),
                                new Point(x: 3.0, y: 0.0),
                                new Point(x: 3.0, y: 1.0),
-                               new Point(x: 2.0, y: 1.0)]);
+                               new Point(x: 2.0, y: 1.0),
+                               new Point(x: 2.0, y: 2.0)]);
   test("test_ring: permute 4", 
-      () => expect(cShape.permuted(4), geometryEquals(cShape4, 1e-15)));
-  test("test_ring: permute wraps around length",
-      () => expect(cShape.permuted(cShape.length), geometryEquals(cShape, 1e-15)));
+      () => expect(cShape.permute(4), geometryEquals(cShape4, 1e-15)));
+  test("test_ring: permute wraps around (length - 1)",
+      () => expect(cShape.permute(cShape.length - 1), geometryEquals(cShape, 1e-15)));
 }
 
 void testEncloses() {
@@ -128,4 +128,21 @@ testTesselation() {
                   ].toSet();
   test("test_ring: tesselate unit square",
       () => expect(unitSquare.tesselate(), equals(expect1)));
+}
+
+testSimplify() {
+  final r1 = new Ring([new Point(x: 0.0, y: 0.0),
+                       new Point(x: 1.0, y: 0.0),
+                       new Point(x: 1.0, y: 1.0),
+                       new Point(x: -1.0, y: 1.0),
+                       new Point(x: -1.0, y: 0.0),
+                       new Point(x: -1.0, y: 0.0),
+                       new Point(x: 0.0, y: 0.0)]);
+  final expect1 = new Ring([new Point(x: 1.0, y: 0.0),
+                            new Point(x: 1.0, y: 1.0),
+                            new Point(x: -1.0, y: 1.0),
+                            new Point(x: -1.0, y: 0.0),
+                            new Point(x: 1.0, y: 0.0)]);
+  test("test_ring: colinear around start of ring",
+      () => expect(r1.simplify(), geometryEquals(expect1, 1e-15)));
 }

@@ -3,7 +3,7 @@ library test_linestring;
 import 'dart:math' as math;
 
 import 'package:unittest/unittest.dart';
-import 'package:layers/geometry.dart';
+import 'package:spatially/geometry.dart';
 
 import 'std_tests.dart';
 
@@ -92,7 +92,7 @@ void testFromSegments() {
       [ new LineSegment(new Point(x:1.0, y: 2.0), new Point(x: 1.0, y: 1.0)),
         new LineSegment(new Point(x:1.0, y: 1.0), new Point(x: 1.5, y: 1.5)),
         new LineSegment(new Point(x:1.5, y: 1.5), new Point(x: 1.75, y: 2.0))];
-  Linestring fromConnected = new Linestring.fromSegments(connectedSegments);
+  Linestring fromConnected = new Linestring.fromLines(connectedSegments);
   
   Linestring fromPoints = new Linestring(
       [ new Point(x: 1.0, y: 2.0),
@@ -107,10 +107,14 @@ void testFromSegments() {
       [ new LineSegment(new Point(x: 1.0, y: 2.0), new Point(x: 1.5, y: 1.5)),
         new LineSegment(new Point(x: 1.0, y: 1.0), new Point(x: 1.5, y: 1.5))];
   
-  var tryCreateLstr = () => new Linestring.fromSegments(unconnectedSegments);
+  var tryCreateLstr = () => new Linestring.fromLines(unconnectedSegments);
   test("test_linestring: If segments in list aren't connected, throws an InvalidGeometry",
-      () => expect(tryCreateLstr, 
-                  throwsA(new isInstanceOf<InvalidGeometry>())));
+      () => expect(
+          tryCreateLstr, throwsA(new isInstanceOf<InvalidGeometry>())));
+  var tryCreateLstr2 = () => new Linestring.fromLines(unconnectedSegments, reverse: true);
+  test("test_linestring: If reverse is allowed, a linestring results",
+      () => expect(
+          tryCreateLstr2, isNot(throwsA(new isInstanceOf<InvalidGeometry>()))));
 }
 
 void testEncloses() {
@@ -219,9 +223,9 @@ void testConcat() {
       () => expect(() => lstr1.concat(lstr3),
                    throwsA(new isInstanceOf<InvalidGeometry>())));
   
-  var lstr4 = new Linestring([new Point(x: 0.0, y: 1.0), new Point(x: 2.0, y: 2.0)]);
-  var expected2 = new Linestring([  new Point(x: 1.0, y:1.0), 
-                                    new Point(x:0.0, y: 1.0),
+  var lstr4 = new Linestring([new Point(x: 2.0, y: 2.0), new Point(x: 1.0, y: 1.0)]);
+  var expected2 = new Linestring([  new Point(x: 0.0, y:1.0), 
+                                    new Point(x:1.0, y: 1.0),
                                     new Point(x:2.0, y: 2.0)]);
   test("test_linestring: concatenate with reverse",
       () => expect(lstr1.concat(lstr4, reverse: true),

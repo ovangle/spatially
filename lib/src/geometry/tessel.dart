@@ -136,73 +136,43 @@ class Tessel extends Geometry implements Planar {
    * Returns one of
    * -- A Point, if the two [Tessel]s intersect at one of the vertices of the [Tessels]
    * -- A [LineSegment], if the two [Tessels] intersect along one of the edges
-   * -- A [Tessel], if the one of the [Tessel]s contains the other.
    * -- A [Ring], if the two [Tessel]s overlap.
    */  
   Geometry _tesselIntersection(Tessel tesl, {double tolerance: 1e-15}) {
     if (!mbrIntersects(tesl, tolerance: tolerance)) {
       return null;
     }
+    // If there are no intersecting segments, then since Tessels are their own
+    // convex hulls, this will contain a point if the tessels intersect at a single point
+    // or null otherwise.
     Point intersectionPoint;
+    // The list of segments surrounding the intersection of the two tessels, ordered
+    // so that adjacent segments are adjacent in the intersection.
+    // Once both tessels are processed, this should contain all the segments required
+    // for the boundary.
     List<LineSegment> intersectionSegments = [];
-    void addSegment(LineSegment lseg) {
-      if (intersectionSegments.isEmpty) {
-        intersectionSegments.add(lseg);
-      }
-      print("Segments: $intersectionSegments");
-      print("lseg: $lseg");
-      if (intersectionSegments.contains(lseg) || intersectionSegments.contains(lseg.reversed())) {
-        return;
-      }
-      if (intersectionSegments.first.start == lseg.end) {
-        intersectionSegments.insert(0, lseg);
-        return;
-      } else if (intersectionSegments.first.start == lseg.start) {
-        intersectionSegments.insert(0, lseg.reversed());
-        return;
-      }
-      //Attempt to insert the segment in a position adjacent to the previous segment 
-      for (var i in range(1, intersectionSegments.length)) {
-        if (intersectionSegments[i-1].end == lseg.start) {
-          intersectionSegments.insert(i, lseg);
-          return;
-        } else if (intersectionSegments[i - 1].end == lseg.end) {
-          intersectionSegments.insert(i, lseg.reversed());
-          return;
+    void findBoundaryIntersections(Iterable<LineSegment> segs, 
+                                   Geometry intersectSeg(LineSegment lseg)) {
+      for (var seg in segs) {
+        final intersection = intersectSeg(seg);
+        if (intersection is Point) 
+          intersectionPoint = intersection;
+        if (intersection is LineSegment) {
+          intersectionSegments = _insertBeforeAdjacent(intersection, intersectionSegments);
         }
       }
-      //If it is not adjacent to any previous segment, insert it at the end of the list.
-      intersectionSegments.add(lseg);
     }
-    for (var seg in boundary.segments) {
-      var teslIntersection = tesl._segmentIntersection(seg);
-      if (teslIntersection is LineSegment) {
-        addSegment(teslIntersection);
-      }
-      if (teslIntersection is Point) {
-        intersectionPoint = teslIntersection;
-      }
+    findBoundaryIntersections(boundary.segments, tesl._segmentIntersection);
+    findBoundaryIntersections(tesl.boundary.segments, _segmentIntersection);
+    
+    if (intersectionSegments.isEmpty) {
+      //Tessels do not intersect or intersect at a point
+      return intersectionPoint;
+    } else if (intersectionSegments.length == 1) {
+      //Tessels intersect along an edge
+      return intersectionSegments.single;
     }
-    for (var seg in tesl.boundary.segments) {
-      var teslIntersection = _segmentIntersection(seg);
-      if (teslIntersection is LineSegment) {
-        addSegment(teslIntersection);
-      }
-      if (teslIntersection is Point) {
-        intersectionPoint = teslIntersection;
-      }
-    }
-    print("Finally: $intersectionSegments");
-    switch(intersectionSegments.length) {
-      case 0:
-        //Tessels do not intersect or intersect at a point
-        return intersectionPoint;
-      case 1:
-        //Tessels intersect along an edge
-        return intersectionSegments.single;
-      default:
-        return new Ring.fromSegments(intersectionSegments);
-    }
+    return new Ring.fromSegments(intersectionSegments);
   }
   
   Geometry intersection(Geometry geom, {double tolerance: 1e-15}) {
@@ -236,42 +206,65 @@ class Tessel extends Geometry implements Planar {
         || disjoint(tesl, tolerance: tolerance)) {
       return new GeometryList.from([this, tesl], growable: false);
     }
-    var unionVerts = boundary.segments
-        .fold([], (verts, seg) {
-          addIfUniq(Point vert1, [Point vert2]) {
-            if (verts.isEmpty || !verts.last.equalTo(vert1, tolerance: tolerance)) {
-              verts.add(vert1);
-            }
-            if (vert2 != null && !verts.last.equalTo(vert2, tolerance: tolerance)) {
-              verts.add(vert2);
-            }
+    //Given a linesegment `lseg1` which is 
+    //1. enclosed by lseg2; and
+    //2. shares either a start or end point with lseg2
+    //returns the portion of `lseg2` not covered by lseg1.
+    //returns `null` if lseg1 encloses lseg2
+    LineSegment complementOf(LineSegment lseg1, LineSegment lseg2) {
+      if (lseg1.encloses(lseg2)) return null;
+      final resultStart = 
+          [lseg2.start, lseg2.end].contains(lseg1.start) ? lseg1.end : lseg1.start;
+      final resultEnd = 
+          [lseg1.start, lseg1.end].contains(lseg2.start) ? lseg2.end : lseg2.start; 
+      return new LineSegment(resultStart, resultEnd);
+    }
+    
+    //If `this` intersects tesl at a unique point, then we need to know
+    //what that point is. Only useful if unionSegments is empty
+    Point intersectionPoint = null;
+    //The segments surrounding the union. When we're finished processing both
+    //boundaries, this should consist of a list of adjacent linesegments.
+    List<LineSegment> unionSegments = [];
+    
+    
+    
+    //Intersect each of the boundarySegments of one tessel with the other,
+    //recording the portion of the boundary which is outside the other.
+    void findUnionSegments(Iterable<LineSegment> boundarySegments,
+                           Geometry intersectOther(LineSegment lseg),
+                           Geometry intersectOtherBoundary(LineSegment lseg)) {
+      for (var seg in boundarySegments) {
+        final intersection = intersectOther(seg);
+        if (intersection is Point) {
+          intersectionPoint = intersection;
+        }
+        if (intersection is LineSegment) {
+          var boundaryIntersection = intersectOtherBoundary(intersection);
+          if (boundaryIntersection is LineSegment) {
+            //The intersection lies along the boundary of the other tessel,
+            //thus forming part of the boundary of the union
+            unionSegments = _insertBeforeAdjacent(intersection, unionSegments);
           }
-          if (!tesl._enclosesPoint(seg.start, tolerance: tolerance)) {
-            addIfUniq(seg.start);
+          var intersectionComplement = complementOf(intersection, seg);
+          if (intersectionComplement == null) {
+            //The entire edge is enclosed by the union, and thus not
+            //part of the boundary of the union
+            continue;
           }
-          for (var teslSeg in tesl.boundary.segments) {
-            var intersection = seg._segmentIntersection(teslSeg, tolerance: tolerance);
-            if (intersection is LineSegment) {
-              addIfUniq(seg.start, seg.end);
-            }
-            if (intersection is Point) {
-              //If the segment and the teslSeg intersect at a point, we have
-              //exactly one of the linesegments (teslSeg.start -> intersection)
-              //and (intersection -> teslSeg.end) must be part of the union
-              if (!_enclosesPoint(teslSeg.end, tolerance: tolerance)) {
-                addIfUniq(intersection, teslSeg.end);
-              } else {
-                addIfUniq(teslSeg.start, intersection);
-              }
-            }
-          }
-          if (!tesl._enclosesPoint(seg.end, tolerance: tolerance)) {
-            addIfUniq(seg.end);
-          }
-          return verts;
-        });
-    return new Ring(unionVerts);
+          unionSegments = _insertBeforeAdjacent(intersectionComplement, unionSegments);
+        }
+        if (intersection == null) {
+          //This segment must lie entirely outside the other tessel
+          unionSegments = _insertBeforeAdjacent(seg, unionSegments);
+        }
+      }
+    }
+    findUnionSegments(boundary.segments, tesl._segmentIntersection, tesl.boundary.intersection);
+    findUnionSegments(tesl.boundary.segments, _segmentIntersection, boundary.intersection);
+    return new Ring(new Linestring.fromLines(unionSegments, reverse: true)).simplify();
   }
+  
   /**
    * Returns the [:union:] of two [Planar] geometries.
    * The result will be one of:
@@ -489,4 +482,44 @@ class Tessel extends Geometry implements Planar {
   }
   
   String toString() => "Tessel($a, $b, $c)";
+}
+
+/**
+ * Given a list of segments, inserts [:lseg:] at the first position in
+ * the list which would make it either:
+ * 1. adjacent to the start of the first segment; or 
+ * 2. adjacent to the end of the previous segment
+ * reversing the segment if necessary.
+ * 
+ * If not adjacent to any of the segments in the list, appends it to the end.
+ */
+List<LineSegment> _insertBeforeAdjacent(LineSegment lseg, List<LineSegment> segmentList) {
+  if (segmentList.isEmpty) {
+    segmentList.add(lseg);
+  }
+  if (segmentList.contains(lseg) 
+      || segmentList.contains(lseg.reversed)) {
+    return segmentList;
+  }
+  if (lseg.end == segmentList.first.start) {
+    segmentList.insert(0, lseg);
+    return segmentList;
+  } else if (lseg.start == segmentList.first.start) {
+    segmentList.insert(0, lseg.reversed);
+    return segmentList;
+  }
+  
+  for (var i in range(1, segmentList.length)) {
+    if (lseg.start == segmentList[i - 1].end) {
+      segmentList.insert(i, lseg);
+      return segmentList;
+    } else if (lseg.end == segmentList[i - 1].end) {
+      segmentList.insert(i, lseg.reversed);
+      return segmentList;
+    }
+  }
+  
+  //If we haven't added it, append it to the end of the list
+  segmentList.add(lseg);
+  return segmentList;
 }

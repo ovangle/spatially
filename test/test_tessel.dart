@@ -140,24 +140,26 @@ void testTesselTesselIntersection() {
   final tesl6 = tesl1.scale(0.5, origin: new Point(x: 0.0, y: 0.0))
                      .translate(dx: -0.5, dy: -0.5);
   final expect1 = 
-      new Tessel(new Point(x: 0.0, y: 0.0),
+      new Ring([ new Point(x: 0.5, y: 0.0),
                  new Point(x: 0.5, y: 0.5),
-                 new Point(x: 0.5, y: 0.0));
+                 new Point(x: 0.0, y: 0.0),
+                 new Point(x: 0.5, y: 0.0)]);
   test("test_tessel: intersection along common edge",
       () => expect(tesl1.intersection(tesl6), geometryEquals(expect1, 1e-15)));
   
   final tesl7 = new Tessel(new Point(x: 0.0, y: 0.0), new Point(x: 3.0, y:0.0), new Point(x: 1.5, y: 3.0));
   final tesl8 = new Tessel(new Point(x: 0.0, y: 2.0), new Point(x: 3.0, y:2.0), new Point(x: 1.5, y: -1.0));
-  final expect2 = 
-      new Ring([new Point(x: 1.0, y: 0.0),
-                new Point(x: 0.5, y: 1.0),
-                new Point(x: 1.0, y: 2.0),
-                new Point(x: 2.0, y: 2.0),
-                new Point(x: 2.5, y: 1.0),
-                new Point(x: 2.0, y: 0.0),
-                new Point(x: 1.0, y: 0.0)]);
+  final expectVerts =
+      [new Point(x: 1.0, y: 0.0),
+       new Point(x: 0.5, y: 1.0),
+       new Point(x: 1.0, y: 2.0),
+       new Point(x: 2.0, y: 2.0),
+       new Point(x: 2.5, y: 1.0),
+       new Point(x: 2.0, y: 0.0),
+       new Point(x: 1.0, y: 0.0)];
+  final expect2 = new Ring(expectVerts.reversed);
   test("test_tessel: star of david intersection",
-      () => expect(tesl7.intersection(tesl8), geometryEquals(expect2, 1e-15)));
+      () => expect(tesl7.intersection(tesl8), geometryEquals(expect2, 1e-15, permute: true)));
 }
 
 void testUnion() {
@@ -171,7 +173,8 @@ void testUnion() {
       () => expect(tesl1.union(tesl2), equals(new Ring([a, b, c, a]))));
       
   final tesl3 = tesl1.translate(dx: 0.5);
-  final expected = new Ring([a, c, new Point(x: 1.0, y: 0.5), c.translate(dx: 0.5), b.translate(dx: 0.5), a]);
+  final expectedVerts = [a, c, new Point(x: 1.0, y: 0.5), c.translate(dx: 0.5), b.translate(dx: 0.5), a];
+  final expected1 = new Ring(expectedVerts.reversed);
   test("test_tessel: tesl1 union an overlapping tesl",
-      () => expect(tesl1.union(tesl3), geometryEquals(expected, 1e-15)));
+      () => expect(tesl1.union(tesl3), geometryEquals(expected1, 1e-15, permute: true)));
 }
