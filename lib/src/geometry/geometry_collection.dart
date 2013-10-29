@@ -21,7 +21,7 @@ abstract class GeometryCollection<T> extends Geometry with IterableMixin<T> {
    * The distance from a [GeometryCollection] to [:geom:]
    * is the minimum distance from any of it's component geometries
    */
-  double distanceTo(Geometry geom) {
+  double distanceTo(Point geom) {
     return map((g) => (g as Geometry).distanceTo(geom))
           .fold(double.INFINITY, math.min);
   }

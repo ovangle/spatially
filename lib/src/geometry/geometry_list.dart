@@ -4,7 +4,6 @@ part of geometry;
  * A [GeometryList] is a possibly heterogeneous, mutable collection of geometries.
  */
 class GeometryList<T extends Geometry> extends GeometryCollection<T> with ListMixin<T> {
-   
       
   GeometryList<T> get mutableCopy {
     return new GeometryList<T>.from(this);

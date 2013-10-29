@@ -18,8 +18,7 @@ radiansToDegrees(double radians) {
  */
 int compareDoubles(double d1, double d2, double tolerance) {
   if (d1 == d2) return 0;
-  assert(tolerance != null);
-  assert(tolerance > 0);
+  assert(tolerance != null && tolerance >= 0);
   var absDiff = (d1 - d2).abs();
   //If they are equal to within tolerance then they're equal
   //Otherwise there might be a problem comparing to 0.

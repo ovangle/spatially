@@ -48,26 +48,19 @@ class Point extends Geometry implements Nodal {
                      y: (y - origin.y) * ratio + origin.y);
   }
   
-  double distanceTo(Point other) {
-    final dx = x - other.x;
-    final dy = y - other.y;
-    return math.sqrt(dx * dx + dy * dy);
-  }
+  double distanceTo(Point p) => math.sqrt(distanceToSqr(p));
   
   /**
    * The square of the distance to [:other:].
    */
-  double distanceToSqr(Point other) {
-    final dx = x - other.x;
-    final dy = y - other.y;
-    return dx * dx + dy * dy;
+  double distanceToSqr(Point p) {
+      final dx = x - p.x;
+      final dy = y - p.y;
+      return dx * dx + dy * dy;
   }
   
-  Geometry intersection(Geometry geom, {double tolerance: 1e-15}) {
-    if (geom is Point) {
-      if (equalTo(geom, tolerance: tolerance)) return this;
-    }
-    return geom.intersection(this, tolerance: tolerance);
+  Geometry intersection(Geometry geom) {
+    return equalTo(geom) ? this : geom.intersection(this);
   }
   
   /**

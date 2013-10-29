@@ -44,48 +44,33 @@ class Linestring extends GeometryCollection<Point>
    * Raises an [InvalidGeometry] if the start point of the line is not
    * equal to the endpoint of the linestring.
    * 
+   * If [:tolerance:] is given, the argument's start can be a maximum of [:tolerance:] units 
+   * away from the endpoint when matching against `this.end`. 
+   * If the endpoints are seperated by a distance less than [:tolerance:], 
+   * `this`.end will be used as the connecting point.
+   * 
    * If [:reverse:] is `true`, then [:line:] may be reversed in an attempt
    * to ensure that it remains adjacent to the endpoint.
    */
-  Linestring concat(Linear line, {double tolerance: 1e-15, bool reverse: false}) {
-    if (isEmpty) {
-      return line.toLinestring();
-    }
-    var lstr = this;
+  Linestring concat(Linear line, {double tolerance: 0.0, bool reverse: false}) {
+    if (isEmpty) return line.toLinestring();
+    
     if (reverse && line.end.equalTo(end, tolerance: tolerance)) {
-      line = line.reversed;
+      return concat(line.reversed);
     }
-    if (!line.start.equalTo(lstr.end, tolerance: tolerance)) {
-      throw new InvalidGeometry("Cannot concatenate non-contiguous linear geometry $line");
+    if (!line.start.equalTo(end, tolerance: tolerance)) {
+      throw new InvalidGeometry("Line must be adjacent at one of it's endpoints\n"
+                                "\tLine: $line");
     }
-    final verts = lstr._geometries.toList();
-    verts.addAll(line.toLinestring().skip(1));
-    return new Linestring(verts);
+    return new Linestring([_geometries, line.toLinestring().skip(1)].expand((i) => i));
   }
   
   
+  /**
+   * The geometric length of `this`
+   */
+  double get span => segments.fold(0.0, (span, seg) => span + seg.span);
   
-  Iterable<Point> get vertices => this;
-  
-  double get span {
-    var len = 0.0;
-    for (var i in range(length - 1)) {
-      len += this[i].distanceTo(this[i+1]);
-    }
-    return len;
-  }
-  /*
-  double get geodesicSpan {
-    if (length < 2)
-      throw new StateError('Linestring with fewer than 2 vertices');
-    double len = 0.0;
-    for (var i in range(length - 1)) {
-      len += this[i].geodesicDistanceTo(this[i+1]);
-    }
-    return len;
-  }
-  */
- 
   /**
    * Iterates over the segments formed between each adjacent pair of vertices
    * in the [Linestring]
@@ -102,44 +87,30 @@ class Linestring extends GeometryCollection<Point>
    *   any part of their length; or
    * --A [Point] if the the segment intersects another segment at a single point
    */
-  Geometry intersection(Geometry geom, {double tolerance: 1e-15}) {
-    if (!mbrIntersects(geom, tolerance: tolerance)) return null;
+  Geometry intersection(Geometry geom) {
+    if (!boundsIntersects(geom)) return null;
+    
     if (geom is Point) {
-      for (var seg in segments) {
-        var isect = seg.intersection(geom, tolerance: tolerance);
-        if (isect != null) return isect;
-      }
-      return null;
+      return segments.map((seg) => seg.intersection(geom))
+                     .firstWhere((intersection) => intersection != null, orElse: () => null);
     }
-    if (geom is LineSegment) {
-      Set segs = segments.toSet();
-      segs.add(geom);
-      final intersections = new GeometryList.from(alg.bentleyOttmanIntersections(segs, ignoreAdjacencies: true));
-      if (intersections.isEmpty) {
-        return null;
-      } else if (intersections.length == 1) {
-        return intersections.single;
-      }
-      return intersections;
+    
+    if (geom is Linear) {
+      Set segs = new Set.from(segments)
+          .union(geom.toLinestring().segments.toSet());
+      final intersections = new GeometryList.from(
+          alg.bentleyOttmanIntersections(segs, ignoreAdjacencies: true), 
+          growable: false);
+      return intersections.isNotEmpty ? intersections : null;
     }
-    if (geom is Linestring) {
-      Set segs = segments.toSet();
-      segs = segs.union(geom.segments.toSet());
-      final intersections = new GeometryList.from(alg.bentleyOttmanIntersections(segs, ignoreAdjacencies: true));
-      if (intersections.isEmpty) {
-        return null;
-      } else if (intersections.length == 1) {
-        return intersections.single;
-      }
-      return intersections;
-    }
+    
     return geom.intersection(this);
   }
   
   Point get centroid {
     //Only count each vertex once, even if we're closed
     Iterable<Point> vertices = _isClosed(this) ? skip(1) : this;
-    //Only count each vertex once, even if we're closed
+
     var ySum = vertices.fold(0.0, (sum, v) => sum + v.y);
     var xSum = vertices.fold(0.0, (sum, v) => sum + v.x);
     
@@ -162,15 +133,20 @@ class Linestring extends GeometryCollection<Point>
   }
   
   bool encloses(Geometry geom, {double tolerance: 1e-15}) {
-    if (geom is Point) return segments.any((s) => s.encloses(geom, tolerance: tolerance));
+    if (geom is Point) {
+      return segments.any((s) => s.encloses(geom, tolerance: tolerance));
+    }
+    
     if (geom is LineSegment) {
       final simplified = simplify(tolerance: tolerance);
       return segments.any((s) => s.encloses(geom));
     }
+    
     if (geom is Linestring) {
       return geom.segments.every((s) => encloses(s));
     }
-    return geom.encloses(this, tolerance: tolerance);
+    
+    return false;
   }
   
   /**
@@ -199,6 +175,9 @@ class Linestring extends GeometryCollection<Point>
   
   Linestring toLinestring() => this;
   
+  /**
+   * Returns a new [Linestring] which passes through each of the vertices in the opposite direction
+   */
   Linestring get reversed => new Linestring(_geometries.reversed);
   
   /**
@@ -208,33 +187,24 @@ class Linestring extends GeometryCollection<Point>
    * 2. For every triple of vertices a, b, c if the triangle formed with base ac
    *    and apex b has height less than tolerance, b is removed from the linestring
    */
-  Linestring simplify({double tolerance:1e-15}) {
-    bool isDup(int i) {
-      if (i == 0) return false;
-      return this[i].equalTo(this[i-1], tolerance: tolerance);
-    }
-    bool inline(int i) {
-      if (i == 0 || i == length - 1) return false;
-      final test = this[i];
-      
-      var j = i - 1;
-      while (j != 0) {
-        if (isDup(j)) { j--; } else { break; }
+  Linestring simplify({double tolerance:1e-1}) {
+    if (isEmpty) return this;
+    //The vertices in the linestring which are equal to the previous vertex
+    final nonDups = [this[0]];
+    nonDups.addAll(
+        range(1, length)
+        .where((i) => this[i].notEqualTo(this[i - 1], tolerance: tolerance))
+        .map((i) => this[i])
+    );
+    final nonColinear = [nonDups[0]];
+    for (int i=1; i < nonDups.length - 1; i++) {
+      final lseg = new LineSegment(nonDups[i - 1], nonDups[i + 1]);
+      if (!lseg.encloses(nonDups[i], tolerance: tolerance)) {
+        nonColinear.add(nonDups[i]);
       }
-      
-      var k = i + 1;
-      while (k < length) {
-        if (isDup(k)) { k++; } else { break; }
-      }
-      
-      final lseg = new LineSegment(this[j], this[k]);
-      return lseg.encloses(test, tolerance: tolerance);
     }
-    return new Linestring( 
-          range(length)
-              .where((i) => !isDup(i))
-              .where((i) => !inline(i))
-              .map((i) => this[i]));
+    nonColinear.add(nonDups[nonDups.length - 1]);
+    return new Linestring(nonColinear);
   }
   
   String toString() => "Linestring($_geometries)";

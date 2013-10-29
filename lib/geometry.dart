@@ -32,7 +32,7 @@ abstract class Geometry {
   /**
    * The minimum distance to the given geometry in coordinate space.
    */
-  double distanceTo(Geometry other);
+  double distanceTo(Geometry geom);
   
   /**
    * The real-world distance to the given geometry
@@ -64,7 +64,7 @@ abstract class Geometry {
    * Returns the result of intersecting two [Geometry]s 
    * or `null` if the geometries are disjoint.
    */
-  Geometry intersection(Geometry other, {double tolerance: 1e-15});
+  Geometry intersection(Geometry other);
   /**
    * Returns the geometry which is the result of unioning the two [Geometries].
    */
@@ -82,29 +82,38 @@ abstract class Geometry {
    * Determines whether a geometry is equal to other up to a given tolerance.
    */
   bool equalTo(Geometry other, {double tolerance: 1e-15});
+  /**
+   * is `this` not equal to [:geom:] to within the given [:tolerance:]?
+   */
   bool notEqualTo(Geometry geom, {double tolerance: 1e-15}) 
       => !equalTo(geom, tolerance: tolerance);
-  bool mbrIntersects(Geometry geom, {double tolerance: 1e-15})
+  /**
+   * Do the [:bounds:] of this intersect the [:bounds:] of [:geom:]? 
+   */
+  bool boundsIntersects(Geometry geom, {double tolerance: 1e-15})
       => bounds.intersects(geom.bounds, tolerance: tolerance);
-  bool intersects(Geometry geom, {double tolerance: 1e-15})
-      => intersection(geom, tolerance: tolerance) != null;
+  /**
+   * Does `this` have a non-zero spatial overlap with [:geom:]?
+   */
+  bool intersects(Geometry geom, {double tolerance: 1e-15});
+  /**
+   * Does `this` have a zero spatial overlap with [:geom:]?
+   */
   bool disjoint(Geometry geom, {double tolerance: 1e-15}) 
-      => intersection(geom, tolerance: tolerance) == null;
+      => !intersects(geom, tolerance: tolerance);
+  /**
+   * `true` iff [:geom:] is completely inside `this`
+   */
   bool encloses(Geometry geom, {double tolerance: 1e-15});
+  /**
+   * `true` if `this` completely encloses [:geom:]
+   */
   bool enclosedBy(Geometry geom, {double tolerance: 1e-15}) 
       => geom.encloses(this);
-  bool touches(Geometry geom, {double tolerance: 1e-15});
-  
-  
   /**
-   * Returns a mutable copy of the geometry, which is checked for consistency
-   * during mutation.
-   * 
-   * Only [Linestring]s, [Ring]s and [Polygon]s can be copied to a mutable copy.
-   * An [UnsupportedError] is raised if a mutable copy is requested for any other
-   * [Geometry] type.
+   * `true` if `this` and `geom` touch at an edge or endpoint
    */
-  //GeometryList get mutableCopy;
+  bool touches(Geometry geom, {double tolerance: 1e-15});
   
   /**
    * Returns a simplified geometry. What this method actually does is dependent
@@ -115,7 +124,6 @@ abstract class Geometry {
 }
 
 abstract class Nodal extends Geometry {
- 
   /**
    * The [Nodal] geometry as a [Point]
    */
@@ -184,7 +192,7 @@ abstract class Planar extends Geometry {
    * position `0`.
    * If [:i:] is not provided, defaults to `1`.
    */
-  Planar permuted([int i = 1]);
+  Planar permute([int i = 1]);
   
   /**
    * Splits the [Planar] into a set of [Tessel]s, which partition the [Planar] geometry.

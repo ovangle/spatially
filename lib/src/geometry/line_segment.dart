@@ -56,7 +56,7 @@ class LineSegment extends Geometry implements Linear {
     return -cmp;
   }
   
-  double distanceTo(Geometry geom) {
+  double distanceToPoint(Point p) {
     if (geom is Point) {
       final a = _aCoeff; final b = _bCoeff; final c = _cCoeff;
       return (a * geom.x + b * geom.y + c).abs() 
