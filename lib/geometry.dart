@@ -156,19 +156,19 @@ abstract class Linear extends Geometry {
    */
   Linestring append(Nodal node);
   /**
-   * [:concat:] concatenates the [Linear] geometry with the current line
-   * and returns the result without modifications to either geometry.
+   * Concatenates a [Linear] geometry onto the end of this geometry
+   * Raises an [InvalidGeometry] if the start point of the line is not
+   * equal to the endpoint of the linestring.
    * 
-   * Throws an [InvalidGeometry] if the end point of the current line
-   * is not equal to the start point of the concatenated line (up to the 
-   * specified [:tolerance:]).
+   * If [:tolerance:] is given, the argument's start can be a maximum of [:tolerance:] units 
+   * away from the endpoint when matching against `this.end`. 
+   * If the endpoints are seperated by a distance less than [:tolerance:], 
+   * `this.end` will be used as the connecting point.
    * 
-   * If [:reverse:] is `true` and the [:line.end:] is equal to [:end:],
-   * then [:line:] will be reversed before concatenation. Simililarly,
-   * if [:line.start:] is equal to [:start:], then the current line will
-   * be reversed before concatenation.
+   * If [:reverse:] is `true`, then [:line:] may be reversed in an attempt
+   * to ensure that it remains adjacent to the endpoint.
    */
-  Linestring concat(Linear line, {double tolerance: 1e-15, bool reverse: false});
+  Linestring concat(Linear line, {double tolerance: 0.0, bool reverse: false});
 }
 
 abstract class Planar extends Geometry {

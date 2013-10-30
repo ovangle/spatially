@@ -33,10 +33,48 @@ class Linestring extends GeometryCollection<Point>
         (lstr, seg) => lstr.concat(seg, reverse: reverse));
   }
   
-  Linestring append(Nodal p) {
-    final verts = _geometries.toList();
-    verts.add(p);
-    return new Linestring(verts);
+  /**
+   * Return the linestring obtained by appending the given [Nodal] geometry
+   * to the list of vertices.
+   * 
+   * If [:preserve_closure:] is `true` and the linestring is closed,
+   * then the returned [Linestring] will also be closed.
+   */
+  Linestring append(Nodal p, {bool preserve_closure: false}) =>
+      insert(length, p, preserve_closure: preserve_closure);
+  
+  /**
+   * Insert the given point into the linestring at index [:i:].
+   * 
+   * If [:preserve_closure:] is `true` and the linestring is
+   * closed, then the resulting linestring will be closed
+   */
+  Linestring insert(int i, Nodal p, {bool preserve_closure : false}) {
+    if (i < 0 || i > length) {
+      throw new RangeError("Not a valid index into the linestring: $i");
+    }
+    if (preserve_closure) {
+      var verts = _geometries.take(length - 1).toList();
+      if (i == 0 && preserve_closure && _isClosed(this)) {
+          verts.insert(0, p.toPoint());
+      } else if (i == length && preserve_closure && _isClosed(this)) {
+          verts.add(p.toPoint());
+      } else if (i == length) {
+        verts.add(p);
+      } else {
+        verts.insert(i, p);
+      }
+      verts.add(verts[0]);
+      return new Linestring(verts);
+    } else {
+      var verts = _geometries.toList();
+      if (i < length) {
+        verts.insert(p, i);
+      } else {
+        verts.add(p);
+      }
+      return new Linestring(verts);
+    }
   }
   
   /**
@@ -96,8 +134,12 @@ class Linestring extends GeometryCollection<Point>
     }
     
     if (geom is Linear) {
+      for (var seg in segments.where((s) => s.encloses(geom))) {
+        return geom;
+      }
       Set segs = new Set.from(segments)
           .union(geom.toLinestring().segments.toSet());
+      
       final intersections = new GeometryList.from(
           alg.bentleyOttmanIntersections(segs, ignoreAdjacencies: true), 
           growable: false);
@@ -187,7 +229,7 @@ class Linestring extends GeometryCollection<Point>
    * 2. For every triple of vertices a, b, c if the triangle formed with base ac
    *    and apex b has height less than tolerance, b is removed from the linestring
    */
-  Linestring simplify({double tolerance:1e-1}) {
+  Linestring simplify({double tolerance:1e-15}) {
     if (isEmpty) return this;
     //The vertices in the linestring which are equal to the previous vertex
     final nonDups = [this[0]];

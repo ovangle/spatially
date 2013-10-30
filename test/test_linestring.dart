@@ -28,6 +28,7 @@ void main() {
   testSimplify();
   testFromSegments();
   testGeometryImpl();
+  testInsert();
   testConcat();
   testTouches();
 }
@@ -195,15 +196,46 @@ void testGeometryImpl() {
                    closeTo(2 * math.sqrt(2) + 1, 0.05)));
 }
 
-void testAppend() {
-  var lstr = new Linestring([new Point(x: 0.0, y: 0.0), new Point(x: 1.0, y:1.0)]);
+void testInsert() {
+  var lstr  = new Linestring([new Point(x: 0.0, y: 0.0), new Point(x: 1.0, y:1.0)]);
   var lstr2 = lstr.append(new Point(x: 2.0, y:1.0));
-  expect("test_linestring: append to $lstr",
+  test("test_linestring: append to $lstr",
       () => expect(lstr2, 
                    geometryEquals(new Linestring([new Point(x: 0.0, y:0.0),
                                                   new Point(x: 1.0, y:1.0),
                                                   new Point(x: 2.0, y:1.0)]),
                                   1e-15)));
+  test("test_linestring: append to unitSquare",
+      () => expect(unitSquare.append(new Point(x: -0.5, y: 0.5), preserve_closure: true),
+                   geometryEquals(new Linestring([
+                      new Point(x: 0.0, y: 0.0),
+                      new Point(x: 1.0, y: 0.0),
+                      new Point(x: 1.0, y: 1.0),
+                      new Point(x: 0.0, y: 1.0),
+                      new Point(x: -0.5, y: 0.5),
+                      new Point(x: 0.0, y: 0.0)
+                   ]), 1e-15)));
+  test("test_linestring: insert into unitSquare at 0",
+       () => expect(unitSquare.insert(0, new Point(x: 0.5, y: -0.5), preserve_closure: true),
+                    geometryEquals(new Linestring([
+                      new Point(x: 0.5, y: -0.5),
+                      new Point(x: 0.0, y: 0.0),
+                      new Point(x: 1.0, y: 0.0),
+                      new Point(x: 1.0, y: 1.0),
+                      new Point(x: 0.0, y: 1.0),
+                      new Point(x: 0.5, y: -0.5)
+                    ]), 1e-15)));
+  test("test_linestring: insert into unitSquare at 3",
+      () => expect(unitSquare.insert(3, new Point(x: 1.5, y: 0.5), preserve_closure: true),
+                  geometryEquals(new Linestring([
+                      new Point(x: 0.0, y: 0.0),
+                      new Point(x: 1.0, y: 0.0),
+                      new Point(x: 1.0, y: 1.0),
+                      new Point(x: 1.5, y: 0.5),
+                      new Point(x: 0.0, y: 1.0),
+                      new Point(x: 0.0, y: 0.0) 
+                      ]), 1e-15)));
+  
 }
 
 void testConcat() {

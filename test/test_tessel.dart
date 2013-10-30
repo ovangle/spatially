@@ -25,7 +25,7 @@ void testPermuted() {
       new Point(x: 1.0, y: 1.0),
       new Point(x: 1.0, y: 0.0));
   test("test_tessel: Permute defaults to 1",
-      () => expect(tesl.permuted(), 
+      () => expect(tesl.permute(), 
                    geometryEquals(new Tessel(new Point(x: 1.0, y: 1.0), 
                                              new Point(x: 1.0, y: 0.0), 
                                              new Point(x: 0.0, y: 0.0)), 
@@ -145,7 +145,7 @@ void testTesselTesselIntersection() {
                  new Point(x: 0.0, y: 0.0),
                  new Point(x: 0.5, y: 0.0)]);
   test("test_tessel: intersection along common edge",
-      () => expect(tesl1.intersection(tesl6), geometryEquals(expect1, 1e-15)));
+      () => expect(tesl1.intersection(tesl6), geometryEquals(expect1, 1e-15, permute: true)));
   
   final tesl7 = new Tessel(new Point(x: 0.0, y: 0.0), new Point(x: 3.0, y:0.0), new Point(x: 1.5, y: 3.0));
   final tesl8 = new Tessel(new Point(x: 0.0, y: 2.0), new Point(x: 3.0, y:2.0), new Point(x: 1.5, y: -1.0));
@@ -170,11 +170,18 @@ void testUnion() {
   
   final tesl2 = tesl1.scale(0.5, origin: new Point(x: 0.0, y: 0.0));
   test("test_tessel: tesl1 union an enclosed tesl",
-      () => expect(tesl1.union(tesl2), equals(new Ring([a, b, c, a]))));
+      () => expect(tesl1.union(tesl2), geometryEquals(new Ring([a, b, c, a]), 1e-15, permute: true)));
       
   final tesl3 = tesl1.translate(dx: 0.5);
   final expectedVerts = [a, c, new Point(x: 1.0, y: 0.5), c.translate(dx: 0.5), b.translate(dx: 0.5), a];
   final expected1 = new Ring(expectedVerts.reversed);
   test("test_tessel: tesl1 union an overlapping tesl",
       () => expect(tesl1.union(tesl3), geometryEquals(expected1, 1e-15, permute: true)));
+  
+  final tesl4 = new Tessel(new Point(x: 1.0, y: 1.0),
+                           new Point(x: 2.0, y: 1.0),
+                           new Point(x: 2.0, y: 2.0));
+  final expected2 = new GeometryList.from([tesl1, tesl4], growable: false);
+  test("test_tessel: tessels touch at corner",
+      () => expect(tesl1.union(tesl4), geometryEquals(expected2, 1e-15, permute: true)));
 }

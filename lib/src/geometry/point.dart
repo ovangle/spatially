@@ -81,6 +81,13 @@ class Point extends Geometry implements Nodal {
     return false;
   }
   
+  bool intersects(Geometry geom, {double tolerance: 1e-15}) {
+    if (geom is Point) {
+      return equalTo(geom, tolerance: tolerance);
+    }
+    return geom.intersects(this, tolerance: tolerance);
+  }
+  
   bool touches(Geometry geom, {double tolerance: 1e-15}) {
     if (geom is Point) {
       return equalTo(geom, tolerance: tolerance);

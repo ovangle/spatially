@@ -151,7 +151,7 @@ class _GeometryEquals extends Matcher {
         return false;
       }
       for (var i = 0; i < (item as Planar).boundary.length; i++) {
-        if ((item as Planar).permuted(i).equalTo(_value, tolerance: _delta)) {
+        if ((item as Planar).permute(i).equalTo(_value, tolerance: _delta)) {
           return true;
         }
       }

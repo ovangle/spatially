@@ -238,7 +238,7 @@ class LineSegment extends Geometry implements Linear {
   
   Linestring append(Nodal node) => toLinestring().append(node);
   
-  Linestring concat(Linear line, {double tolerance: 1e-15, bool reverse: false}) 
+  Linestring concat(Linear line, {double tolerance: 0.0, bool reverse: false}) 
       => toLinestring().concat(line, tolerance: tolerance, reverse: reverse);
   
   

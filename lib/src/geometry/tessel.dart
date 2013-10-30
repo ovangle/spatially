@@ -18,29 +18,21 @@ class Tessel extends Geometry implements Planar {
   
   factory Tessel.fromEdges(LineSegment ab, LineSegment bc, LineSegment ca) {
     var a,b,c;
-    if (ab.start.equalTo(ca.end)) {
-      a = ab.start;
-    } else {
-      throw new InvalidGeometry("Segments $ab and $ca not adjacent");
+    var edges = [ab,bc,ca];
+    for (var i in range(3)) {
+      var prev = (i == 0) ? ca : edges[i - 1];
+      if (edges[i].start.notEqualTo(prev.end)) {
+        throw new InvalidGeometry("Segments $prev and ${edges[i]} not adjacent");
+      }
     }
-    if (bc.start.equalTo(ab.end)) {
-      b = bc.start;
-    } else {
-      throw new InvalidGeometry("Segments $bc and $ab not adjacent");
-    }
-    if (ca.start.equalTo(bc.end)) {
-      c = ca.start;
-    } else {
-      throw new InvalidGeometry("Segments $ca and $ab not adjacent");
-    }
-    return new Tessel(a, b, c);
+    return new Tessel(ab.start, bc.start, ca.start);
   }
   
   Bounds get bounds {
     final ps = [a, b, c];
     return new Bounds(bottom: ps.map((p) => p.y).fold(double.INFINITY, math.min),
                       top:    ps.map((p) => p.y).fold(double.NEGATIVE_INFINITY, math.max),
-                      left:  ps.map((p) => p.y).fold(double.INFINITY, math.min),
+                      left:   ps.map((p) => p.x).fold(double.INFINITY, math.min),
                       right:  ps.map((p) => p.x).fold(double.NEGATIVE_INFINITY, math.max));
                       
   }
@@ -69,7 +61,7 @@ class Tessel extends Geometry implements Planar {
                       c.scale(ratio, origin: origin));
   }
   
-  Tessel permuted([int i = 1]) {
+  Tessel permute([int i = 1]) {
     switch (i % 3) {
       case 0: 
         return this;
@@ -81,9 +73,8 @@ class Tessel extends Geometry implements Planar {
   }
   
   double distanceTo(Geometry geom) {
-    final ps = [a, b, c];
-    return ps.map((p) => p.distanceTo(geom))
-             .fold(0.0, math.min);
+    if (encloses(geom)) return 0.0;
+    return boundary.segments.fold(0.0, (d, seg) => math.min(d, seg.distanceTo(geom)));
   }
  
   LineSegment get _base   => new LineSegment(a, b);
@@ -98,17 +89,17 @@ class Tessel extends Geometry implements Planar {
     if (enclosesStart && enclosesEnd) return lseg;
     final boundaryIntersections = 
         boundary.segments
-                .map((s) => lseg.intersection(s, tolerance: tolerance))
+                .map((s) => lseg.intersection(s))
                 .where((s) => s != null)
                 .toSet();
+    if (boundaryIntersections.any((i) => i is LineSegment)) {
+      return boundaryIntersections.singleWhere((i) => i is LineSegment);
+    }
     switch(boundaryIntersections.length) {
       case 0: //No intersection
         return null;
       case 1: //One of the edges is a subsegment of lseg
         final intersection = boundaryIntersections.single;
-        if (intersection is LineSegment) {
-          return intersection;
-        }
         if (intersection.equalTo(lseg.start)) return lseg.start;
         if (intersection.equalTo(lseg.end))   return lseg.end;
         if (enclosesStart) 
@@ -119,14 +110,11 @@ class Tessel extends Geometry implements Planar {
       case 2: //The segment intersects at two places
         final intersection1 = boundaryIntersections.first;
         final intersection2 = boundaryIntersections.last;
-        if (intersection1 is LineSegment) return intersection1;
-        if (intersection2 is LineSegment) return intersection2;
-        var intersections = boundaryIntersections.toList()
-            ..sort((p1, p2) => Comparable.compare(p1.distanceTo(lseg.start), p2.distanceTo(lseg.start)));
-        return new LineSegment(intersections[0], intersections[1]);
-      default: //Three intersection points, exactly one of them must be a linesegment
-        return boundaryIntersections.singleWhere((intersection) => intersection is LineSegment);
-    }
+        if (intersection1.distanceTo(lseg.start) < intersection2.distanceTo(lseg.start) ) {
+          return new LineSegment(intersection1, intersection2);
+        }
+        return new LineSegment(intersection2, intersection1);
+     }
   }
   
   /**
@@ -139,7 +127,7 @@ class Tessel extends Geometry implements Planar {
    * -- A [Ring], if the two [Tessel]s overlap.
    */  
   Geometry _tesselIntersection(Tessel tesl, {double tolerance: 1e-15}) {
-    if (!mbrIntersects(tesl, tolerance: tolerance)) {
+    if (!boundsIntersects(tesl, tolerance: tolerance)) {
       return null;
     }
     // If there are no intersecting segments, then since Tessels are their own
@@ -175,34 +163,34 @@ class Tessel extends Geometry implements Planar {
     return new Ring.fromSegments(intersectionSegments);
   }
   
-  Geometry intersection(Geometry geom, {double tolerance: 1e-15}) {
-    if (!mbrIntersects(geom, tolerance: tolerance)) 
+  Geometry intersection(Geometry geom) {
+    if (!boundsIntersects(geom)) 
       return null;
     if (geom is Point) {
-      return encloses(geom, tolerance: tolerance) ? geom : null;
+      return encloses(geom) ? geom : null;
     }
     if (geom is LineSegment) 
-      return _segmentIntersection(geom, tolerance: tolerance);
+      return _segmentIntersection(geom);
     
     if (geom is Linestring) {
       var intersections = 
           new GeometryList.from(
               geom.segments
-                  .map((s) => _segmentIntersection(s, tolerance: tolerance))
+                  .map((s) => _segmentIntersection(s))
                   .where((isect) => isect != null)
-          ).simplify(tolerance: tolerance);
+          ).simplify();
       return (intersections.length == 1) ? intersections.single : intersections;
     }
     
     if (geom is Tessel) {
-      return _tesselIntersection(geom, tolerance: tolerance);
+      return _tesselIntersection(geom);
     }
     
-    return geom.intersection(this, tolerance: tolerance);
+    return geom.intersection(this);
   }
   
   _tesselUnion(Tessel tesl, {double tolerance: 1e-15}) {
-    if (!mbrIntersects(tesl, tolerance: tolerance)
+    if (!boundsIntersects(tesl, tolerance: tolerance)
         || disjoint(tesl, tolerance: tolerance)) {
       return new GeometryList.from([this, tesl], growable: false);
     }
@@ -219,15 +207,9 @@ class Tessel extends Geometry implements Planar {
           [lseg1.start, lseg1.end].contains(lseg2.start) ? lseg2.end : lseg2.start; 
       return new LineSegment(resultStart, resultEnd);
     }
-    
-    //If `this` intersects tesl at a unique point, then we need to know
-    //what that point is. Only useful if unionSegments is empty
-    Point intersectionPoint = null;
     //The segments surrounding the union. When we're finished processing both
     //boundaries, this should consist of a list of adjacent linesegments.
     List<LineSegment> unionSegments = [];
-    
-    
     
     //Intersect each of the boundarySegments of one tessel with the other,
     //recording the portion of the boundary which is outside the other.
@@ -236,9 +218,6 @@ class Tessel extends Geometry implements Planar {
                            Geometry intersectOtherBoundary(LineSegment lseg)) {
       for (var seg in boundarySegments) {
         final intersection = intersectOther(seg);
-        if (intersection is Point) {
-          intersectionPoint = intersection;
-        }
         if (intersection is LineSegment) {
           var boundaryIntersection = intersectOtherBoundary(intersection);
           if (boundaryIntersection is LineSegment) {
@@ -285,7 +264,7 @@ class Tessel extends Geometry implements Planar {
   }
   
   bool intersects(Geometry geom, {double tolerance: 1e-15}) {
-    if (!mbrIntersects(geom, tolerance: tolerance)) {
+    if (!boundsIntersects(geom, tolerance: tolerance)) {
       return false;
     }
     if (geom is Point) return encloses(geom);
@@ -319,6 +298,8 @@ class Tessel extends Geometry implements Planar {
   }
   
   bool encloses(Geometry geom, {double tolerance: 1e-15}) {
+    if (!boundsIntersects(geom)) return false;
+    
     if (geom is Nodal) 
       return _enclosesPoint(geom.toPoint(), tolerance: tolerance);
     
@@ -331,8 +312,6 @@ class Tessel extends Geometry implements Planar {
     if (geom is Tessel) {
       return encloses(geom.boundary, tolerance: tolerance);
     }
-    
-    if (!mbrIntersects(geom)) return false;
     
     if (geom is GeometryCollection) {
       return geom.every((g) => encloses(g, tolerance: tolerance));
@@ -376,7 +355,7 @@ class Tessel extends Geometry implements Planar {
     if (geom is LineSegment) {
       //If the intersection lies along any edge then it touches the tessel.
       for (var seg in boundary.segments) {
-        if (seg.intersection(geom, tolerance: tolerance) is LineSegment) {
+        if (seg._segmentIntersection(geom, tolerance: tolerance) is LineSegment) {
           return true;
         }
       }
@@ -394,7 +373,7 @@ class Tessel extends Geometry implements Planar {
     if (geom is Linestring) {
       bool foundTouch = false;
       for (var seg in geom.segments) {
-        final boundaryIntersection = boundary.intersection(seg, tolerance: tolerance);
+        final boundaryIntersection = boundary.intersection(seg);
         
         if (boundaryIntersection is Point) {
           var isectPoint = boundaryIntersection as Point;
