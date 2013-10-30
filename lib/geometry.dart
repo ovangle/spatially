@@ -20,6 +20,10 @@ part 'src/geometry/polygon.dart';
 part 'src/geometry/ring.dart';
 part 'src/geometry/tessel.dart';
 
+part 'src/geometry/multi_point.dart';
+part 'src/geometry/multi_linestring.dart';
+part 'src/geometry/multi_polygon.dart';
+
 abstract class Geometry {
   
   const Geometry();
@@ -90,30 +94,28 @@ abstract class Geometry {
   /**
    * Do the [:bounds:] of this intersect the [:bounds:] of [:geom:]? 
    */
-  bool boundsIntersects(Geometry geom, {double tolerance: 1e-15})
-      => bounds.intersects(geom.bounds, tolerance: tolerance);
+  bool boundsIntersects(Geometry geom) => bounds.intersects(geom.bounds);
   /**
    * Does `this` have a non-zero spatial overlap with [:geom:]?
    */
-  bool intersects(Geometry geom, {double tolerance: 1e-15});
+  bool intersects(Geometry geom);
   /**
    * Does `this` have a zero spatial overlap with [:geom:]?
    */
-  bool disjoint(Geometry geom, {double tolerance: 1e-15}) 
-      => !intersects(geom, tolerance: tolerance);
+  bool disjoint(Geometry geom) => !intersects(geom);
   /**
    * `true` iff [:geom:] is completely inside `this`
    */
-  bool encloses(Geometry geom, {double tolerance: 1e-15});
+  bool encloses(Geometry geom);
   /**
    * `true` if `this` completely encloses [:geom:]
    */
-  bool enclosedBy(Geometry geom, {double tolerance: 1e-15}) 
+  bool enclosedBy(Geometry geom) 
       => geom.encloses(this);
   /**
    * `true` if `this` and `geom` touch at an edge or endpoint
    */
-  bool touches(Geometry geom, {double tolerance: 1e-15});
+  bool touches(Geometry geom);
   
   /**
    * Returns a simplified geometry. What this method actually does is dependent
@@ -202,6 +204,10 @@ abstract class Planar extends Geometry {
   Geometry union(Planar geom, {double tolerance: 1e-15});
   
   Geometry difference(Planar geom, {double tolerance: 1e-15});
+}
+
+abstract class MultiGeometry<T> {
+  
 }
 
 class InvalidGeometry implements Exception {

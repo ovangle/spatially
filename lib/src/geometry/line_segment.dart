@@ -211,20 +211,30 @@ class LineSegment extends Geometry implements Linear {
    * -- If [:geom:] is a [Linear] geometry, true iff the geom's start or end point touches the current geometry
    * -- If [:geom:] is a [Planar] geometry, true iff [:start:] or [:end:] is a point on the [:boundary:].
    * -- If [:geom:] is a [GeometryList], truee iff the geometry touches any of the elements of [:geom:]
-   * 
-   * **NOTE**: Unlike other geometric relations, [:touches:] is not commutative.
    */
-  bool touches(Geometry geom, {double tolerance: 1e-15}) {
+  bool touches(Geometry geom) {
     if (geom is Nodal) {
-      return geom.equalTo(start, tolerance: tolerance)
-          || geom.equalTo(end, tolerance: tolerance);
+      return geom == start || geom == end;
     }
     if (geom is Linear) {
-      return touches(geom.start, tolerance: tolerance)
-          || touches(geom.end, tolerance: tolerance);
+      final isect = intersection(geom);
+      if (isect is MultiPoint) {
+        return touches(isect);
+      }
+      return intersection(geom) is Point;
     }
-    if (geom is Planar || geom is GeometryList) {
-      return geom.touches(this, tolerance: tolerance);
+    if (geom is Planar) {
+      final isect = intersection(geom);
+      return isect is Point || isect is LineSegment;
+    }
+    if (geom is MultiPoint) {
+      return geom.every((p) => p == start || p == end);
+    }
+    if (geom is MultiLinestring) {
+      
+    }
+    if (geom is GeometryList) {
+      return geom.touches(this);
     }
     throw new InvalidGeometry("unknown geometry type: ${geom.runtimeType}");
   }
@@ -241,6 +251,20 @@ class LineSegment extends Geometry implements Linear {
   Linestring concat(Linear line, {double tolerance: 0.0, bool reverse: false}) 
       => toLinestring().concat(line, tolerance: tolerance, reverse: reverse);
   
+  /**
+   * The portion of `this` which is not covered by [:lseg:]
+   * or `null` if lseg encloses `this`.
+   */
+  LineSegment _complementOf(LineSegment lseg) {
+    if (enclosedBy(lseg)) return null;
+    if (disjoint(lseg) || touches(lseg)) return this;
+    
+    final resultStart = 
+        [start, end].contains(lseg.start) ? lseg.end : lseg.start;
+    final resultEnd = 
+        [lseg.start, lseg.end].contains(start) ? end : start; 
+    return new LineSegment(resultStart, resultEnd);
+  }
   
   bool operator ==(Object other) {
     if (other is! LineSegment) return false;

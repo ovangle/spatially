@@ -174,14 +174,20 @@ class Linestring extends GeometryCollection<Point>
     return new Linestring(map((v) => v.rotate(dt, origin: origin)));
   }
   
-  bool encloses(Geometry geom, {double tolerance: 1e-15}) {
+  bool encloses(Geometry geom) {
     if (geom is Point) {
-      return segments.any((s) => s.encloses(geom, tolerance: tolerance));
+      return segments.any((s) => s.encloses(geom));
     }
     
     if (geom is LineSegment) {
-      final simplified = simplify(tolerance: tolerance);
-      return segments.any((s) => s.encloses(geom));
+      var partialGeom = geom;
+      for (var seg in segments) {
+        if (seg.encloses(partialGeom)) return true;
+        final segIntersection = seg.intersection(geom);
+        if (segIntersection is LineSegment) {
+          partialGeom = seg._complementOf(segIntersection);
+        }
+      }
     }
     
     if (geom is Linestring) {

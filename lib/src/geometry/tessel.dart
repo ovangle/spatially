@@ -198,19 +198,7 @@ class Tessel extends Geometry implements Planar {
     if (teslIntersection == null || teslIntersection is Point) {
       return new GeometryList.from([this, tesl], growable: false);
     }
-    //Given a linesegment `lseg1` which is 
-    //1. enclosed by lseg2; and
-    //2. shares either a start or end point with lseg2
-    //returns the portion of `lseg2` not covered by lseg1.
-    //returns `null` if lseg1 encloses lseg2
-    LineSegment complementOf(LineSegment lseg1, LineSegment lseg2) {
-      if (lseg1.encloses(lseg2)) return null;
-      final resultStart = 
-          [lseg2.start, lseg2.end].contains(lseg1.start) ? lseg1.end : lseg1.start;
-      final resultEnd = 
-          [lseg1.start, lseg1.end].contains(lseg2.start) ? lseg2.end : lseg2.start; 
-      return new LineSegment(resultStart, resultEnd);
-    }
+    
     //The segments surrounding the union. When we're finished processing both
     //boundaries, this should consist of a list of adjacent linesegments.
     List<LineSegment> unionSegments = [];
@@ -260,11 +248,52 @@ class Tessel extends Geometry implements Planar {
    */
   Geometry union(Planar geom, {double tolerance: 1e-15}) {
     if (!boundsIntersects(geom, tolerance: tolerance)) {
-      return new GeometryList.from([this, geom]);
+      return new GeometryList.from([this, geom], growable: false);
     }
     if (geom is Tessel) {
       return _tesselUnion(geom, tolerance: tolerance);
     }
+    
+    throw new InvalidGeometry("Unexpected geometry type: ${geom.runtimeType}");
+  }
+  
+  Geometry _tesselDifference(Tessel tesl, {double tolerance: 1e-15}) {
+    if (!boundsIntersects(tesl, tolerance: tolerance)) {
+      return this;
+    }
+    final intersection = _tesselIntersection(tesl, tolerance: tolerance);
+    if (intersection == null
+        || intersection is Point
+        || intersection is LineSegment) {
+      return this;
+    }
+    
+    assert(intersection is Ring);
+    final differenceSegments = [];
+    final holes = new Set<Ring>();
+    for (var seg in boundary.segments) {
+      final segIntersection = intersection.intersection(seg);
+      if (segIntersection == null) {
+        _insertBeforeAdjacent(seg, differenceSegments);
+      }
+      if (segIntersection is Point) {
+        holes.add(intersection);
+      }
+      if (segIntersection is LineSegment) {
+        
+      }
+    }
+  }
+  
+  Geometry difference(Planar geom, {double tolerance: 1e-15}) {
+    if (!boundsIntersects(geom, tolerance: tolerance)) {
+      return this;
+    }
+    if (geom is Tessel) {
+      return _tesselDifference(geom, tolerance: tolerance);
+    }
+    
+    throw new InvalidGeometry("Unexpected geometry type: ${geom.runtimeType}");
   }
   
   bool intersects(Geometry geom, {double tolerance: 1e-15}) {
@@ -474,4 +503,18 @@ List<LineSegment> _insertBeforeAdjacent(LineSegment lseg, List<LineSegment> segm
   //If we haven't added it, append it to the end of the list
   segmentList.add(lseg);
   return segmentList;
+}
+
+//Given a linesegment `lseg1` which is 
+//1. enclosed by lseg2; and
+//2. shares either a start or end point with lseg2
+//returns the portion of `lseg2` not covered by lseg1.
+//returns `null` if lseg1 encloses lseg2
+LineSegment complementOf(LineSegment lseg1, LineSegment lseg2) {
+  if (lseg1.encloses(lseg2)) return null;
+  final resultStart = 
+      [lseg2.start, lseg2.end].contains(lseg1.start) ? lseg1.end : lseg1.start;
+  final resultEnd = 
+      [lseg1.start, lseg1.end].contains(lseg2.start) ? lseg2.end : lseg2.start; 
+  return new LineSegment(resultStart, resultEnd);
 }

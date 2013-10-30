@@ -44,8 +44,8 @@ abstract class GeometryCollection<T> extends Geometry with IterableMixin<T> {
     return true;
   }
   
-  bool intersects(Geometry geom, {double tolerance: 1e-15}) {
-    return any((g) => (g as Geometry).intersects(geom, tolerance: tolerance));
+  bool intersects(Geometry geom) {
+    return any((g) => (g as Geometry).intersects(geom));
   }
   
   /**
