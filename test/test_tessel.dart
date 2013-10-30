@@ -183,5 +183,5 @@ void testUnion() {
                            new Point(x: 2.0, y: 2.0));
   final expected2 = new GeometryList.from([tesl1, tesl4], growable: false);
   test("test_tessel: tessels touch at corner",
-      () => expect(tesl1.union(tesl4), geometryEquals(expected2, 1e-15, permute: true)));
+      () => expect(tesl1.union(tesl4), geometryEquals(expected2, 1e-15)));
 }

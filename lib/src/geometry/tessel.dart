@@ -190,8 +190,12 @@ class Tessel extends Geometry implements Planar {
   }
   
   _tesselUnion(Tessel tesl, {double tolerance: 1e-15}) {
-    if (!boundsIntersects(tesl, tolerance: tolerance)
-        || disjoint(tesl, tolerance: tolerance)) {
+   
+    if (!boundsIntersects(tesl, tolerance: tolerance)) {
+      return new GeometryList.from([this, tesl], growable: false);
+    }
+    final teslIntersection = _tesselIntersection(tesl, tolerance: tolerance);
+    if (teslIntersection == null || teslIntersection is Point) {
       return new GeometryList.from([this, tesl], growable: false);
     }
     //Given a linesegment `lseg1` which is 
@@ -255,7 +259,7 @@ class Tessel extends Geometry implements Planar {
    *       are ignored.
    */
   Geometry union(Planar geom, {double tolerance: 1e-15}) {
-    if (disjoint(geom, tolerance: tolerance)) {
+    if (!boundsIntersects(geom, tolerance: tolerance)) {
       return new GeometryList.from([this, geom]);
     }
     if (geom is Tessel) {

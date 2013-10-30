@@ -16,7 +16,7 @@ void testIntersection() {
   final p1 = new Point(x: 1.0, y: 1.0);
   final p2 = new Point(x: 1.0, y: 1 + 1e-16);
   test("test_point: $p1 intersection $p2",
-      () => expect(p1.intersection(p2, tolerance: 1e-15),
+      () => expect(p1.intersection(p2),
                    geometryEquals(new Point(x: 1.0, y:1.0), 1e-15)));
 }
 
