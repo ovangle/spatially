@@ -4,7 +4,7 @@ import 'package:unittest/unittest.dart';
 
 import 'package:spatially/geometry.dart';
 
-import 'std_tests.dart';
+import 'src/geometry/std_tests.dart';
 
 void main() {
   var lseg = new LineSegment(

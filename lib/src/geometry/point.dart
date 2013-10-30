@@ -11,6 +11,7 @@ bool colinear(Point p_a, Point p_b, Point p_c, {double tolerance: 1e-15}) {
 }
 
 class Point extends Geometry implements Nodal {
+  
   static const _O = const Point(x: 0.0, y: 0.0);
   
   final double x;
@@ -59,40 +60,83 @@ class Point extends Geometry implements Nodal {
       return dx * dx + dy * dy;
   }
   
+  /**
+   * The geometry enclosing precisely those points which are
+   * enclosed by `this` and enclosed by `geom`.
+   * 
+   * If [:geom:] is a [Point], then will return either a
+   *   -- [Point], if the two points are equal
+   *   -- `null`, if the two points are not equal
+   *   
+   * Otherwise, the return type is dependent on the type of the [Geometry].
+   * Check the documentation of the type for further information
+   */
   Geometry intersection(Geometry geom) {
-    return equalTo(geom) ? this : geom.intersection(this);
+    switch(geom.runtimeType) {
+      case Point:
+        return this == geom ? this : null;
+      default:
+        return geom.intersection(this);
+    }
+  }
+  
+  /**
+   * The geometry enclosing precisely those points which are
+   * enclosed by `this` or enclosed by `geom`.
+   * 
+   * If [:geom:] is a [Point], then will return either a
+   *   -- [MultiPoint], if the two points are not equal
+   *   -- [Point], if the two points are equal
+   *   
+   * Otherwise, the return type is dependent on the type of the [Geometry].
+   * Check the documentation of the type for further information
+   */
+  Geometry union(Geometry geom) {
+    switch(geom.runtimeType) {
+      case Point:
+        return this == geom ? this : new MultiPoint([this, geom]);
+      default:
+        return geom.union(this);
+    }
+  }
+  
+  /**
+   * The geometry enclosing precisely those points which are
+   * enclosed by `this` or enclosed by `geom`.
+   * 
+   * For all geometry types, the result is either a:
+   *  -- [Point], if the geometry is [disjoint] from `this`
+   *  -- `null` if the geometry intersects `this` 
+   */
+  Geometry difference(Geometry geom) {
+    return geom.disjoint(this) ? this : null;
   }
   
   /**
    * [Point]s can't be simplified, just returns the point
    */
+  //TODO: simplify should affect the number of sigfigs in the precision somehow.
   Point simplify({double tolerance: 1e-15}) => this;
-
-  bool equalTo(Geometry geom, {double tolerance: 1e-15}) {
-    return geom is Point
-        && utils.compareDoubles(x, geom.x, tolerance) == 0
-        && utils.compareDoubles(y, geom.y, tolerance) == 0;
-  }
   
-  bool encloses(Geometry geom, {double tolerance: 1e-15}) {
+  bool encloses(Geometry geom) {
     if (geom is Point) {
-      return equalTo(geom, tolerance: tolerance);
+      return geom.toPoint() == this;
     }
     return false;
   }
   
-  bool intersects(Geometry geom, {double tolerance: 1e-15}) {
+  bool intersects(Geometry geom) {
     if (geom is Point) {
-      return equalTo(geom, tolerance: tolerance);
+      return geom.toPoint() == this;
     }
-    return geom.intersects(this, tolerance: tolerance);
+    return geom.intersects(this);
   }
   
-  bool touches(Geometry geom, {double tolerance: 1e-15}) {
-    if (geom is Point) {
-      return equalTo(geom, tolerance: tolerance);
+  bool touches(Geometry geom) {
+    if (geom is Nodal) {
+      return geom.toPoint() == this;
     }
-    return geom.touches(this, tolerance: tolerance);
+    return geom.touches(this);
   }
   
   Point toPoint() => this;

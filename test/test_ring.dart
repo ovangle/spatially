@@ -3,7 +3,7 @@ library test_ring;
 import 'package:unittest/unittest.dart';
 
 import 'package:spatially/geometry.dart';
-import 'std_tests.dart';
+import 'src/geometry/std_tests.dart';
 
 final unitSquare = new Ring([new Point(x: 0.0, y: 0.0),
                              new Point(x: 1.0, y: 0.0),

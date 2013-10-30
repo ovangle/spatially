@@ -203,22 +203,20 @@ class Linestring extends GeometryCollection<Point>
    * -- If [:geom:] is a [Linear] geometry, true iff the geom's start or end point touches the current geometry
    * -- If [:geom:] is a [Planar] geometry, true iff [:start:] or [:end:] is a point on the [:boundary:].
    * -- If [:geom:] is a [GeometryList], truee iff the geometry touches any of the elements of [:geom:]
-   * 
-   * **NOTE**: Unlike other geometric relations, [:touches:] is not commutative.
    */
-  bool touches(Geometry geom, {double tolerance: 1e-15}) {
+  bool touches(Geometry geom) {
     if (geom is Nodal) {
-      return (start.equalTo(geom, tolerance: tolerance))
-          || (end.equalTo(geom, tolerance: tolerance));
+      return (start.equalTo(geom))
+          || (end.equalTo(geom));
     }
     if (geom is Linear) {
-      return touches(geom.start, tolerance: tolerance)
-          || touches(geom.end, tolerance: tolerance);
+      var isect = intersection(geom);
+      if (isect is MultiPoint) {
+        return touches(isect);
+      }
+      return isect is Point;
     }
-    if (geom is Planar || geom is GeometryList) {
-      return geom.touches(this, tolerance: tolerance);
-    }
-    throw new InvalidGeometry("Unreognised geometry type: ${geom.runtimeType}");
+    return geom.touches(this);
   }
   
   Linestring toLinestring() => this;

@@ -27,6 +27,7 @@ part 'src/geometry/multi_polygon.dart';
 abstract class Geometry {
   
   const Geometry();
+  
   /**
    * The minimum [Bounds] object which entirely contains
    * the [Geometry]
@@ -65,32 +66,36 @@ abstract class Geometry {
   Point get centroid;
   
   /**
-   * Returns the result of intersecting two [Geometry]s 
-   * or `null` if the geometries are disjoint.
+   * The geometry enclosing precisely those points which are
+   * enclosed by `this` and enclosed by `geom`.
+   * 
+   * The possible return types differ between implementations.
+   * Check the documentation for the geometry type for further information
    */
-  Geometry intersection(Geometry other);
+  Geometry intersection(Geometry geom);
+  Geometry operator &(Geometry geom) => intersection(geom);
+
   /**
-   * Returns the geometry which is the result of unioning the two [Geometries].
+   * The geometry containing precisely the points that are 
+   * enclosed by `this` or enclosed by `geom`.
+   * 
+   * The possible return types differ between implementations
+   * Check the documentation for the geometry type for further information
    */
-  //TODO: add this into interface
-  //Geometry union(Geometry other, {double tolerance: 1e-15});
+  Geometry union(Geometry geom);
+  Geometry operator |(Geometry geom) => union(geom);
   
   /**
-   * Returns the portion of the geometry which is not covered by [:other:]
+   * The geometry containing precisely the points which are 
+   * enclosed by `this` and disjoint from [:geom:].
+   * 
+   * The possible return types differ between implementations.
+   * Check the documentation for the geometry type for further information
    */
-  //TODO: add this into interface
-  //Geometry difference(Geometry other, {double tolerance: 1e-15});
+  Geometry difference(Geometry geom);
+  Geometry operator -(Geometry geom) => difference(geom);
 
   //Relations
-  /**
-   * Determines whether a geometry is equal to other up to a given tolerance.
-   */
-  bool equalTo(Geometry other, {double tolerance: 1e-15});
-  /**
-   * is `this` not equal to [:geom:] to within the given [:tolerance:]?
-   */
-  bool notEqualTo(Geometry geom, {double tolerance: 1e-15}) 
-      => !equalTo(geom, tolerance: tolerance);
   /**
    * Do the [:bounds:] of this intersect the [:bounds:] of [:geom:]? 
    */
@@ -110,8 +115,7 @@ abstract class Geometry {
   /**
    * `true` if `this` completely encloses [:geom:]
    */
-  bool enclosedBy(Geometry geom) 
-      => geom.encloses(this);
+  bool enclosedBy(Geometry geom)  => geom.encloses(this);
   /**
    * `true` if `this` and `geom` touch at an edge or endpoint
    */
@@ -119,7 +123,8 @@ abstract class Geometry {
   
   /**
    * Returns a simplified geometry. What this method actually does is dependent
-   * on the type of the geometry.
+   * on the type of the geometry. Check the documentation for the Geometry type
+   * for more information.
    */
   Geometry simplify({double tolerance: 1e-15});
   
@@ -201,9 +206,6 @@ abstract class Planar extends Geometry {
    */
   Set<Tessel> tesselate();
   
-  Geometry union(Planar geom, {double tolerance: 1e-15});
-  
-  Geometry difference(Planar geom, {double tolerance: 1e-15});
 }
 
 abstract class MultiGeometry<T> {

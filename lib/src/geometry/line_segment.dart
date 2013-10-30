@@ -120,9 +120,7 @@ class LineSegment extends Geometry implements Linear {
     final a2 = lseg._aCoeff; final b2 = lseg._bCoeff; final c2 = lseg._cCoeff;
     final discr = a1 * b2 - a2 * b1;
     
-    bool intersectionEncloses(Point pt) => 
-        encloses(pt, tolerance: tolerance) 
-        && lseg.encloses(pt, tolerance: tolerance);
+    bool intersectionEncloses(Point pt) => encloses(pt) && lseg.encloses(pt);
     
     if (utils.compareDoubles(discr, 0.0, 1e-15) == 0) {
       // the lines are approximately parallel.
@@ -178,31 +176,25 @@ class LineSegment extends Geometry implements Linear {
     return geom.intersection(this);
   }
   
-  bool encloses(Geometry geom, {double tolerance: 1e-15}) {
-    if (geom is Point) {
-      if (compareToPoint(geom, tolerance: tolerance) != 0) return false;
-      return bounds.contains(geom, tolerance: tolerance);
+  bool encloses(Geometry geom) {
+    if (geom is Nodal) {
+      if (compareToPoint(geom.toPoint()) != 0) return false;
+      return bounds.contains(geom);
     }
-    if (geom is LineSegment) {
-      return encloses(geom.start) && encloses(geom.end);
-    }
-    if (geom is Linestring) {
-      for (var p in geom) {
-        return encloses(p);
-      }
+    if (geom is Linear) {
+      return geom.toLinestring().every(encloses);
     }
     return false;
   }
   
-  
-  bool intersects(Geometry geom, {double tolerance: 1e-15}) {
+  bool intersects(Geometry geom) {
     if (geom is Point) {
-      return !encloses(geom, tolerance: tolerance);
+      return encloses(geom);
     }
     if (geom is LineSegment) {
-      return _segmentIntersection(geom, tolerance: tolerance) != null;
+      return _segmentIntersection(geom) != null;
     }
-    return geom.intersects(this, tolerance: tolerance);
+    return geom.intersects(this);
   }
   
   /**
@@ -223,20 +215,7 @@ class LineSegment extends Geometry implements Linear {
       }
       return intersection(geom) is Point;
     }
-    if (geom is Planar) {
-      final isect = intersection(geom);
-      return isect is Point || isect is LineSegment;
-    }
-    if (geom is MultiPoint) {
-      return geom.every((p) => p == start || p == end);
-    }
-    if (geom is MultiLinestring) {
-      
-    }
-    if (geom is GeometryList) {
-      return geom.touches(this);
-    }
-    throw new InvalidGeometry("unknown geometry type: ${geom.runtimeType}");
+    return geom.touches(this);
   }
  
   /**
@@ -254,8 +233,11 @@ class LineSegment extends Geometry implements Linear {
   /**
    * The portion of `this` which is not covered by [:lseg:]
    * or `null` if lseg encloses `this`.
+   * 
+   * Do not make this part of the public API, [:difference:] should only exist on [Planar]
+   * objects. 
    */
-  LineSegment _complementOf(LineSegment lseg) {
+  LineSegment _difference(LineSegment lseg) {
     if (enclosedBy(lseg)) return null;
     if (disjoint(lseg) || touches(lseg)) return this;
     

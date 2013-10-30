@@ -130,40 +130,38 @@ class Bounds {
   /**
    * Tests whether the [Bounds] contains the given [LatLng]
    */
-  bool contains(Point p, {double tolerance: 1e-15}) {
-    return utils.compareDoubles((bottom < top) ? bottom : top,  p.y, tolerance) <= 0
-        && utils.compareDoubles((bottom < top) ? top : bottom,  p.y, tolerance) >= 0
-        && utils.compareDoubles((left < right) ? left : right,  p.x, tolerance) <= 0
-        && utils.compareDoubles((left < right) ? right : left,  p.x, tolerance) >= 0;
+  bool enclosesPoint(Point p) {
+    if (bottom <= top) {
+      if (bottom > p.y || top < p.y) return false;
+    } else {
+      if (top > p.y || bottom < p.y) return false; 
     }
+    if (left <= right) {
+      return left <= p.x && right >= p.x;
+    } else {
+      return right <= p.x && left >= p.x;
+    }
+  }
   
   /**
    * Tests whether the given [Bounds] object is intersecting.
    */ 
-  bool intersects(Bounds other, {double tolerance: 1e-15}) {
-    return contains(other.bottomLeft,   tolerance: tolerance)
-        || contains(other.bottomRight,  tolerance: tolerance)
-        || contains(other.topLeft,      tolerance: tolerance)
-        || contains(other.topRight,     tolerance: tolerance)
-        || other.contains(center,       tolerance: tolerance);
+  bool intersects(Bounds other) {
+    return enclosesPoint(other.bottomLeft)
+        || enclosesPoint(other.bottomRight)
+        || enclosesPoint(other.topLeft)
+        || enclosesPoint(other.topRight)
+        || other.enclosesPoint(center);
   }
   
   /**
    * Tests whether [:other:] is entirely enclosed by the bounds
    */
-  bool encloses(Bounds other, {double tolerance: 1e-15}) {
-    return contains(other.bottomLeft,   tolerance: tolerance)
-        && contains(other.bottomRight,  tolerance: tolerance)
-        && contains(other.topLeft,      tolerance: tolerance)
-        && contains(other.topRight,     tolerance: tolerance);
-  }
-  
-  /**
-   * Tests whether equal to [Bounds] object [:other:] within a given [:tolerance:]
-   */
-  bool equalTo(Bounds other, {double tolerance}) {
-    return bottomLeft.equalTo(other.bottomLeft, tolerance: tolerance)
-        && topRight.equalTo(other.topRight,     tolerance: tolerance);
+  bool encloses(Bounds other) {
+    return enclosesPoint(other.bottomLeft)
+        && enclosesPoint(other.topRight)
+        && enclosesPoint(other.bottomLeft)
+        && enclosesPoint(other.topRight);
   }
   
   bool operator ==(Object o) {

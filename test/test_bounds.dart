@@ -3,6 +3,8 @@ library test_bounds;
 import 'package:spatially/geometry.dart';
 import 'package:unittest/unittest.dart';
 
+import 'geometry_tests.dart';
+
 void main() {
   testConstructors();
   testSize();
@@ -83,17 +85,19 @@ testWrapDateLine() {
   
   var bounds2 = new Bounds(bottom: 0.25, top: 1.25, left: -1.1, right: -0.9);
   test("test_bounds: $bounds2 wrapped to world bounds $worldBounds"
-      " (crosses left extent)",
-      () => expect(bounds2.wrapDateLine(worldBounds)
-                          .equalTo(new Bounds(bottom: 0.25, top: 1.25, left:-0.1, right: 0.1), tolerance: 0.0000005),
-                   isTrue));
+      " (crosses left extent)", () {
+    final wrappedBounds = new Bounds(bottom: 0.25, top: 1.25, left:-0.1, right: 0.1);
+    expect(bounds2.wrapDateLine(worldBounds),
+           boundsCloseTo(wrappedBounds, 1e-15));
+  });
   
   var bounds3 = new Bounds(bottom: 0.25, top: 1.25, left: 0.9, right: 1.1);
   test("test_bounsd: $bounds3 wrapped to world bounds $worldBounds"
-       " (crosses right extent)",
-      () => expect(bounds3.wrapDateLine(worldBounds)
-                          .equalTo(new Bounds(bottom: 0.25, top: 1.25, left: -0.1, right:0.1), tolerance: 0.0000005),
-                   isTrue));
+       " (crosses right extent)", () {
+    final wrappedBounds = new Bounds(bottom: 0.25, top: 1.25, left: -0.1, right:0.1);
+    expect(bounds3.wrapDateLine(worldBounds),
+           boundsCloseTo(wrappedBounds, 1e-15));
+  });
 }
 
 testExtend() {
@@ -107,7 +111,7 @@ testExtend() {
 
 testContains() {
   test("test_bounds: Unit bounds contains centre",
-      () => expect(unitBounds.contains(unitBounds.center), isTrue));
+      () => expect(unitBounds.enclosesPoint(unitBounds.center), isTrue));
 }
 
 testEncloses() {
