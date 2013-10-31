@@ -13,8 +13,25 @@ void main() {
   pointRelations("Point", new Point(x: 0.0, y: 0.0));
   linesegmentRelations("Point", new Point(x: 0.0, y: 0.0));
   multipointRelations("Point", new Point(x: 0.0, y: 0.0));
+  testRotate();
   testDistanceTo();
   testColinear();
+}
+
+void testRotate() {
+  var p = new Point(x: 1.0, y: 0.0);
+  final a = 1 / math.sqrt(2);
+  test("Rotate through PI/4 about (0,0)", () {
+    final rotated = p.rotate(math.PI/4, origin: O);
+    final expected = new Point(x: 1/math.sqrt(2), y: 1/math.sqrt(2));
+    expect(rotated, pointCloseTo(expected, 1e-15));
+  });
+  test("Rotate through PI/4 around (1,1)", () {
+    final p1 = new Point(x: 1.0, y: 1.0);
+    final rotated = p.rotate(math.PI/4, origin: p1);
+    final expected = new Point(x: 1 + a, y: 1 - a);
+    expect(rotated, pointCloseTo(expected, 1e-15));
+  });
 }
 
 testDistanceTo() {

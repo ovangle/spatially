@@ -20,7 +20,7 @@ part 'src/geometry/polygon.dart';
 part 'src/geometry/ring.dart';
 part 'src/geometry/tessel.dart';
 
-part 'src/geometry/multi_point.dart';
+part 'src/geometry/multipoint.dart';
 part 'src/geometry/multi_linestring.dart';
 part 'src/geometry/multi_polygon.dart';
 

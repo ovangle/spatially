@@ -37,7 +37,7 @@ void testScale(String test_lib, Geometry geom) {
     test("Scaling scales centroid",() {
       //Scaling scales centroid.
       final scaledCentroid = geom.centroid.scale(5.0, origin: O);
-      expect(geom1.centroid, equals(scaledCentroid));
+      expect(geom1.centroid, pointCloseTo(scaledCentroid, 1e-13));
     });
     test("Scaling scales bounds", () {
       final scaledBounds = geom.bounds.scale(5.0, origin: O);
@@ -60,10 +60,12 @@ testRotate(String test_lib, Geometry geom) {
   assert(geom.centroid != O);
   group("std_tests: $test_lib: Geometry.rotate: ",() {
     final geom1 = geom.rotate(math.PI/4, origin: O);
+    print("Centroid: ${geom1.centroid}");
    
     test("Rotating geometry rotates centroid by same amount", () {
       final rotatedCentroid = geom.centroid.rotate(math.PI/4, origin: O);
-      expect(geom1.centroid, pointCloseTo(rotatedCentroid, 1e-15));
+      print("Rotated centroid: $rotatedCentroid");
+      expect(geom1.centroid, pointCloseTo(rotatedCentroid, 1e-13));
     });
     test("Rotating by inverse amount restores original geometry", () {
       final geom2 = geom1.rotate(-math.PI/4, origin: O);
@@ -76,7 +78,7 @@ testRotate(String test_lib, Geometry geom) {
     });
     test("Rotating about centroid preserves the centroid", () {
       final geom2 = geom.rotate(-math.PI/6);
-      expect(geom2.centroid, geometryCloseTo(geom.centroid, 1e-15));
+      expect(geom2.centroid, geometryCloseTo(geom.centroid, 1e-14));
     });
     test("Rotating by 2 * PI restores the geometry", () {
       final geom2 = geom.rotate(2 * math.PI, origin: O);

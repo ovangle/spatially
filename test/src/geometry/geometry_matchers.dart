@@ -99,15 +99,17 @@ Matcher geometryCloseTo(Geometry geom, double delta) {
     case Point: 
       return pointCloseTo(geom, delta);
     case LineSegment:
-      return linearCloseTo((geom as Linear).toLinestring(), delta);
+      return linestringCloseTo((geom as Linear).toLinestring(), delta);
     case Linestring:
-      return linearCloseTo(geom, delta);
+      return linestringCloseTo(geom, delta);
+    case MultiPoint:
+      return multipointCloseTo(geom, delta);
     default:
       throw 'geometryCloseTo not implemented for ${geom.runtimeType}';
   }
 }
 
-Matcher linearCloseTo(Linestring lstr, double delta) =>
+Matcher linestringCloseTo(Linestring lstr, double delta) =>
     new _LinestringCloseTo(lstr, delta);
 
 class _LinestringCloseTo extends Matcher {
@@ -164,6 +166,59 @@ class _LinestringCloseTo extends Matcher {
           .add('which differed at vertex ${failVertex} in the y coordinate')
           .add(' by ${(item[failVertex].y - _lstr[failVertex].y).abs()}');
     }
+    return mismatchDescription;
+  }
+}
+
+Matcher multipointCloseTo(MultiPoint mp, double delta) =>
+    new _MultiPointCloseTo(mp, delta);
+
+class _MultiPointCloseTo extends Matcher {
+  MultiPoint _mp;
+  double _delta;
+  _MultiPointCloseTo(MultiPoint this._mp, double this._delta);
+  
+  Description describe(Description description) {
+    return description.add(" MultiPoint equal to ")
+                      .addDescriptionOf(_mp)
+                      .add(" up to a tolerance of ")
+                      .addDescriptionOf(_delta);
+  }
+  
+  bool matches(item, Map matchState) {
+    if (item is! MultiPoint) {
+      return false;
+    }
+    if (item.length != _mp.length) {
+      return false;
+    }
+    for (var p in item) {
+      if (_mp.any((g) => utils.compareDoubles(g.x, p.x, _delta) == 0)
+          || _mp.any((g) => utils.compareDoubles(g.y, p.y, _delta) == 0)) {
+        continue;
+      }
+      addStateInfo(matchState, {"fail_point": p});
+      return false;
+    }
+    return true;
+  }
+  
+  Description describeMismatch(item, Description mismatchDescription,
+                               Map matchState, bool verbose) {
+    if (item is! MultiPoint) {
+      mismatchDescription.add(' not a MultiPoint');
+      return mismatchDescription;
+    }
+    if (item.length != _mp.length) {
+      mismatchDescription
+          .add(' length was ${item.length}, which differs by ${(item.length - _mp.length).abs()}');
+      return mismatchDescription;
+    }
+    var failPoint = matchState['fail_point'];
+    mismatchDescription
+          .add("No point matching ")
+          .addDescriptionOf(failPoint)
+          .add(" was not found in multipoint");
     return mismatchDescription;
   }
 }

@@ -37,8 +37,7 @@ class Point extends Geometry implements Nodal {
     
     final r = math.sqrt(dx * dx + dy * dy);
     final t = math.atan2(dy, dx);
-    final new_x = origin.x + r * math.cos(t + dt);
-    final new_y = origin.y + r * math.sin(t + dt);
+
     return new Point(x: origin.x + r * math.cos(t + dt),
                      y: origin.y + r * math.sin(t + dt));
   }
