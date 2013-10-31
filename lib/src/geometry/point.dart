@@ -120,9 +120,15 @@ class Point extends Geometry implements Nodal {
   
   bool encloses(Geometry geom) {
     if (geom is Point) {
-      return geom.toPoint() == this;
+      return geom == this;
     }
-    return false;
+    if (geom is MultiPoint) {
+      return geom.isNotEmpty && geom.every(encloses);
+    }
+    if (geom is LineSegment) {
+      return encloses(geom.start) && encloses(geom.end); 
+    }
+    throw "Point.encloses not implemented for ${geom.runtimeType}";
   }
   
   bool intersects(Geometry geom) {

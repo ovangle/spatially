@@ -209,7 +209,16 @@ abstract class Planar extends Geometry {
 }
 
 abstract class MultiGeometry<T> {
-  
+  /**
+   * The result of adding [:geom:] to `this`.
+   * Geometries are immutable, so the operation is *not* performed in place
+   */
+  MultiGeometry<T> add(T geom);
+  /**
+   * The result of adding all [:geoms:] to `this`
+   * Geometries are immutable so the operation is *not* permformed in-place
+   */
+  MultiGeometry<T> addAll(Iterable<T> geoms);
 }
 
 class InvalidGeometry implements Exception {

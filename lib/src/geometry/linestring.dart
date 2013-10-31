@@ -15,7 +15,6 @@ class Linestring extends GeometryCollection<Point>
     return new GeometryList<Point>.from(this);
   }
   
-  MultiPoint get _boundary => new MultiPoint([start, end]);
   
   /**
    * Creates a linestring from an iterable of [Point]s.

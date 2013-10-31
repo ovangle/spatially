@@ -22,9 +22,19 @@ void pointRelations(String test_lib, Geometry geom) {
   pointDifference(test_lib, geom);
 }
 
+void multipointRelations(String test_lib, Geometry geom) {
+  if (geom is! Point) {
+    assert(geom.bounds == new Bounds(bottom: 0.0, top: 1.0, left: 0.0, right: 1.0));
+  }
+  multipointTouches(test_lib, geom);
+  multipointEncloses(test_lib, geom);
+  multipointIntersection(test_lib, geom);
+  multipointUnion(test_lib, geom);
+  multipointDifference(test_lib, geom);
+}
+
 void linesegmentRelations(String test_lib, Geometry geom) {
   if (geom is! Point) {
-    
     assert(geom.bounds == new Bounds(bottom: 0.0, top: 1.0, left: 0.0, right: 1.0));
   }
   linesegmentTouches(test_lib, geom);

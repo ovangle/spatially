@@ -1,5 +1,6 @@
 part of geometry_tests;
 
+final lseg0 = new LineSegment(new Point(x: 0.0, y: 0.0), new Point(x: 0.0, y: 0.0));
 final lseg1 = new LineSegment(new Point(x: 0.0, y: 0.0), new Point(x: 1.0, y: 1.0));
 final lseg2 = new LineSegment(new Point(x: 0.0, y: 0.25), new Point(x: 0.75, y: 1.0));
 final lseg3 = new LineSegment(new Point(x: 1.0, y: 0.0), new Point(x: 0.0, y: 1.0));
@@ -13,11 +14,12 @@ final lseg4 = new LineSegment(new Point(x: 0.0, y: 0.0), new Point(x: 1.0, y: 0.
  * and to not enclose the linesegment, but to intersect it
  * (1,0) -> (0,1)
  * and to touch the linesegment
- * (0,0) -> (1,0)
+ * (0,0) -> (1,0) at (0,0)
  * 
  */
 linesegmentEncloses(String test_lib, Geometry geom) {
   group("relation_tests: $test_lib: LineSegment: Encloses: ", () {
+    test("geom encloses lseg0", () => expect(geom.encloses(lseg0), isTrue));
     if (geom is! Point && geom is! MultiPoint) {
       test("geom encloses lseg1", () => expect(geom.encloses(lseg1), isTrue));
     } else {
@@ -33,6 +35,7 @@ linesegmentEncloses(String test_lib, Geometry geom) {
 
 linesegmentTouches(String test_lib, Geometry geom) {
   group("relation_tests: $test_lib: LineSegment: Touches: ", () {
+    test("geom touches lseg0",() => geom.touches(lseg0));
     test("geom touches lseg4", 
         () => expect(geom.touches(lseg4), isTrue));
     if (geom is! Point && geom is! MultiPoint) {
@@ -48,6 +51,7 @@ linesegmentTouches(String test_lib, Geometry geom) {
 
 linesegmentIntersects(String test_lib, Geometry geom) {
   group("relation_tests: $test_lib: LineSegment: Intersects: ", () {
+    test("geom intersects lseg0", () => expect(geom.intersects(lseg0), isTrue));
     test("geom intersects lseg1", () {
       expect(geom.intersects(lseg1), isTrue);
     });
@@ -67,6 +71,9 @@ linesegmentIntersects(String test_lib, Geometry geom) {
 
 linesegmentIntersection(String test_lib, Geometry geom) {
   group("relation_tests: $test_lib: LineSegment: Interection: ", () {
+    test("geom intersection lseg0 is lseg0", () {
+      expect(geom.intersection(lseg0), equals(new Point(x: 0.0, y: 0.0)));
+    });
     if (geom is! Point && geom is! MultiPoint) {
       test("geom intersection lseg1 is lseg1", () {
         expect(geom.intersection(lseg1), equals(lseg1));

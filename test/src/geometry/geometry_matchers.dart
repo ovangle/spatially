@@ -40,6 +40,23 @@ class _Encloses extends Matcher {
   }
 }
 
+Matcher enclosedBy(Geometry geom) => new _EnclosedBy(geom);
+
+class _EnclosedBy extends Matcher {
+  Geometry _geom;
+  
+  _EnclosedBy(Geometry this._geom);
+  bool matches(item, Map matchState) {
+    return item.enclosedBy(_geom);  
+  }
+  
+  Description describe(Description description) {
+    return description
+        .add(' enclosed by ')
+        .addDescriptionOf(_geom);
+  }
+}
+
 Matcher touches(Geometry geom) => new _Touches(geom);
 
 class _Touches extends Matcher {

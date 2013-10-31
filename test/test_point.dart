@@ -12,6 +12,7 @@ void main() {
   runStandardTests("Point", sample_point);
   pointRelations("Point", new Point(x: 0.0, y: 0.0));
   linesegmentRelations("Point", new Point(x: 0.0, y: 0.0));
+  multipointRelations("Point", new Point(x: 0.0, y: 0.0));
   testDistanceTo();
   testColinear();
 }

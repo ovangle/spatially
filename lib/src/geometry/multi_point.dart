@@ -33,11 +33,30 @@ class MultiPoint extends GeometryCollection<Point> implements MultiGeometry<Poin
   }
   
   Geometry intersection(Geometry geom) {
-    if (geom is Nodal) {
-      return new MultiPoint(where((p) => geom.toPoint() == p));
-    } else {
-      return new MultiPoint(where(geom.encloses));
+    final intersections = where(geom.encloses);
+    if (intersections.isEmpty) return null;
+    if (intersections.length == 1) return intersections.single;
+    return new MultiPoint(intersections);
+  }
+  
+  Geometry difference(Geometry geom) {
+    if (enclosedBy(geom)) {
+      return null;
     }
+    return new MultiPoint(where(geom.disjoint));
+  }
+  
+  Geometry union(Geometry geom) {
+    if (geom is Nodal) {
+      if (encloses(geom)) return this;
+      return add(geom);
+    }
+    if (geom is MultiPoint) {
+      var newPoints = geom.where(disjoint);
+      if (newPoints.isEmpty) return this;
+      return addAll(newPoints);
+    }
+    throw "MultiPoint.difference ${geom.runtimeType} not implemented";
   }
   
   bool intersects(Geometry geom) => any(geom.intersects);
@@ -68,5 +87,11 @@ class MultiPoint extends GeometryCollection<Point> implements MultiGeometry<Poin
     return foundTouch;
   }
   
+  MultiPoint add(Nodal geom) {
+    return new MultiPoint([_geometries, [geom]].expand((i) => i));
+  }
   
+  MultiPoint addAll(Iterable<Point> points) {
+    return new MultiPoint([_geometries, points].expand((i) => i));
+  }
 }
