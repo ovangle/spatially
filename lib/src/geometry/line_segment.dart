@@ -98,24 +98,16 @@ class LineSegment extends Geometry implements Linear {
         end.scale(ratio, origin: origin));
   }
  
-  bool equalTo(Geometry geom, {double tolerance: 1e-15}) {
-    if (geom is LineSegment) {
-      return geom.start.equalTo(start, tolerance: tolerance)
-          && geom.end.equalTo(end, tolerance: tolerance);
-    }
-    return false;
-  }
-  
   /**
    * Returns the [:intersection:] of this with another [LineSegment]
    * If the lines are disjoint, the output will be `null`.
    * If the lines intersect at a single point, the [Point] of intersection will be returned
    * If the lines are coincident for any non-zero portion of their lengths, 
    *  the [LineSegment] between the start and end point of the intersection will be returned,
-   *  starting at the [:leftmost:] point of the coincidence, and ending at the [:rightmost:]
-   *  point.
+   *  and the start of the returned segment will be the segment closest to [:start:]
    */
-  Geometry _segmentIntersection(LineSegment lseg, {double tolerance: 1e-15}) {
+  //TODO: Should return a line in same direction as `this`
+  Geometry _segmentIntersection(LineSegment lseg) {
     final a1 = _aCoeff;      final b1 = _bCoeff;      final c1 = _cCoeff;
     final a2 = lseg._aCoeff; final b2 = lseg._bCoeff; final c2 = lseg._cCoeff;
     final discr = a1 * b2 - a2 * b1;
@@ -168,7 +160,7 @@ class LineSegment extends Geometry implements Linear {
    */
   Geometry intersection(Geometry geom) {
     if (geom is Point) {
-      if (encloses(geom)) return geom; 
+      return (encloses(geom)) ? geom : null; 
     }
     if (geom is LineSegment) {
       return _segmentIntersection(geom);
@@ -176,10 +168,21 @@ class LineSegment extends Geometry implements Linear {
     return geom.intersection(this);
   }
   
+  Geometry union(Geometry geom) {
+    if (geom is Point) {
+      if (encloses(geom))
+        return this;
+      return new GeometryList.from([geom, this], growable: false);
+    }
+    if (geom is LineSegment) {
+      var isect = _segmentIntersection(geom);
+    }
+  }
+  
   bool encloses(Geometry geom) {
     if (geom is Nodal) {
       if (compareToPoint(geom.toPoint()) != 0) return false;
-      return bounds.contains(geom);
+      return bounds.enclosesPoint(geom.toPoint());
     }
     if (geom is Linear) {
       return geom.toLinestring().every(encloses);
@@ -213,7 +216,7 @@ class LineSegment extends Geometry implements Linear {
       if (isect is MultiPoint) {
         return touches(isect);
       }
-      return intersection(geom) is Point;
+      return isect == start || isect == end;
     }
     return geom.touches(this);
   }
@@ -231,21 +234,53 @@ class LineSegment extends Geometry implements Linear {
       => toLinestring().concat(line, tolerance: tolerance, reverse: reverse);
   
   /**
-   * The portion of `this` which is not covered by [:lseg:]
-   * or `null` if lseg encloses `this`.
+   * The geometry containing precisely the points which are 
+   * enclosed by `this` and disjoint from [:geom:].
    * 
-   * Do not make this part of the public API, [:difference:] should only exist on [Planar]
-   * objects. 
+   * If [:geom:] is a [Point], then always returns `this`.
+   * 
+   * If [:geom:] is a [LineSegment], then always returns a 
+   * -- A [MultiLinestring], if the intersection of `this` and [:geom:] is non-empty
+   *    and doesn't contain either endpoint.
+   * -- [LineSegment], if the intersection of `this` and [:geom:] 
+   *    encloses either of the endpoints
+   * -- `null`, if [:geom:] encloses `this`.
    */
-  LineSegment _difference(LineSegment lseg) {
-    if (enclosedBy(lseg)) return null;
-    if (disjoint(lseg) || touches(lseg)) return this;
-    
-    final resultStart = 
-        [start, end].contains(lseg.start) ? lseg.end : lseg.start;
-    final resultEnd = 
-        [lseg.start, lseg.end].contains(start) ? end : start; 
-    return new LineSegment(resultStart, resultEnd);
+  LineSegment difference(Geometry geom) {
+    switch (geom.runtimeType) {
+      case Point:
+        return this;
+      case LineSegment:
+        var isect = _segmentIntersection(geom);
+        if (isect is Point) {
+          return this;
+        }
+        if (isect == null) {
+          return this;
+        }
+        final containsStart = isect.encloses(start);
+        final containsEnd   = isect.encloses(end);
+        if (containsStart && containsEnd) {
+          return null;
+        } else if (containsStart) {
+          final diffStart = 
+              isect.start.distanceToSqr(start) <= isect.end.distanceToSqr(start)
+              ? isect.start : isect.end;
+          return new LineSegment(diffStart, end);
+        } else if (containsEnd) {
+          final diffEnd =
+              isect.end.distanceToSqr(end) <= isect.start.distanceToSqr(end)
+              ? isect.end : isect.start;
+          return new LineSegment(start, diffEnd);
+        }
+        final resultStart = 
+            [start, end].contains(isect.start) ? isect.end : isect.start;
+        final resultEnd = 
+            [isect.start, isect.end].contains(start) ? end : start; 
+        return new LineSegment(resultStart, resultEnd);
+      default:
+        throw 'NotImplemented';
+    }
   }
   
   bool operator ==(Object other) {

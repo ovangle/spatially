@@ -7,7 +7,11 @@ class _Intersects extends Matcher {
   Geometry _geom;
   
   _Intersects(Geometry this._geom);
+  
   bool matches(item, Map matchState) {
+    if (item == null) {
+      return false;
+    }
     return item.intersects(_geom);  
   }
   
@@ -77,10 +81,76 @@ Matcher geometryCloseTo(Geometry geom, double delta) {
   switch(geom.runtimeType) {
     case Point: 
       return pointCloseTo(geom, delta);
+    case LineSegment:
+      return linearCloseTo((geom as Linear).toLinestring(), delta);
+    case Linestring:
+      return linearCloseTo(geom, delta);
     default:
-      throw 'NotImplemented';
+      throw 'geometryCloseTo not implemented for ${geom.runtimeType}';
   }
 }
+
+Matcher linearCloseTo(Linestring lstr, double delta) =>
+    new _LinestringCloseTo(lstr, delta);
+
+class _LinestringCloseTo extends Matcher {
+  Linestring _lstr;
+  double _delta;
+  _LinestringCloseTo(Linestring this._lstr, double this._delta);
+  bool matches(item, Map matchState) {
+    if (item is! Linear) {
+      return false;
+    }
+    item = item.toLinestring();
+    if (item.length != _lstr.length) {
+      return false;
+    }
+    for (int i=0;i<item.length;i++) {
+      if (utils.compareDoubles(item[i].x, _lstr[i].x, _delta) != 0) {
+        addStateInfo(matchState, {'vertex_x' : i});
+        return false;
+      }
+      if (utils.compareDoubles(item[i].y, _lstr[i].y, _delta) != 0) {
+        addStateInfo(matchState, {'vertex_y' : i});
+        return false;
+      }
+    }
+    return true;
+  }
+  
+  Description describe(Description description) {
+    description.add('Linestring equal to ')
+               .addDescriptionOf(_lstr)
+               .add('up to a tolerance of ')
+               .addDescriptionOf(_delta);
+  }
+  
+  Description describeMismatch(item, Description mismatchDescription,
+                               Map matchState, bool verbose) {
+    if (item is! Linestring) {
+      mismatchDescription.add(' not a Linestring');
+      return mismatchDescription;
+    }
+    if (item.length != _lstr.length) {
+      mismatchDescription
+          .add(' length was ${item.length}, which differs by ${(item.length - _lstr.length).abs()}');
+      return mismatchDescription;
+    }
+    var failVertex = matchState['vertex_x'];
+    if (failVertex != null) {
+      mismatchDescription
+          .add('which differed at vertex ${failVertex} in the x coordinate')
+          .add(' by ${(item[failVertex].x - _lstr[failVertex].x).abs()}');
+    } else {
+      failVertex = matchState['vertex_y'];
+      mismatchDescription
+          .add('which differed at vertex ${failVertex} in the y coordinate')
+          .add(' by ${(item[failVertex].y - _lstr[failVertex].y).abs()}');
+    }
+    return mismatchDescription;
+  }
+}
+
 
 Matcher pointCloseTo(Point p, double delta) {
   return allOf(

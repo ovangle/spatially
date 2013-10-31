@@ -198,7 +198,7 @@ GeometryList bentleyOttmanIntersections(Set<LineSegment> lineSegments,
   }
   final GeometryList uniqueIntersections = new GeometryList();
   for (var isect in intersections) {
-    if (uniqueIntersections.every((e) => !e.equalTo(isect, tolerance: tolerance))) {
+    if (uniqueIntersections.every((e) => e == isect)) {
       uniqueIntersections.add(isect);
     }
   }
@@ -281,11 +281,9 @@ class _EventQueue extends SplayTreeMap<Tuple3<Point,int,int>, Map<String,dynamic
     evtData["segment2"] = lseg1.left.y < lseg2.left.y ? lseg2 : lseg1;
     if (intersection is Point) {
       if (ignoreAdjacencies) {
-        if (intersection.equalTo(lseg1.end, tolerance: tolerance) 
-            && intersection.equalTo(lseg2.start, tolerance: tolerance)) 
+        if (intersection == lseg1.end && intersection == lseg2.start) 
           return;
-        if (intersection.equalTo(lseg1.start, tolerance: tolerance) 
-             && intersection.equalTo(lseg2.end, tolerance: tolerance))
+        if (intersection == lseg1.start && intersection == lseg1.end)
           return;
       }
       final evtKey = _newKey(intersection, CROSSING_EVT);

@@ -10,11 +10,8 @@ import 'geometry_tests.dart';
 void main() {
   final sample_point = new Point(x: 15.2, y: 188.4);
   runStandardTests("Point", sample_point);
-  pointIntersection("Point", new Point(x: 0.0, y: 0.0));
-  pointUnion("Point", new Point(x: 0.0, y: 0.0));
-  pointDifference("Point", new Point(x: 0.0, y: 0.0));
-  pointEncloses("Point", new Point(x: 0.0, y: 0.0));
-  pointTouches("Point", new Point(x: 0.0, y: 0.0));
+  pointRelations("Point", new Point(x: 0.0, y: 0.0));
+  linesegmentRelations("Point", new Point(x: 0.0, y: 0.0));
   testDistanceTo();
   testColinear();
 }

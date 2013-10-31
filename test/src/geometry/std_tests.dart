@@ -9,7 +9,7 @@ void runStandardTests(String test_lib, Geometry geom) {
 const Point O = const Point(x: 0.0, y: 0.0);
 
 void testTranslate(String test_lib, Geometry geom) {
-  group("std_tests: $test_lib: Translate", () {
+  group("std_tests: $test_lib: Geometry.translate: ", () {
     final geomCentroid = geom.centroid;
     final geom1 = geom.translate(dx: 1.0, dy: 1.0);
     test("Translating geometry translates centroid", () {
@@ -33,7 +33,7 @@ void testScale(String test_lib, Geometry geom) {
   final geomCentroid = geom.centroid;
   final scaledCentroid = geom.centroid.scale(5.0, origin: const Point(x: 0.0, y:0.0));
   var geom1 = geom.scale(5.0, origin: O);
-  group("std_tests: $test_lib: Scaling", () {
+  group("std_tests: $test_lib: Geometry.scale: ", () {
     test("Scaling scales centroid",() {
       //Scaling scales centroid.
       final scaledCentroid = geom.centroid.scale(5.0, origin: O);
@@ -58,12 +58,12 @@ void testScale(String test_lib, Geometry geom) {
 testRotate(String test_lib, Geometry geom) {
   //Test depends on O not being centroid.
   assert(geom.centroid != O);
-  group("std_tests: $test_lib: Rotating",() {
+  group("std_tests: $test_lib: Geometry.rotate: ",() {
     final geom1 = geom.rotate(math.PI/4, origin: O);
    
     test("Rotating geometry rotates centroid by same amount", () {
       final rotatedCentroid = geom.centroid.rotate(math.PI/4, origin: O);
-      expect(geom1.centroid, equals(rotatedCentroid));
+      expect(geom1.centroid, pointCloseTo(rotatedCentroid, 1e-15));
     });
     test("Rotating by inverse amount restores original geometry", () {
       final geom2 = geom1.rotate(-math.PI/4, origin: O);
@@ -76,7 +76,7 @@ testRotate(String test_lib, Geometry geom) {
     });
     test("Rotating about centroid preserves the centroid", () {
       final geom2 = geom.rotate(-math.PI/6);
-      expect(geom2.centroid, equals(geom2));
+      expect(geom2.centroid, geometryCloseTo(geom.centroid, 1e-15));
     });
     test("Rotating by 2 * PI restores the geometry", () {
       final geom2 = geom.rotate(2 * math.PI, origin: O);

@@ -3,12 +3,11 @@ library geometry_tests;
 import 'package:unittest/unittest.dart';
 import 'package:spatially/geometry.dart';
 import 'dart:math' as math;
+import 'package:spatially/utils.dart' as utils;
 
 part 'src/geometry/geometry_matchers.dart';
 part 'src/geometry/std_tests.dart';
-part 'src/geometry/encloses_tests.dart';
 
-part 'src/geometry/difference_tests.dart';
-part 'src/geometry/intersection_tests.dart';
-part 'src/geometry/union_tests.dart';
-part 'src/geometry/touches_tests.dart';
+part 'src/geometry/relation_tests.dart';
+part 'src/geometry/relations/point.dart';
+part 'src/geometry/relations/line_segment.dart';

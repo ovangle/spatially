@@ -4,13 +4,19 @@ import 'package:unittest/unittest.dart';
 
 import 'package:spatially/geometry.dart';
 
-import 'src/geometry/std_tests.dart';
+import 'geometry_tests.dart';
 
 void main() {
   var lseg = new LineSegment(
       new Point(x: 0.0, y: 1.0),
       new Point(x: 1.0, y: 0.0));
   runStandardTests("LineSegment", lseg);
+  pointRelations(
+      "LineSegment", 
+      new LineSegment(new Point(x: 0.0, y: 0.0), new Point(x: 1.0, y: 1.0)));
+  linesegmentRelations(
+      "LineSegment", 
+      new LineSegment(new Point(x: 0.0, y: 0.0), new Point(x: 1.0, y: 1.0)));
   testEncloses();
   testIntersection();
   testComparePoint();
@@ -26,7 +32,7 @@ void testIntersection() {
       new Point(y: 0.0, x: 1.0));
   test("test_linesegment: $lseg1 intersects $lseg2",
       () => expect(lseg1.intersection(lseg2), 
-                   geometryEquals(new Point(y: 0.5, x: 0.5), 1e-15)));
+                   equals(new Point(y: 0.5, x: 0.5))));
       
   var lseg3 = new LineSegment(
       new Point(y: 2.0, x: 2.0),
@@ -42,7 +48,7 @@ void testIntersection() {
                       new Point(y: 0.75, x: 0.75));
   test("test_linesegment: $lseg1 intersects $lseg4",
       () => expect(lseg1.intersection(lseg4),
-                   geometryEquals(intersectionSegment, 1e-15)));
+                   equals(lseg4)));
   
   var lseg5 = new LineSegment(new Point(x: 2.0, y: 2.0), new Point(x: 2.0, y: 3.0));
   var lseg6 = new LineSegment(new Point(x: 2.0, y: 4.0), new Point(x: 4.0, y: 3.0));
@@ -55,7 +61,7 @@ void testIntersection() {
   //Technically this should be invalid data, but we need to support it anyway.
   test("test_linesegment: intersection with empty linestring",
       () => expect(lseg8.intersection(lseg7),
-                   geometryEquals(new Point(x: 2.0, y: 2.0), 1e-15)));
+                   equals(new Point(x: 2.0, y: 2.0))));
 }
 
 void testEncloses() {
@@ -78,9 +84,7 @@ void testEncloses() {
       new Point(x: 0.25, y: 0.25),
       new Point(x: 1.25, y:1.25));
   test("test_linesegment: $lseg1 does not enclose $lseg2",
-      () => expect(lseg1.encloses(lseg3), isFalse));
-
-  
+      () => expect(lseg1.encloses(lseg3), isFalse)); 
 }
 
 void testTouches() {
@@ -93,12 +97,12 @@ void testTouches() {
   test("test_linesegment: $lseg1 does not touch $p2",
       () => expect(lseg1.touches(p2), isFalse));
   
-  final lseg2 = new LineSegment(new Point(x: 0.0, y: 0.0), new Point(x: 0.5, y: 0.5));
+  final lseg2 = new LineSegment(new Point(x: 0.0, y: 0.0), new Point(x: 0.0, y: 0.5));
   final lseg3 = new LineSegment(new Point(x: 1.0, y: 0.0), new Point(x: 0.0, y: 1.0));
   
   test("test_linesegment: $lseg1 touches $lseg2",
       () => expect(lseg1.touches(lseg2), isTrue));
-  test("test_linesemgnet: $lseg1 does not touch $lseg3",
+  test("test_linesegment: $lseg1 does not touch $lseg3",
       () => expect(lseg1.touches(lseg3), isFalse));
   
   final lstr1 = new Linestring([new Point(x: 1.0, y: 1.0), new Point(x: 1.0, y: 0.0)]);
