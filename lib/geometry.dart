@@ -175,7 +175,7 @@ abstract class Linear extends Geometry {
    * If [:reverse:] is `true`, then [:line:] may be reversed in an attempt
    * to ensure that it remains adjacent to the endpoint.
    */
-  Linestring concat(Linear line, {double tolerance: 0.0, bool reverse: false});
+  Linestring concat(Linear line, {bool reverse: false});
 }
 
 abstract class Planar extends Geometry {

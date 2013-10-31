@@ -22,6 +22,7 @@ abstract class GeometryCollection<T> extends Geometry with IterableMixin<T> {
    * is the minimum distance from any of it's component geometries
    */
   double distanceTo(Point geom) {
+    if (encloses(geom)) return 0.0;
     return map((g) => (g as Geometry).distanceTo(geom))
           .fold(double.INFINITY, math.min);
   }
@@ -31,22 +32,6 @@ abstract class GeometryCollection<T> extends Geometry with IterableMixin<T> {
           .fold(double.INFINITY, math.min);
   }
   */
-  
-  //Relations
-  
-  bool equalTo(Geometry other, {double tolerance: 1e-15}) {
-    if (other is! GeometryCollection) return false;
-    GeometryCollection oList = other as GeometryCollection;
-    if (length != oList.length) return false;
-    for (var i in range(length)) {
-      if (!(this[i] as Geometry).equalTo(oList[i], tolerance: tolerance)) return false;
-    }
-    return true;
-  }
-  
-  bool intersects(Geometry geom) {
-    return any((g) => (g as Geometry).intersects(geom));
-  }
   
   /**
    * Returns the [:i:]th geometry in the iterable.

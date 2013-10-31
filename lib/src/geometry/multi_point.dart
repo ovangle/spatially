@@ -34,7 +34,7 @@ class MultiPoint extends GeometryCollection<Point> implements MultiGeometry<Poin
   
   Geometry intersection(Geometry geom) {
     if (geom is Nodal) {
-      return new MultiPoint(where(geom.toPoint().equalTo));
+      return new MultiPoint(where((p) => geom.toPoint() == p));
     } else {
       return new MultiPoint(where(geom.encloses));
     }
@@ -44,12 +44,28 @@ class MultiPoint extends GeometryCollection<Point> implements MultiGeometry<Poin
   bool encloses(Geometry geom) => any(geom.encloses);
   bool touches(Geometry geom) {
     bool foundTouch;
-    for (var p in this) {
-      if (geom.touches(p)) {
-        foundTouch = true;
-      }
-      
+    if (geom is Point) {
+      return any(geom.encloses);
     }
+    for (var p in this) {
+      var isect = geom.intersection(p);
+      if (isect == null) continue;
+      if (geom is Linear) {
+        if (isect == geom.start || isect == geom.end) {
+          foundTouch = true;
+        } else {
+          return false;
+        }
+      }
+      if (geom is Planar) {
+        if (geom.boundary.encloses(isect)) {
+          foundTouch= true;
+        } else {
+          return false;
+        }
+      }
+    }
+    return foundTouch;
   }
   
   

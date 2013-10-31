@@ -9,6 +9,8 @@ class LineSegment extends Geometry implements Linear {
     throw new UnsupportedError("Cannot construct mutable copy of LineSegment");
   }
   
+  MultiPoint get _boundary => new MultiPoint([start, end]);
+  
   /**
    * The endpoint with the minimal x coorinate.
    */

@@ -15,6 +15,8 @@ class Linestring extends GeometryCollection<Point>
     return new GeometryList<Point>.from(this);
   }
   
+  MultiPoint get _boundary => new MultiPoint([start, end]);
+  
   /**
    * Creates a linestring from an iterable of [Point]s.
    */
@@ -90,13 +92,13 @@ class Linestring extends GeometryCollection<Point>
    * If [:reverse:] is `true`, then [:line:] may be reversed in an attempt
    * to ensure that it remains adjacent to the endpoint.
    */
-  Linestring concat(Linear line, {double tolerance: 0.0, bool reverse: false}) {
+  Linestring concat(Linear line, {bool reverse: false}) {
     if (isEmpty) return line.toLinestring();
     
-    if (reverse && line.end.equalTo(end, tolerance: tolerance)) {
+    if (reverse && line.end == end) {
       return concat(line.reversed);
     }
-    if (!line.start.equalTo(end, tolerance: tolerance)) {
+    if (line.start != end) {
       throw new InvalidGeometry("Line must be adjacent at one of it's endpoints\n"
                                 "\tLine: $line");
     }
@@ -183,9 +185,9 @@ class Linestring extends GeometryCollection<Point>
       var partialGeom = geom;
       for (var seg in segments) {
         if (seg.encloses(partialGeom)) return true;
-        final segIntersection = seg.intersection(geom);
+        final segIntersection = seg & geom;
         if (segIntersection is LineSegment) {
-          partialGeom = seg._complementOf(segIntersection);
+          partialGeom = seg - segIntersection;
         }
       }
     }
@@ -206,8 +208,7 @@ class Linestring extends GeometryCollection<Point>
    */
   bool touches(Geometry geom) {
     if (geom is Nodal) {
-      return (start.equalTo(geom))
-          || (end.equalTo(geom));
+      return start == geom || end == geom;
     }
     if (geom is Linear) {
       var isect = intersection(geom);
@@ -239,13 +240,13 @@ class Linestring extends GeometryCollection<Point>
     final nonDups = [this[0]];
     nonDups.addAll(
         range(1, length)
-        .where((i) => this[i].notEqualTo(this[i - 1], tolerance: tolerance))
+        .where((i) => this[i] != this[i - 1])
         .map((i) => this[i])
     );
     final nonColinear = [nonDups[0]];
     for (int i=1; i < nonDups.length - 1; i++) {
       final lseg = new LineSegment(nonDups[i - 1], nonDups[i + 1]);
-      if (!lseg.encloses(nonDups[i], tolerance: tolerance)) {
+      if (!lseg.encloses(nonDups[i])) {
         nonColinear.add(nonDups[i]);
       }
     }

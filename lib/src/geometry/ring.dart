@@ -20,7 +20,8 @@ class Ring extends GeometryCollection<Point> implements Planar {
   
   factory Ring.fromSegments(Iterable<LineSegment> segments) {
     for (var i in range(1, segments.length)) {
-      final i_adjacent = segments.elementAt(i - 1).end.equalTo(segments.elementAt(i).start);
+      final i_adjacent = 
+          segments.elementAt(i - 1).end == segments.elementAt(i).start;
       if (!i_adjacent) {
         throw new InvalidGeometry("All segments must be adjacent.\n\tSegments:\n\t\t"
                                   "${segments.join("\n\t\t")}");
