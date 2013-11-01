@@ -4,8 +4,7 @@ import 'dart:math' as math;
 
 import 'package:unittest/unittest.dart';
 import 'package:spatially/geometry.dart';
-
-import 'src/geometry/std_tests.dart';
+import 'geometry_tests.dart';
 
 final unitSquare = new Linestring(
     [ new Point(x: 0.0, y: 0.0),

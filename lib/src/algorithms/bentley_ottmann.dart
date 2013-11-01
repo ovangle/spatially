@@ -10,12 +10,12 @@ part of algorithms;
  * If [:includeEndpoints:] is `false`, intersections which contain only the start of
  * one segment and the end of another are ignored.
  */
-GeometryList bentleyOttmanIntersections(Set<LineSegment> lineSegments, 
+MultiGeometry bentleyOttmanIntersections(Set<LineSegment> lineSegments, 
                                       {double tolerance: 1e-15,
-                                       bool ignoreAdjacencies: false}) {
+                                       Iterable<Point> ignoredAdjacencies: const []}) {
   
   //The result set.
-  GeometryList intersections = new GeometryList();
+  MultiGeometry intersections = new MultiGeometry();
   
   //A new priority queue, with priority based on the longitude of the map key
   //and on the type of the event. 
@@ -43,7 +43,6 @@ GeometryList bentleyOttmanIntersections(Set<LineSegment> lineSegments,
   
   int iterCount = 0;
   while (eventQueue.isNotEmpty) {
-    /*
     util.IFDEF_DEBUG(() { 
       print("Iteration: $iterCount");
       print('\tEvent queue: ');
@@ -59,7 +58,6 @@ GeometryList bentleyOttmanIntersections(Set<LineSegment> lineSegments,
         print("\t\t$isectPoint");
       }
     }); //#endif
-      */  
     
     iterCount += 1;
     
@@ -98,11 +96,11 @@ GeometryList bentleyOttmanIntersections(Set<LineSegment> lineSegments,
         // it intersect it in the future.
         final r = sweepline.segmentAbove(evtSegment);
         if (r != null) {
-          eventQueue.futureCrossingEvent(evtSegment, r, ignoreAdjacencies);
+          eventQueue.futureCrossingEvent(evtSegment, r, ignoredAdjacencies);
         }
         final t = sweepline.segmentBelow(evtSegment);
         if (t != null) {
-          eventQueue.futureCrossingEvent(evtSegment, t, ignoreAdjacencies);
+          eventQueue.futureCrossingEvent(evtSegment, t, ignoredAdjacencies);
         }
         continue;
         
@@ -136,7 +134,7 @@ GeometryList bentleyOttmanIntersections(Set<LineSegment> lineSegments,
         // Check to see whether the segments that were directly
         // below and above the line intersect in the future.
         if (r != null && t != null) {
-           eventQueue.futureCrossingEvent(r,t, ignoreAdjacencies);
+           eventQueue.futureCrossingEvent(r,t, ignoredAdjacencies);
         }
         continue;
       case _EventQueue.CROSSING_EVT:
@@ -161,7 +159,14 @@ GeometryList bentleyOttmanIntersections(Set<LineSegment> lineSegments,
         // Here we would record the intersection of C and A
         if (evtHandled(evtData)) continue;
         handledCrossings.add(evtData);
-        intersections.add(evtData["intersection"]);
+        print("INTERSECTION!!: ${evtData["intersection"]}");
+        final intersection = evtData["intersection"];
+        if (!intersections.contains(intersection)
+            && (intersection is! LineSegment 
+                || !intersections.contains(intersection.reversed)
+            )) {
+          intersections = intersections.add(evtData["intersection"]);
+        }
         
         final evtSegment1 = evtData["segment1"];
         final evtSegment2 = evtData["segment2"];
@@ -177,32 +182,26 @@ GeometryList bentleyOttmanIntersections(Set<LineSegment> lineSegments,
         // Check the segment directly above the new top segment for an intersection
         final r = sweepline.segmentAbove(evtSegment1);
         if (r != null)
-          eventQueue.futureCrossingEvent(r, evtSegment1, ignoreAdjacencies);
+          eventQueue.futureCrossingEvent(r, evtSegment1, ignoredAdjacencies);
         
         // The segment directly below the new top segment
         final s = sweepline.segmentBelow(evtSegment1);
         if (s != null)
-          eventQueue.futureCrossingEvent(s, evtSegment1, ignoreAdjacencies);
+          eventQueue.futureCrossingEvent(s, evtSegment1, ignoredAdjacencies);
         
         // And the segment directly below the new bottom segment
         final u = sweepline.segmentBelow(evtSegment2);
         if (u != null) 
-          eventQueue.futureCrossingEvent(u, evtSegment2, ignoreAdjacencies);
+          eventQueue.futureCrossingEvent(u, evtSegment2, ignoredAdjacencies);
         
         // Finally, the segment directly above the new bottom segment
         final v = sweepline.segmentAbove(evtSegment2);
         if (v != null) 
-          eventQueue.futureCrossingEvent(v, evtSegment2, ignoreAdjacencies);
+          eventQueue.futureCrossingEvent(v, evtSegment2, ignoredAdjacencies);
         continue;
     }
   }
-  final GeometryList uniqueIntersections = new GeometryList();
-  for (var isect in intersections) {
-    if (uniqueIntersections.every((e) => e == isect)) {
-      uniqueIntersections.add(isect);
-    }
-  }
-  return uniqueIntersections;
+  return intersections;
 }
 
 class _EventQueue extends SplayTreeMap<Tuple3<Point,int,int>, Map<String,dynamic>> {
@@ -270,7 +269,7 @@ class _EventQueue extends SplayTreeMap<Tuple3<Point,int,int>, Map<String,dynamic
   
   void futureCrossingEvent(LineSegment lseg1, 
                            LineSegment lseg2, 
-                           bool ignoreAdjacencies) {
+                           Iterable<Point> ignoredAdjacencies) {
     final intersection = lseg1.intersection(lseg2);
     //Don't record a crossing 
     if (intersection == null) return;
@@ -280,10 +279,9 @@ class _EventQueue extends SplayTreeMap<Tuple3<Point,int,int>, Map<String,dynamic
     evtData["segment1"] = lseg1.left.y < lseg2.left.y ? lseg1 : lseg2;
     evtData["segment2"] = lseg1.left.y < lseg2.left.y ? lseg2 : lseg1;
     if (intersection is Point) {
-      if (ignoreAdjacencies) {
-        if (intersection == lseg1.end && intersection == lseg2.start) 
-          return;
-        if (intersection == lseg1.start && intersection == lseg1.end)
+      if (ignoredAdjacencies.contains(intersection)
+            && [lseg1.start, lseg1.end].contains(intersection)
+            && [lseg2.start, lseg2.end].contains(intersection)) {
           return;
       }
       final evtKey = _newKey(intersection, CROSSING_EVT);

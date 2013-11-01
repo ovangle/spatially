@@ -7,6 +7,7 @@ import 'package:spatially/algorithms.dart';
 
 void main() {
   testSet1();
+  
   testSet2();
   testSet3();
   testSet4();
@@ -14,6 +15,7 @@ void main() {
   testSet6();
   testSet7();
   testSet8();
+  
 }
 
 void testSet1() {
@@ -82,9 +84,10 @@ testSet5() {
   segmentSet1.add(new LineSegment(new Point(x: 0.0, y: 0.0), new Point(x: 1.0, y:1.0)));
   segmentSet1.add(new LineSegment(new Point(x: 1.0, y: 1.0), new Point(x: 2.0, y:1.0)));
   segmentSet1.add(new LineSegment(new Point(x: 1.0, y: 0.0), new Point(x: 0.0, y:1.0)));
+  segmentSet1.add(new LineSegment(new Point(x: 1.0, y: 0.0), new Point(x: -1.0, y: -1.0)));
   test("test bentley_ottmann: Ignore adjacent segments",
-      () => expect(bentleyOttmanIntersections(segmentSet1, ignoreAdjacencies: true),
-                   unorderedEquals([new Point(x: 0.5, y: 0.5)])));
+      () => expect(bentleyOttmanIntersections(segmentSet1, ignoredAdjacencies: [new Point(x:1.0, y:1.0)]),
+                   unorderedEquals([new Point(x: 0.5, y: 0.5), new Point(x: 1.0, y: 0.0)])));
 }
 
 testSet6() {

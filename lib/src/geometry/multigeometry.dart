@@ -1,28 +1,11 @@
 part of geometry;
 
 /**
- * A [GeometryList] is a possibly heterogeneous, mutable collection of geometries.
+ * A [MultiGeometry] is a possibly heterogeneous, immutable collection of geometries.
  */
-class GeometryList<T extends Geometry> extends GeometryCollection<T> with ListMixin<T> {
+class MultiGeometry<T extends Geometry> extends GeometryCollection<T> implements Multi<T> {
       
-  GeometryList<T> get mutableCopy {
-    return new GeometryList<T>.from(this);
-  }
-  /**
-   * Creates a new [GeometryList] with the given [:length:]
-   */
-  factory GeometryList([int length]) {
-    if (length == null) {
-      return new GeometryList.from([], growable: true);
-    }
-    return new GeometryList.from(new List<T>(length), growable: false);
-  }
-  
-  GeometryList.from(Iterable<T> geometries, 
-                    { bool growable: true}) 
-      : super(new List.from(geometries), growable);
-  
-  
+  MultiGeometry([Iterable<T> geoms]) : super(geoms != null ? geoms : [], false);
   
   //Implementation of Geometry
   Point get centroid {
@@ -61,36 +44,41 @@ class GeometryList<T extends Geometry> extends GeometryCollection<T> with ListMi
   }
 
   
-  GeometryList<T> translate({double dx: 0.0, double dy: 0.0}) 
-      => new GeometryList<T>.from(map((g) => (g as Geometry).translate(dx: dx, dy: dy)));
+  MultiGeometry<T> translate({double dx: 0.0, double dy: 0.0}) 
+      => new MultiGeometry<T>.from(map((g) => (g as Geometry).translate(dx: dx, dy: dy)));
   
-  GeometryList<T> scale(double ratio, {Point origin : null}) {
+  MultiGeometry<T> scale(double ratio, {Point origin : null}) {
     if (origin == null) origin = centroid;
-    return new GeometryList<T>.from(map((g) => (g as Geometry).scale(ratio, origin: origin)));
+    return new MultiGeometry<T>.from(map((g) => (g as Geometry).scale(ratio, origin: origin)));
   }
   
-  GeometryList<T> rotate(double dt, {Point origin : null}) {
+  MultiGeometry<T> rotate(double dt, {Point origin : null}) {
     if (origin == null) origin = centroid;
-    return new GeometryList<T>.from(map((g) => g.rotate(dt, origin: origin)));
+    return new MultiGeometry<T>.from(map((g) => g.rotate(dt, origin: origin)));
   }
-  Geometry intersection(Geometry geom, {double tolerance: 1e-15}) {
+  Geometry intersection(Geometry geom) {
     //If we're passed a point, return the intersection as a point
     if (geom is Point) {
       if (any((g) => g.intersects(geom))) return geom;
     }
     //For all other geometries, return a List of all the intersections
     //between self and other
-    return new GeometryList.from(map((g) => g.intersection(geom)));
+    return new MultiGeometry<T>(map((g) => g.intersection(geom)));
   }
   
+  MultiGeometry<T> add(T geom) =>
+      new MultiGeometry<T>([_geometries, [geom]].expand((i) => i));
+  MultiGeometry<T> addAll(Iterable<T> geoms) =>
+      new MultiGeometry<T>([_geometries, geoms].expand((i) => i));
+  
+  
   /**
-   * A [GeometryList] encloses another [Geometry] iff at least one of it's components
+   * A [MultiGeometry] encloses another [Geometry] iff at least one of it's components
    * completely enclose the [Geometry]. 
    * 
    */
-  bool encloses(Geometry geom, {double tolerance: 1e-15}) {
-    return any((g) => g.encloses(geom, tolerance: tolerance));
-  }
+  bool encloses(Geometry geom) =>
+      fold(geom, (part, g) => (part != null) ? part - g : null) == null;
   
   /**
    * Simplify for geometry lists does a couple of things, depending on the components
@@ -105,30 +93,30 @@ class GeometryList<T extends Geometry> extends GeometryCollection<T> with ListMi
    *    into a single [Planar] geometry which encloses both components
    * 
    */
-  GeometryList simplify({double tolerance: 1e-15}) {
-    Geometry simplifyAdjacent(GeometryList geomlist, Geometry geom2) {
+  MultiGeometry simplify({double tolerance: 1e-15}) {
+    List<Geometry> simplifyAdjacent(List<Geometry> geomlist, Geometry geom2) {
       var toAdd;
       if (geomlist.isEmpty) {
         toAdd = [geom2];
       } else {
         final prevGeom = geomlist.removeLast();
         if (prevGeom is Nodal) {
-          toAdd = _mergeNodal(prevGeom, geom2, tolerance);
+          toAdd = _mergeNodal(prevGeom, geom2);
         } else if (prevGeom is Linear) {
-          toAdd = _mergeLinear(prevGeom, geom2, tolerance);
+          toAdd = _mergeLinear(prevGeom, geom2);
         } else if (prevGeom is Planar) {
-          toAdd =  _mergePlanar(prevGeom, geom2, tolerance);
+          toAdd =  _mergePlanar(prevGeom, geom2);
         } else {
-          toAdd = [(prevGeom as GeometryList).simplify(tolerance: tolerance)];
+          toAdd = [(prevGeom as MultiGeometry).simplify(tolerance: tolerance)];
         }
       }
       geomlist.addAll(toAdd);
       return geomlist;
     }
-    if (length < 2) return new GeometryList<T>.from(this);
+    if (length < 2) return new MultiGeometry<T>.from(this);
     var simplifiedList = 
-        new GeometryList<T>.from(
-            fold(new GeometryList(), simplifyAdjacent)
+        new MultiGeometry<T>.from(
+            fold(new MultiGeometry(), simplifyAdjacent)
             .map((g) => g.simplify())
         );
     print(simplifiedList);
@@ -139,29 +127,15 @@ class GeometryList<T extends Geometry> extends GeometryCollection<T> with ListMi
   }
   
   
-  //Implementation of List<T>
-  
-  Geometry operator[](int i) => _geometries[i];
-  void operator[]=(int i, Geometry geom) {
-    _geometries[i] = geom;
-  }
-
-  int 
-    get length => _geometries.length;
-    set length(int value) {
-      _geometries.length = value;
-    }
-   
-  
   bool operator ==(Object other) {
-    if (other is! GeometryList<T>) return false;
-    var geomList = other as GeometryList<T>;
-    if (geomList.length != length) return false;
-    for (var i in range(length)) {
-      if (this[i] != geomList[i]) return false;
+    if (other is Multi<T>) {
+      if (other.length != length) return false;
+      return range(length).every((i) => this[i] == other.elementAt(i));
     }
-    return true;
+    return false;
   }
+  
+  int get hashCode => fold(Multi._hashPrime, (hash, g) => hash * Multi._hashPrime + g.hashCode);
   
   String toString() {
     final sBuffer = new StringBuffer("GEOM_LIST[");
@@ -175,48 +149,49 @@ class GeometryList<T extends Geometry> extends GeometryCollection<T> with ListMi
   
 }
     
-Iterable<Geometry> _mergeNodal(Nodal node, Geometry geom, double tolerance) {
-  final geomEncloses = geom.encloses(node, tolerance: tolerance);
-  if (geom.encloses(node, tolerance: tolerance)) return [geom];
+Iterable<Geometry> _mergeNodal(Nodal node, Geometry geom) {
+  final geomEncloses = geom.encloses(node);
+  if (geom.encloses(node)) return [geom];
   return [node, geom];
 }
     
-Iterable<Geometry> _mergeLinear(Linear line, Geometry geom, double tolerance) {
+Iterable<Geometry> _mergeLinear(Linear line, Geometry geom) {
   if (geom is Nodal) {
     Point p = geom.toPoint();
-    if (line.encloses(geom, tolerance: tolerance)) {
+    if (line.encloses(geom)) {
       return [line];
     }
   }
   if (geom is Linear) {
     Linestring lstr1 = line.toLinestring();
     Linestring lstr2 = geom.toLinestring();
-    if (lstr1.end.equalTo(lstr2.start, tolerance: tolerance)) {
+    if (lstr1.end == lstr2.start) {
       return [lstr1.concat(lstr2)];
     }
-    if (lstr2.encloses(lstr1, tolerance: tolerance)) return [lstr2];
-    if (lstr1.encloses(lstr1, tolerance: tolerance)) return [lstr1];
+    if (lstr2.encloses(lstr1)) return [lstr2];
+    if (lstr1.encloses(lstr1)) return [lstr1];
   }
   if (geom is Planar) {
-    if (geom.encloses(line, tolerance: tolerance)) return [geom];
+    if (geom.encloses(line)) return [geom];
   }
   return [line, geom];
 }
 
-Iterable<Geometry> _mergePlanar(Planar plane, Geometry geom, double tolerance) {
+Iterable<Geometry> _mergePlanar(Planar plane, Geometry geom) {
   if (geom is Nodal) {
-    if (plane.encloses(geom.toPoint(), tolerance: tolerance)) 
+    if (plane.encloses(geom.toPoint())) 
       return [geom];
   }
   if (geom is Linear) {
-    if (plane.encloses(geom.toLinestring(), tolerance: tolerance))
+    if (plane.encloses(geom.toLinestring()))
       return [geom];
   }
   if (geom is Planar) {
     final poly1 = plane.toPolygon();
     final poly2 = geom.toPolygon();
-    if (poly1.intersects(poly2, tolerance: tolerance)) {
-      return poly1.union(poly2, tolerance: tolerance);
+    final intersection = poly1 & poly2;
+    if (intersection != Point) {
+      return poly1 | poly2; 
     }
   }
   return [plane, geom];

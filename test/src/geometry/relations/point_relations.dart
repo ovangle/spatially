@@ -61,7 +61,12 @@ void pointUnion(String test_lib, Geometry geom) {
   group("relation_tests: $test_lib: Point: Union", () {
     test("Union enclosed p1",
         () => expect(geom.union(p1), equals(geom)));
-    test("Union disjoint p2", 
-        () => expect(geom.union(p2), unorderedEquals([geom, p2])));
+    test("Union disjoint p2", () {
+      if (geom is Multi) {
+        expect(geom.union(p2), contains(p2));
+      } else {
+        expect(geom.union(p2), unorderedEquals([geom, p2]));
+      }
+    });
   });
 }

@@ -5,7 +5,7 @@ class LineSegment extends Geometry implements Linear {
   final Point start;
   final Point end;
   
-  GeometryList get mutableCopy {
+  MultiGeometry get mutableCopy {
     throw new UnsupportedError("Cannot construct mutable copy of LineSegment");
   }
   
@@ -118,22 +118,21 @@ class LineSegment extends Geometry implements Linear {
     
     if (utils.compareDoubles(discr, 0.0, 1e-15) == 0) {
       // the lines are approximately parallel.
-      var isectLeft, isectRight;
+      var isectStart, isectEnd;
      
-      if (intersectionEncloses(left))       isectLeft = left;
-      if (intersectionEncloses(right))      isectRight = right;
+      if (intersectionEncloses(start))      isectStart = left;
+      if (intersectionEncloses(end))        isectEnd = right;
       
-      if (intersectionEncloses(lseg.left))  isectLeft = lseg.left;
-      if (intersectionEncloses(lseg.right)) isectRight = lseg.right;
-      if (isectLeft == isectRight) {
-        return isectLeft;
+      if (lseg.start.distanceToSqr(start) > lseg.end.distanceToSqr(end)) {
+        lseg = lseg.reversed;
       }
-      if (isectLeft.x == isectRight.x) {
-        //Ensure that the returned intersection is from the bottom to the top
-        //of the coincidence.
-        if (isectLeft.y > isectRight.y) return new LineSegment(isectRight, isectLeft);
+      
+      if (intersectionEncloses(lseg.start)) isectStart = lseg.start; 
+      if (intersectionEncloses(lseg.end))   isectEnd   = lseg.end;
+      if (isectStart == isectEnd) {
+        return isectEnd;
       }
-      return new LineSegment(isectLeft, isectRight);
+      return new LineSegment(isectStart, isectEnd);
     } else {
       final intersectionPoint = 
           new Point(
@@ -157,7 +156,7 @@ class LineSegment extends Geometry implements Linear {
    * If the result is a [LineSegment], then the segment returned will be the one
    * travelling from the bottom left to the top right of the intersection.
    * 
-   * Intersecting with other [Geometry] types can return a [GeometryList]
+   * Intersecting with other [Geometry] types can return a [MultiGeometry]
    * of [Point]s and [LineSegment]s.
    */
   Geometry intersection(Geometry geom) {
@@ -174,11 +173,32 @@ class LineSegment extends Geometry implements Linear {
     if (geom is Point) {
       if (encloses(geom))
         return this;
-      return new GeometryList.from([geom, this], growable: false);
+      return new MultiGeometry([geom, this]);
     }
     if (geom is LineSegment) {
       var isect = _segmentIntersection(geom);
+      if (isect == null || isect is Point) {
+        return new MultiLinestring([toLinestring(), geom.toLinestring()]);
+      }
+      final enclosesStart = isect.encloses(start);
+      final enclosesEnd   = isect.encloses(end);
+      if (enclosesStart && enclosesEnd) {
+        //geom encloses this.
+        return geom;
+      } else if (enclosesStart) {
+        return isect.encloses(geom.start) 
+            ? new LineSegment(geom.end, end) 
+            : new LineSegment(start, geom.end);
+      } else if (enclosesEnd) {
+        return isect.encloses(geom.start)
+            ? new LineSegment(start, geom.end)
+            : new LineSegment(geom.end, end);
+      } else {
+        //this encloses geom
+        return this;
+      }
     }
+    return geom.union(this);
   }
   
   bool encloses(Geometry geom) {
@@ -188,6 +208,9 @@ class LineSegment extends Geometry implements Linear {
     }
     if (geom is Linear) {
       return geom.toLinestring().every(encloses);
+    }
+    if (geom is GeometryCollection) {
+      return geom.every(encloses);
     }
     return false;
   }
@@ -207,15 +230,20 @@ class LineSegment extends Geometry implements Linear {
    * -- If [:geom:] is a [Nodal] geometry, true iff the geom is the start or end point.
    * -- If [:geom:] is a [Linear] geometry, true iff the geom's start or end point touches the current geometry
    * -- If [:geom:] is a [Planar] geometry, true iff [:start:] or [:end:] is a point on the [:boundary:].
-   * -- If [:geom:] is a [GeometryList], truee iff the geometry touches any of the elements of [:geom:]
+   * -- If [:geom:] is a [MultiGeometry], truee iff the geometry touches any of the elements of [:geom:]
    */
   bool touches(Geometry geom) {
     if (geom is Nodal) {
       return geom == start || geom == end;
     }
+    if (geom is MultiPoint) {
+      final intersections = geom.map(intersection).where(isNotNull);
+      return intersections.isNotEmpty
+          && intersections.every((i) => i == start || i == end);
+    }
     if (geom is Linear) {
       final isect = intersection(geom);
-      if (isect is MultiPoint) {
+      if (isect is Multi) {
         return touches(isect);
       }
       return isect == start || isect == end;
@@ -233,7 +261,7 @@ class LineSegment extends Geometry implements Linear {
   Linestring append(Nodal node) => toLinestring().append(node);
   
   Linestring concat(Linear line, {double tolerance: 0.0, bool reverse: false}) 
-      => toLinestring().concat(line, tolerance: tolerance, reverse: reverse);
+      => toLinestring().concat(line, reverse: reverse);
   
   /**
    * The geometry containing precisely the points which are 
@@ -251,6 +279,8 @@ class LineSegment extends Geometry implements Linear {
   LineSegment difference(Geometry geom) {
     switch (geom.runtimeType) {
       case Point:
+      case MultiPoint:
+        //Removing single points from the geometry does not affect the geometry;
         return this;
       case LineSegment:
         var isect = _segmentIntersection(geom);
@@ -281,22 +311,23 @@ class LineSegment extends Geometry implements Linear {
             [isect.start, isect.end].contains(start) ? end : start; 
         return new LineSegment(resultStart, resultEnd);
       default:
-        throw 'NotImplemented';
+        throw 'LineSegment.difference not implemented for ${geom.runtimeType}';
     }
   }
   
   bool operator ==(Object other) {
-    if (other is! LineSegment) return false;
-    return (other as LineSegment).start == start
-        && (other as LineSegment).end   == end;
+    if (other is! Linear) return false;
+    if (other is Linestring) {
+      if (other.length != 2) return false;
+    }
+    return (other as Linear).start == start
+        && (other as Linear).end   == end;
   }
   
-  int get hashCode {
-    var result = 41;
-    result = result * 41 + start.hashCode;
-    result = result * 41 + end.hashCode;
-    return result;
-  }
+  int get hashCode => 
+      [start,end].fold(
+          Linear._hashPrime, 
+          (hash, p) => hash * Linear._hashPrime+ p.hashCode);
   
   String toString() => "LineSegment($start, $end)";
 }

@@ -1,6 +1,6 @@
 part of geometry;
 
-abstract class GeometryCollection<T> extends Geometry with IterableMixin<T> {
+abstract class GeometryCollection<T extends Geometry> extends Geometry with IterableMixin<T> {
   final List<T> _geometries;
   
   Iterator<T> get iterator => _geometries.iterator;

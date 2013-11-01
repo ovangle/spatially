@@ -28,6 +28,9 @@ int compareDoubles(double d1, double d2, double tolerance) {
   return (d1 < d2) ? -1 : 1;
 }
 
+bool isNull(dynamic obj) => obj == null;
+bool isNotNull(dynamic obj) => obj != null;
+
 /**
  * Code that should only be run in dart checked mode.
  */

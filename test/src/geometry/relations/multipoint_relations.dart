@@ -4,7 +4,7 @@ final mp1 = new MultiPoint([]);
 final mp2 = new MultiPoint([new Point(x: 0.0, y: 0.0)]);
 final mp3 = new MultiPoint(
     [new Point(x: 0.0, y: 0.0), 
-     new Point(x: 1.0, y: 0.0),
+     new Point(x: 1.0, y: 1.0),
      new Point(x: 0.5, y: 0.5)]);
 final mp4 = new MultiPoint(
     [new Point(x: 1.0, y: 0.0),
@@ -30,10 +30,12 @@ final mp6 = new MultiPoint(
  */
 void multipointEncloses(String test_lib, Geometry geom) {
   group("relation_tests: $test_lib: MultiPoint: Encloses", () {
-    test("Does not enclose empty multi point", () => expect(geom.encloses(mp1), isFalse));
+    test("Encloses empty multi point", 
+        () => expect(geom.encloses(mp1), isTrue));
     test("Encloses mp2", () => expect(geom.encloses(mp2), isTrue));
     if (geom is! Point) {
-      test("Encloses mp3", () => expect(geom.encloses(mp3), isTrue));
+      test("Encloses mp3", 
+           () => expect(geom.encloses(mp3), isTrue));
     }
     test("Does not enclose mp4", () => expect(geom.encloses(mp4), isFalse));
     test("Does not enclose mp5", () => expect(geom.encloses(mp5), isFalse));
@@ -55,14 +57,16 @@ void multipointIntersects(String test_lib, Geometry geom) {
 void multipointTouches(String test_lib, Geometry geom) {
   group("relation_tests: $test_lib: Multipoint: Touches", () {
     test("Does not touch empty multipoint", () => expect(geom.touches(mp1), isFalse));
-    test("Touches mp2", () => expect(geom.touches(mp2), isTrue));
+    test("Touches mp2", 
+        () => expect(geom.touches(mp2), isTrue));
     if (geom is! Point && geom is! MultiPoint) {
       test("Does not touch mp3", () => expect(geom.touches(mp3), isFalse));
     } else {
       test("Touches mp3", () => expect(geom.touches(mp3), isTrue));
     }
     test("Does not touch mp4", () => expect(geom.touches(mp4), isFalse));
-    test("Does not touch mp5", () => expect(geom.touches(mp5), isFalse));
+    test("Does not touch mp5", 
+        () => expect(geom.touches(mp5), isFalse));
     test("Touches mp6", () => expect(geom.touches(mp6), isTrue));
   });
 }
@@ -92,10 +96,10 @@ void multipointIntersection(String test_lib, Geometry geom) {
 void multipointUnion(String test_lib, Geometry geom) {
   group("relation_tests: $test_lib: MultiPoint: Union", () {
     test("Union with empty multipoint", () {
-      expect(geom.union(mp1), anyOf(equals(geom), contains(geom)));
+      expect(geom.union(mp1), encloses(geom));
     });
     test("Union with mp2", () {
-      expect(geom.union(mp2), anyOf(equals(geom), contains(geom))); 
+      expect(geom.union(mp2), encloses(geom)); 
     });
     if (geom is! Point) {
       test("Union with mp3", () => equals(geom));
@@ -109,8 +113,8 @@ void multipointUnion(String test_lib, Geometry geom) {
       expect(geom.union(mp5), encloses(geom));
     });
     test("Union with mp6", () {
-      expect(geom.union(mp6), anyOf(contains(mp6), equals(mp6)));
-      expect(geom.union(mp6), contains(geom));
+      expect(geom.union(mp6), encloses(mp6));
+      expect(geom.union(mp6), encloses(geom));
     });
     
   });
@@ -124,15 +128,16 @@ void multipointDifference(String test_lib, Geometry geom) {
       expect(geom.difference(mp2), anyOf(isNull, enclosedBy(geom)));
     });
     test("geom difference mp4", () {
-      if (geom is Point) {
-        expect(geom.difference(mp4), equals(geom));
+      if (geom is MultiPoint) {
+        expect(geom.difference(mp4).disjoint(mp4), isTrue);
       } else {
-        expect(geom.difference(mp4), isNull);
+        //Taking a point away from a geometry which is not Nodal or Multi-Nodal
+        //doesn't affect the geometry.
+        expect(geom.difference(mp4), equals(geom));
       }
     });
     test("geom difference mp6", () {
-      if (geom is Point) {
-        expect(geom.difference(mp6), isNull);
+      if (geom is Point || geom is MultiPoint) {
         expect(mp6.difference(geom), disjoint(geom));
       } else {
         expect(geom.difference(mp6), equals(geom));

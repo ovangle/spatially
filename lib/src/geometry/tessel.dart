@@ -174,7 +174,7 @@ class Tessel extends Geometry implements Planar {
     
     if (geom is Linestring) {
       var intersections = 
-          new GeometryList.from(
+          new MultiGeometry.from(
               geom.segments
                   .map((s) => _segmentIntersection(s))
                   .where((isect) => isect != null)
@@ -192,11 +192,11 @@ class Tessel extends Geometry implements Planar {
   _tesselUnion(Tessel tesl, {double tolerance: 1e-15}) {
    
     if (!boundsIntersects(tesl, tolerance: tolerance)) {
-      return new GeometryList.from([this, tesl], growable: false);
+      return new MultiGeometry.from([this, tesl], growable: false);
     }
     final teslIntersection = _tesselIntersection(tesl, tolerance: tolerance);
     if (teslIntersection == null || teslIntersection is Point) {
-      return new GeometryList.from([this, tesl], growable: false);
+      return new MultiGeometry.from([this, tesl], growable: false);
     }
     
     //The segments surrounding the union. When we're finished processing both
@@ -241,14 +241,14 @@ class Tessel extends Geometry implements Planar {
    * The result will be one of:
    * -- A [Tessel], if the [Tessel] encloses [:geom:]
    * -- A [Ring], if the two tessels intersection is nonempty
-   * -- A [GeometryList], if the two geometries are disjoint.
+   * -- A [MultiGeometry], if the two geometries are disjoint.
    * 
    * NOTE: When intersecting a [Tessel] with a [Polygon], all holes in the polygon
    *       are ignored.
    */
   Geometry union(Planar geom, {double tolerance: 1e-15}) {
     if (!boundsIntersects(geom, tolerance: tolerance)) {
-      return new GeometryList.from([this, geom], growable: false);
+      return new MultiGeometry.from([this, geom], growable: false);
     }
     if (geom is Tessel) {
       return _tesselUnion(geom, tolerance: tolerance);
@@ -442,7 +442,7 @@ class Tessel extends Geometry implements Planar {
       var isect = _tesselIntersection(geom, tolerance: tolerance);
       return (isect is Point || isect is LineSegment);
     }
-    if (geom is GeometryList) {
+    if (geom is MultiGeometry) {
       return geom.touches(this, tolerance: tolerance);
     }
   }

@@ -17,6 +17,9 @@ void main() {
   linesegmentRelations(
       "LineSegment", 
       new LineSegment(new Point(x: 0.0, y: 0.0), new Point(x: 1.0, y: 1.0)));
+  multipointRelations(
+      "LineSegment",
+      new LineSegment(new Point(x: 0.0, y: 0.0), new Point(x: 1.0, y: 1.0)));
   testEncloses();
   testIntersection();
   testComparePoint();
@@ -62,6 +65,42 @@ void testIntersection() {
   test("test_linesegment: intersection with empty linestring",
       () => expect(lseg8.intersection(lseg7),
                    equals(new Point(x: 2.0, y: 2.0))));
+}
+
+void testDifference() {
+  group("test_linesegment: Difference: ", () {
+    final lseg = new LineSegment(new Point(x: 0.0, y: 0.0), new Point(x: 1.0, y: 1.0));
+    test("encloses lseg", () {
+      expect(lseg.difference(lseg), isNull);
+    });
+    test("encloses start", () {
+      final lseg1 = new LineSegment(new Point(x: 0.0, y: 0.0), new Point(x: 0.5, y: 0.5));
+      expect(lseg.difference(lseg1), equals(new Point(x: 0.5, y: 0.5), new Point(x: 1.0, y: 1.0)));
+    });
+    test("encloses end in opposite direction", () {
+      final lseg1 = new LineSegment(new Point(x: 1.0, y: 1.0), new Point(x: 0.5, y: 0.5));
+      expect(lseg.difference(lseg1), equals(new Point(x: 0.0, y: 0.0), new Point(x: 0.5, y: 0.5)));
+    });
+    test("difference trivial linesegment", () {
+      final lseg1 = new LineSegment(new Point(x: 0.5, y: 0.5), new Point(x: 0.5, y: 0.5));
+      expect(lseg.difference(lseg1), equals(lseg));
+    });
+    test("encloses neither start nor end", () {
+      final lseg1 = new LineSegment(new Point(x: 0.25, y: 0.25), new Point(x: 0.75, y: 0.75));
+      final expected = 
+          new MultiLinestring(
+              [ new Linestring(
+                  [new Point(x: 0.0, y: 0.0),
+                   new Point(x: 0.25, y: 0.25)
+                  ]),
+               new Linestring(
+                  [ new Point(x: 0.75, y: 0.75),
+                    new Point(x: 1.0, y: 1.0)
+                  ])
+              ]);
+      expect(lseg.difference(lseg), equals(expected));
+    });
+  });
 }
 
 void testEncloses() {
@@ -111,19 +150,6 @@ void testTouches() {
       () => expect(lseg1.touches(lstr1), isTrue));
   test("test_linesegment: $lseg1 does not touch $lstr2",
       () => expect(lseg1.touches(lstr2), isFalse));
-  
-  final tesl1 = new Tessel(new Point(x: -1.0, y: -1.0), new Point(x:-1.0, y:1.0), new Point(x: 1.0, y: -1.0));
-  final tesl2 = new Tessel(new Point(x: -1.0, y: -1.0), new Point(x:-1.0, y: 2.2), new Point(x: 2.0, y: -1.0));
-  final tesl3 = new Tessel(new Point(x: 0.0, y: 0.0), new Point(x: 2.0, y: 0.0), new Point(x: 0.0, y: 2.0));
-  final tesl4 = new Tessel(new Point(x: 0.0, y: 0.0), new Point(x: 1.0, y: 1.0), new Point(x: 1.0, y: 0.0));
-  test("test_linesemgnet: $lseg1 touches $tesl1",
-      () => expect(lseg1.touches(tesl1), isTrue));
-  test("test_linesegment: $lseg1 does not touch $tesl2",
-      () => expect(lseg1.touches(tesl2), isFalse));
-  test("test_linesegment: $lseg1 does not touch $tesl3 as it encloses the linesegment",
-      () => expect(lseg1.touches(tesl3), isFalse));
-  test("test_linesegment: $lseg1 touches $tesl4 along an edge",
-      () => expect(lseg1.touches(tesl4), isTrue));
 }
 
 void testComparePoint() {

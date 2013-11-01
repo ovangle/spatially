@@ -1,6 +1,6 @@
 part of geometry;
 
-class MultiLinestring extends GeometryCollection<Linestring> implements MultiGeometry {
+class MultiLinestring extends GeometryCollection<Linestring> implements Multi {
   MultiLinestring(Iterable<Linear> lines) 
       : super(lines.map((l) => l.toLinestring()), false);
   
@@ -30,4 +30,16 @@ class MultiLinestring extends GeometryCollection<Linestring> implements MultiGeo
     if (origin == null) origin = centroid;
     return new MultiLinestring(map((g) => g.scale(ratio, origin: origin)));
   }
+  
+  bool contains(Linear item) => _geometries.contains(item.toLinestring());
+  
+  bool operator ==(Object other) {
+    if (other is MultiLinestring) {
+      if (other.length != length) return false;
+      return range(length).every((i) => this[i] == other[i]);
+    }
+    return false;
+  }
+  
+  int get hashCode => fold(31, (hash, lstr) => hash * 31 + lstr.hashCode);
 }

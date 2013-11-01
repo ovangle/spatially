@@ -6,13 +6,14 @@ import 'dart:collection';
 //import 'package:meta/meta.dart';
 import 'package:range/range.dart';
 
-//import 'package:tuple/tuple.dart';
+//import 'package:tuple/tuple.dart
+import 'utils.dart' show isNull, isNotNull;
 import 'utils.dart' as utils;
 import 'algorithms.dart' as alg;
 
 part 'src/geometry/bounds.dart';
 part 'src/geometry/geometry_collection.dart';
-part 'src/geometry/geometry_list.dart';
+part 'src/geometry/multigeometry.dart';
 part 'src/geometry/line_segment.dart';
 part 'src/geometry/linestring.dart';
 part 'src/geometry/point.dart';
@@ -138,6 +139,8 @@ abstract class Nodal extends Geometry {
 }
 
 abstract class Linear extends Geometry {
+  //The prime to use when generating hashes for linear geometries.
+  static const int _hashPrime = 37;
   //double get geodesicSpan;
   
   Point get start;
@@ -208,17 +211,21 @@ abstract class Planar extends Geometry {
   
 }
 
-abstract class MultiGeometry<T> {
+abstract class Multi<T extends Geometry> implements Iterable<T>, Geometry {
+  /**
+   * The prime to use when hashing [Multi] geometries.
+   */
+  static const _hashPrime = 57;
   /**
    * The result of adding [:geom:] to `this`.
    * Geometries are immutable, so the operation is *not* performed in place
    */
-  MultiGeometry<T> add(T geom);
+  Multi<T> add(T geom);
   /**
    * The result of adding all [:geoms:] to `this`
    * Geometries are immutable so the operation is *not* permformed in-place
    */
-  MultiGeometry<T> addAll(Iterable<T> geoms);
+  Multi<T> addAll(Iterable<T> geoms);
 }
 
 class InvalidGeometry implements Exception {

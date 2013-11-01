@@ -11,10 +11,6 @@ class Linestring extends GeometryCollection<Point>
         && vertices.first == vertices.last;
   }
   
-  GeometryList<Point> get mutableCopy {
-    return new GeometryList<Point>.from(this);
-  }
-  
   
   /**
    * Creates a linestring from an iterable of [Point]s.
@@ -141,10 +137,23 @@ class Linestring extends GeometryCollection<Point>
       Set segs = new Set.from(segments)
           .union(geom.toLinestring().segments.toSet());
       
-      final intersections = new GeometryList.from(
-          alg.bentleyOttmanIntersections(segs, ignoreAdjacencies: true), 
-          growable: false);
-      return intersections.isNotEmpty ? intersections : null;
+      //Ignore any adjancencies at the non-terminating vertices of this
+      //and non-terminating vertices of other.
+      final adjacencies = new Set.from(
+          [ this.take(length - 1).skip(1),
+            geom.toLinestring().take(length - 1).skip(1)
+          ].expand((i) => i));
+      final intersections = new MultiGeometry(
+          alg.bentleyOttmanIntersections(
+              segs,
+              ignoredAdjacencies: adjacencies)
+      );
+      if (intersections.isEmpty) {
+        return null;
+      } else if (intersections.length == 1) {
+        return intersections.single;
+      }
+      return intersections;
     }
     
     return geom.intersection(this);
@@ -203,7 +212,7 @@ class Linestring extends GeometryCollection<Point>
    * -- If [:geom:] is a [Nodal] geometry, true iff the geom is the start or end point.
    * -- If [:geom:] is a [Linear] geometry, true iff the geom's start or end point touches the current geometry
    * -- If [:geom:] is a [Planar] geometry, true iff [:start:] or [:end:] is a point on the [:boundary:].
-   * -- If [:geom:] is a [GeometryList], truee iff the geometry touches any of the elements of [:geom:]
+   * -- If [:geom:] is a [MultiGeometry], truee iff the geometry touches any of the elements of [:geom:]
    */
   bool touches(Geometry geom) {
     if (geom is Nodal) {
@@ -252,6 +261,18 @@ class Linestring extends GeometryCollection<Point>
     nonColinear.add(nonDups[nonDups.length - 1]);
     return new Linestring(nonColinear);
   }
+  
+  bool operator ==(Object other) {
+    if (other is Linear) {
+      final lstr = other.toLinestring();
+      if (lstr.length != length) return false;
+      return range(length).any((i) => this[i] != lstr[i]);
+    }
+    return false;
+  }
+  
+  int get hashCode => 
+      fold(Linear._hashPrime, (hash, v) => hash * Linear._hashPrime + v.hashCode); 
   
   String toString() => "Linestring($_geometries)";
 }

@@ -10,7 +10,7 @@ class Ring extends GeometryCollection<Point> implements Planar {
     if (!Linestring._isClosed(vertices)) {
       vertices = [vertices, [vertices.first]].expand((i) => i);
     }
-    GeometryList selfIntersections = 
+    MultiGeometry selfIntersections = 
         alg.bentleyOttmanIntersections(boundary.segments.toSet(), ignoreAdjacencies: true);        
     if (selfIntersections.isNotEmpty) {
       throw new InvalidGeometry("A ring cannot intersect itself \n"
@@ -101,7 +101,7 @@ class Ring extends GeometryCollection<Point> implements Planar {
   }
   
   Geometry _segmentIntersection(LineSegment lseg, {double tolerance: 1e-15}) {
-    var boundaryIntersections = new GeometryList<Point>();
+    var boundaryIntersections = new MultiGeometry<Point>();
     
     if (_enclosesPoint(lseg.start, tolerance: tolerance)) 
       boundaryIntersections.add(lseg.start);
@@ -121,7 +121,7 @@ class Ring extends GeometryCollection<Point> implements Planar {
       .sort((p1, p2) => Comparable.compare(p1.distanceToSqr(lseg.start), 
                                            p2.distanceToSqr(lseg.start)));
     boundaryIntersections = boundaryIntersections
-      .fold(new GeometryList(), (intersections, p) {
+      .fold(new MultiGeometry(), (intersections, p) {
           append(Geometry g) { intersections.add(g); return intersections; }
           
           if (intersections.isEmpty) return append(p);
@@ -165,12 +165,12 @@ class Ring extends GeometryCollection<Point> implements Planar {
       return _segmentIntersection(geom, tolerance: tolerance);
     }
     if (geom is Linestring) {
-      var intersections = new GeometryList<LineSegment>();
+      var intersections = new MultiGeometry<LineSegment>();
       for (var seg in geom.segments) {
         final segIntersection = intersection(seg, tolerance: tolerance);
         if (segIntersection is LineSegment) 
           intersections.add(segIntersection);
-        if (segIntersection is GeometryList)
+        if (segIntersection is MultiGeometry)
           intersections.addAll(segIntersection);
       }
       if (intersections.isEmpty) return null; 
@@ -281,7 +281,7 @@ class Ring extends GeometryCollection<Point> implements Planar {
       return geom.boundary.segments
              .every((s) => _enclosesLineSegment(s, tolerance: tolerance));
     }
-    if (geom is GeometryList) {
+    if (geom is MultiGeometry) {
       return geom.every((c) => encloses(c, tolerance: tolerance));
     }
     if (geom is Polygon) {
@@ -316,7 +316,7 @@ class Ring extends GeometryCollection<Point> implements Planar {
       return boundary.intersects(bndary, tolerance: tolerance)
           || encloses(bndary, tolerance: tolerance);
     }
-    if (geom is GeometryList) {
+    if (geom is MultiGeometry) {
       return geom.any((g) => intersects(g, tolerance: tolerance));
     }
     return geom.intersects(this, tolerance: tolerance);

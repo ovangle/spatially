@@ -114,7 +114,7 @@ void testIntersection() {
       () => expect(cShape.intersection(lseg1), geometryEquals(expected1, 1e-15)));
   
   final lseg2 = new LineSegment(new Point(x: 2.5, y:1.0), new Point(x: 2.5, y: 2.5));
-  final expected2 = new GeometryList.from(
+  final expected2 = new MultiGeometry.from(
       [ new Point(x: 2.5, y: 1.0),
         new LineSegment(new Point(x: 2.5, y: 2.0), new Point(x: 2.5, y: 2.5))
       ]);

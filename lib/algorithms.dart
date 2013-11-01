@@ -17,4 +17,3 @@ import 'geometry.dart';
 
 part 'src/algorithms/vicenty.dart';
 part 'src/algorithms/bentley_ottmann.dart';
-part 'src/algorithms/thread_linear.dart';

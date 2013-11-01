@@ -20,7 +20,7 @@ class Point extends Geometry implements Nodal {
   Point get centroid => this;
   Bounds get bounds  => new Bounds(top: y, bottom: y, left: x, right: x);
   
-  GeometryList get mutableCopy {
+  MultiGeometry get mutableCopy {
     throw new UnsupportedError("Cannot create a mutable copy of Point type");
   }
   
@@ -122,7 +122,7 @@ class Point extends Geometry implements Nodal {
       return geom == this;
     }
     if (geom is MultiPoint) {
-      return geom.isNotEmpty && geom.every(encloses);
+      return geom.every(this.encloses);
     }
     if (geom is LineSegment) {
       return encloses(geom.start) && encloses(geom.end); 

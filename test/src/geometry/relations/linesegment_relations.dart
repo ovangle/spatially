@@ -107,8 +107,8 @@ linesegmentUnion(String test_lib, Geometry geom) {
       });
     }
     test("Geom union lseg2 contains geom and lseg2", () {
-      expect(geom.union(lseg2), contains(lseg2));
-      expect(geom.union(lseg2), contains(geom));
+      expect(geom.union(lseg2), encloses(lseg2));
+      expect(geom.union(lseg2), encloses(geom));
     });
   });
 }

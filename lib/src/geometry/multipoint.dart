@@ -1,6 +1,6 @@
 part of geometry;
 
-class MultiPoint extends GeometryCollection<Point> implements MultiGeometry<Point> {
+class MultiPoint extends GeometryCollection<Point> implements Multi<Point> {
   
   MultiPoint(Iterable<Nodal> nodes) : super(nodes, false);
   
@@ -40,9 +40,8 @@ class MultiPoint extends GeometryCollection<Point> implements MultiGeometry<Poin
   }
   
   Geometry difference(Geometry geom) {
-    if (enclosedBy(geom)) {
+    if (enclosedBy(geom))
       return null;
-    }
     return new MultiPoint(where(geom.disjoint));
   }
   
@@ -56,16 +55,26 @@ class MultiPoint extends GeometryCollection<Point> implements MultiGeometry<Poin
       if (newPoints.isEmpty) return this;
       return addAll(newPoints);
     }
-    throw "MultiPoint.difference ${geom.runtimeType} not implemented";
+    if (geom is LineSegment) {
+      final multiGeom = new MultiGeometry(where(geom.disjoint));
+      final union = multiGeom.add(geom);
+      return union.length == 1 ? union.single : union;
+    }
+    throw "MultiPoint.union ${geom.runtimeType} not implemented";
   }
   
   bool intersects(Geometry geom) => any(geom.intersects);
-  bool encloses(Geometry geom) => any(geom.encloses);
+  bool encloses(Geometry geom) {
+    if (geom is Multi) {
+      return geom.every(encloses);
+    }
+    return any(geom.enclosedBy);
+  }
   bool touches(Geometry geom) {
-    bool foundTouch;
     if (geom is Point) {
       return any(geom.encloses);
     }
+    bool foundTouch = false;
     for (var p in this) {
       var isect = geom.intersection(p);
       if (isect == null) continue;
@@ -104,9 +113,9 @@ class MultiPoint extends GeometryCollection<Point> implements MultiGeometry<Poin
   }
   
   bool operator ==(Object other) {
-    if (other is MultiPoint) {
+    if (other is Multi<Point>) {
       if (other.length != length) return false;
-      return range(length).every((i) => this[i] == other[i]);
+      return range(length).every((i) => this[i] == other.elementAt(i));
     }
     return false;
   }
