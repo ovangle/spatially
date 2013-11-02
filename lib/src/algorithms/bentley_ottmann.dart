@@ -43,7 +43,7 @@ MultiGeometry bentleyOttmanIntersections(Set<LineSegment> lineSegments,
   
   int iterCount = 0;
   while (eventQueue.isNotEmpty) {
-    util.IFDEF_DEBUG(() { 
+    /* util.IFDEF_DEBUG(() { 
       print("Iteration: $iterCount");
       print('\tEvent queue: ');
       for (var k in eventQueue.keys) {
@@ -58,7 +58,7 @@ MultiGeometry bentleyOttmanIntersections(Set<LineSegment> lineSegments,
         print("\t\t$isectPoint");
       }
     }); //#endif
-    
+    */
     iterCount += 1;
     
     // Pop the next event
@@ -159,7 +159,6 @@ MultiGeometry bentleyOttmanIntersections(Set<LineSegment> lineSegments,
         // Here we would record the intersection of C and A
         if (evtHandled(evtData)) continue;
         handledCrossings.add(evtData);
-        print("INTERSECTION!!: ${evtData["intersection"]}");
         final intersection = evtData["intersection"];
         if (!intersections.contains(intersection)
             && (intersection is! LineSegment 

@@ -11,7 +11,7 @@ class Ring extends GeometryCollection<Point> implements Planar {
       vertices = [vertices, [vertices.first]].expand((i) => i);
     }
     MultiGeometry selfIntersections = 
-        alg.bentleyOttmanIntersections(boundary.segments.toSet(), ignoreAdjacencies: true);        
+        alg.bentleyOttmanIntersections(boundary.segments.toSet(), ignoredAdjacencies: vertices);        
     if (selfIntersections.isNotEmpty) {
       throw new InvalidGeometry("A ring cannot intersect itself \n"
                                 "\t(intersections: $selfIntersections)");

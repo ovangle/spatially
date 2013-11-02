@@ -11,15 +11,14 @@ void main() {
       new Point(x: 0.0, y: 1.0),
       new Point(x: 1.0, y: 0.0));
   runStandardTests("LineSegment", lseg);
-  pointRelations(
-      "LineSegment", 
-      new LineSegment(new Point(x: 0.0, y: 0.0), new Point(x: 1.0, y: 1.0)));
-  linesegmentRelations(
-      "LineSegment", 
-      new LineSegment(new Point(x: 0.0, y: 0.0), new Point(x: 1.0, y: 1.0)));
-  multipointRelations(
-      "LineSegment",
-      new LineSegment(new Point(x: 0.0, y: 0.0), new Point(x: 1.0, y: 1.0)));
+  final lseg1 = new LineSegment(new Point(x: 0.0, y: 0.0), new Point(x: 1.0, y: 1.0));
+  pointRelationTests("LineSegment", lseg1);
+      
+  linesegmentRelations("LineSegment", lseg1);
+  multipointRelations("LineSegment", lseg1);
+  pointOperatorTests("LineSegment", lseg1);
+  multipointOperatorTests("LineSegment", lseg1);
+  linesegmentOperatorTests("LineSegment", lseg1);
   testEncloses();
   testIntersection();
   testComparePoint();

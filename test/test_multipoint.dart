@@ -15,9 +15,12 @@ void main() {
       [ new Point(x: 0.0, y: 0.0),
         new Point(x: 0.5, y: 0.5),
         new Point(x: 1.0, y: 1.0)]);
-  pointRelations("MultiPoint", mp2);
+  pointRelationTests("MultiPoint", mp2);
   multipointRelations("MultiPoint", mp2);
   linesegmentRelations("MultiPoint", mp2);
+  pointOperatorTests("MultiPoint", mp2);
+  multipointOperatorTests("MultiPoint", mp2);
+  linesegmentOperatorTests("MultiPoint", mp2);
   testEncloses();
 }
 

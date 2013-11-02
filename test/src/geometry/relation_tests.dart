@@ -10,16 +10,27 @@ part of geometry_tests;
  * -- be disjoint from (1,0)
  * -- not touch the point (0.5, 0.5)
  */
-void pointRelations(String test_lib, Geometry geom) {
+void pointRelationTests(String test_lib, Geometry geom) {
   if (geom is! Point) {
     print(geom.bounds);
     assert(geom.bounds == new Bounds(bottom: 0.0, top: 1.0, left: 0.0, right: 1.0));
   }
   pointTouches(test_lib, geom);
   pointEncloses(test_lib, geom);
-  pointIntersection(test_lib, geom);
-  pointUnion(test_lib, geom);
-  pointDifference(test_lib, geom);
+  pointIntersects(test_lib, geom);
+  
+}
+
+void pointOperatorTests(String test_lib, Geometry geom) {
+  intersectionTests(test_lib, geom, p1);
+  intersectionTests(test_lib, geom, p2);
+  intersectionTests(test_lib, geom, p3);
+  unionTests(test_lib, geom, p1);
+  unionTests(test_lib, geom, p2);
+  unionTests(test_lib, geom, p3);
+  differenceTests(test_lib, geom, p1);
+  differenceTests(test_lib, geom, p2);
+  differenceTests(test_lib, geom, p3);
 }
 
 void multipointRelations(String test_lib, Geometry geom) {
@@ -33,6 +44,25 @@ void multipointRelations(String test_lib, Geometry geom) {
   multipointDifference(test_lib, geom);
 }
 
+
+void multipointOperatorTests(String test_lib, Geometry geom) {
+  intersectionTests(test_lib, geom, mp1);
+  intersectionTests(test_lib, geom, mp2);
+  intersectionTests(test_lib, geom, mp3);
+  intersectionTests(test_lib, geom, mp4);
+  intersectionTests(test_lib, geom, mp5);
+  unionTests(test_lib, geom, mp1);
+  unionTests(test_lib, geom, mp2);
+  unionTests(test_lib, geom, mp3);
+  unionTests(test_lib, geom, mp4);
+  unionTests(test_lib, geom, mp5);
+  differenceTests(test_lib, geom, mp1);
+  differenceTests(test_lib, geom, mp2);
+  differenceTests(test_lib, geom, mp3);
+  differenceTests(test_lib, geom, mp4);
+  differenceTests(test_lib, geom, mp5);
+}
+
 void linesegmentRelations(String test_lib, Geometry geom) {
   if (geom is! Point) {
     assert(geom.bounds == new Bounds(bottom: 0.0, top: 1.0, left: 0.0, right: 1.0));
@@ -43,5 +73,20 @@ void linesegmentRelations(String test_lib, Geometry geom) {
   linesegmentIntersection(test_lib, geom);
   linesegmentUnion(test_lib, geom);
   linesegmentDifference(test_lib, geom);
+}
+
+linesegmentOperatorTests(String test_lib, Geometry geom) {
+  intersectionTests(test_lib, geom, lseg1);
+  intersectionTests(test_lib, geom, lseg2);
+  intersectionTests(test_lib, geom, lseg3);
+  intersectionTests(test_lib, geom, lseg4);
+  unionTests(test_lib, geom, lseg1);
+  unionTests(test_lib, geom, lseg2);
+  unionTests(test_lib, geom, lseg3);
+  unionTests(test_lib, geom, lseg4);
+  differenceTests(test_lib, geom, lseg1);
+  differenceTests(test_lib, geom, lseg2);
+  differenceTests(test_lib, geom, lseg3);
+  differenceTests(test_lib, geom, lseg4);
 }
 

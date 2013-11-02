@@ -11,7 +11,6 @@ class Linestring extends GeometryCollection<Point>
         && vertices.first == vertices.last;
   }
   
-  
   /**
    * Creates a linestring from an iterable of [Point]s.
    */
@@ -159,6 +158,14 @@ class Linestring extends GeometryCollection<Point>
     return geom.intersection(this);
   }
   
+  Geometry difference(Geometry geom) {
+    throw 'Linestring.difference not implemented for ${geom.runtimeType}';
+  }
+  
+  Geometry union(Geometry geom) {
+    throw 'Linestring.union not implemented for ${geom.runtimeType}';
+  }
+  
   Point get centroid {
     //Only count each vertex once, even if we're closed
     Iterable<Point> vertices = _isClosed(this) ? skip(1) : this;
@@ -201,10 +208,30 @@ class Linestring extends GeometryCollection<Point>
     }
     
     if (geom is Linestring) {
-      return geom.segments.every((s) => encloses(s));
+      return geom.segments.every(encloses);
     }
     
-    return false;
+    if (geom is Planar) {
+      return encloses(geom.boundary);
+    }
+  }
+  
+  bool enclosesProper(Geometry geom) {
+    if (geom is Nodal) {
+      return encloses(geom)
+          && geom != start
+          && geom != end;
+    }
+    if (geom is Linear) {
+      var ends =[start, end];
+      return encloses(geom)
+          && !ends.contains(geom.start)
+          && !ends.contains(geom.end);
+    }
+    if (geom is Planar) {
+      return encloses(geom)
+          && !intersects(geom.boundary);
+    }
   }
   
   /**
@@ -227,6 +254,8 @@ class Linestring extends GeometryCollection<Point>
     }
     return geom.touches(this);
   }
+  
+  bool intersects(Geometry geom) => segments.any(geom.intersects);
   
   Linestring toLinestring() => this;
   

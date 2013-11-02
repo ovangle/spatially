@@ -5,10 +5,6 @@ class LineSegment extends Geometry implements Linear {
   final Point start;
   final Point end;
   
-  MultiGeometry get mutableCopy {
-    throw new UnsupportedError("Cannot construct mutable copy of LineSegment");
-  }
-  
   MultiPoint get _boundary => new MultiPoint([start, end]);
   
   /**
@@ -213,6 +209,23 @@ class LineSegment extends Geometry implements Linear {
       return geom.every(encloses);
     }
     return false;
+  }
+  
+  bool enclosesProper(Geometry geom) {
+    if (geom is Nodal) {
+      return encloses(geom)
+          && geom != start
+          && geom != end;
+    }
+    if (geom is Linear) {
+      var ends = [start,end];
+      return encloses(geom)
+          && !ends.contains(geom.start)
+          && !ends.contains(geom.end);
+    }
+    if (geom is Planar) {
+      return enclosesProper(geom.boundary);
+    }
   }
   
   bool intersects(Geometry geom) {

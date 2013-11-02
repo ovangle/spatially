@@ -64,7 +64,10 @@ void multipointTouches(String test_lib, Geometry geom) {
     } else {
       test("Touches mp3", () => expect(geom.touches(mp3), isTrue));
     }
-    test("Does not touch mp4", () => expect(geom.touches(mp4), isFalse));
+    if (geom is! MultiPoint) {
+      test("Does not touch mp4", 
+          () => expect(geom.touches(mp4), isFalse));
+    }
     test("Does not touch mp5", 
         () => expect(geom.touches(mp5), isFalse));
     test("Touches mp6", () => expect(geom.touches(mp6), isTrue));

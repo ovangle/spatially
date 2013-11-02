@@ -48,7 +48,8 @@ class MultiPoint extends GeometryCollection<Point> implements Multi<Point> {
   Geometry union(Geometry geom) {
     if (geom is Nodal) {
       if (encloses(geom)) return this;
-      return add(geom);
+      final union = add(geom);
+      return union.length == 1? union.single: union;
     }
     if (geom is MultiPoint) {
       var newPoints = geom.where(disjoint);
@@ -70,9 +71,24 @@ class MultiPoint extends GeometryCollection<Point> implements Multi<Point> {
     }
     return any(geom.enclosedBy);
   }
+  
+  bool enclosesProper(Geometry geom) => false;
+  
   bool touches(Geometry geom) {
     if (geom is Point) {
       return any(geom.encloses);
+    }
+    if (geom is Multi) {
+      bool foundTouch = false;
+      for (var g in geom) {
+        if (intersects(g)) {
+          if (enclosesProper(g)) {
+            return false;
+          }
+          foundTouch = true;
+        }
+      }
+      return foundTouch;
     }
     bool foundTouch = false;
     for (var p in this) {
@@ -113,9 +129,9 @@ class MultiPoint extends GeometryCollection<Point> implements Multi<Point> {
   }
   
   bool operator ==(Object other) {
-    if (other is Multi<Point>) {
+    if (other is Multi) {
       if (other.length != length) return false;
-      return range(length).every((i) => this[i] == other.elementAt(i));
+      return range(length).every((i) => contains(other.elementAt(i)));
     }
     return false;
   }

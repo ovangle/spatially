@@ -11,4 +11,7 @@ part 'src/geometry/std_tests.dart';
 part 'src/geometry/relation_tests.dart';
 part 'src/geometry/relations/point_relations.dart';
 part 'src/geometry/relations/linesegment_relations.dart';
+part 'src/geometry/relations/linestring_relations.dart';
 part 'src/geometry/relations/multipoint_relations.dart';
+
+part 'src/geometry/operator_tests.dart';

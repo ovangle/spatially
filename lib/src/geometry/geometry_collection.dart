@@ -37,4 +37,7 @@ abstract class GeometryCollection<T extends Geometry> extends Geometry with Iter
    * Returns the [:i:]th geometry in the iterable.
    */
   T operator[](int i) => _geometries[i];
+  
+  String toString() =>
+    "${runtimeType}$_geometries";
 }

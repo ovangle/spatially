@@ -10,9 +10,12 @@ import 'geometry_tests.dart';
 void main() {
   final sample_point = new Point(x: 15.2, y: 188.4);
   runStandardTests("Point", sample_point);
-  pointRelations("Point", new Point(x: 0.0, y: 0.0));
+  pointRelationTests("Point", new Point(x: 0.0, y: 0.0));
   linesegmentRelations("Point", new Point(x: 0.0, y: 0.0));
   multipointRelations("Point", new Point(x: 0.0, y: 0.0));
+  pointOperatorTests("Point", new Point(x: 0.0, y: 0.0));
+  multipointOperatorTests("Point", new Point(x: 0.0, y: 0.0));
+  linesegmentOperatorTests("Point", new Point(x: 0.0, y: 0.0));
   testRotate();
   testDistanceTo();
   testColinear();

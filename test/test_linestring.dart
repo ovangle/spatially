@@ -58,7 +58,7 @@ void testSimplify() {
                       new Point(x:0.0, y:0.0)]);
   test("test_linestring: simplify removes duplicate points",
       () => expect(duplicatePoints.simplify(tolerance:1e-15),
-                   geometryEquals(simplifiedLinestring, 1e-15)));
+                   equals(simplifiedLinestring)));
   
   final inlinePoints = 
       new Linestring([new Point(x:0.0, y:0.0),
@@ -101,7 +101,7 @@ void testFromSegments() {
         new Point(x: 1.75, y: 2.0)]);
   test("test_linestring: Connected segments are not included twice",
          () => expect(fromConnected,
-                      geometryEquals(fromPoints, 1e-15)));
+                      equals(fromPoints)));
   
   List<LineSegment> unconnectedSegments = 
       [ new LineSegment(new Point(x: 1.0, y: 2.0), new Point(x: 1.5, y: 1.5)),
@@ -200,40 +200,41 @@ void testInsert() {
   var lstr2 = lstr.append(new Point(x: 2.0, y:1.0));
   test("test_linestring: append to $lstr",
       () => expect(lstr2, 
-                   geometryEquals(new Linestring([new Point(x: 0.0, y:0.0),
-                                                  new Point(x: 1.0, y:1.0),
-                                                  new Point(x: 2.0, y:1.0)]),
-                                  1e-15)));
+                   equals(new Linestring(
+                       [new Point(x: 0.0, y:0.0),
+                        new Point(x: 1.0, y:1.0),
+                        new Point(x: 2.0, y:1.0)])
+                   )));
   test("test_linestring: append to unitSquare",
       () => expect(unitSquare.append(new Point(x: -0.5, y: 0.5), preserve_closure: true),
-                   geometryEquals(new Linestring([
+                   equals(new Linestring([
                       new Point(x: 0.0, y: 0.0),
                       new Point(x: 1.0, y: 0.0),
                       new Point(x: 1.0, y: 1.0),
                       new Point(x: 0.0, y: 1.0),
                       new Point(x: -0.5, y: 0.5),
                       new Point(x: 0.0, y: 0.0)
-                   ]), 1e-15)));
+                   ]))));
   test("test_linestring: insert into unitSquare at 0",
        () => expect(unitSquare.insert(0, new Point(x: 0.5, y: -0.5), preserve_closure: true),
-                    geometryEquals(new Linestring([
+                    equals(new Linestring([
                       new Point(x: 0.5, y: -0.5),
                       new Point(x: 0.0, y: 0.0),
                       new Point(x: 1.0, y: 0.0),
                       new Point(x: 1.0, y: 1.0),
                       new Point(x: 0.0, y: 1.0),
                       new Point(x: 0.5, y: -0.5)
-                    ]), 1e-15)));
+                    ]))));
   test("test_linestring: insert into unitSquare at 3",
       () => expect(unitSquare.insert(3, new Point(x: 1.5, y: 0.5), preserve_closure: true),
-                  geometryEquals(new Linestring([
+                  equals(new Linestring([
                       new Point(x: 0.0, y: 0.0),
                       new Point(x: 1.0, y: 0.0),
                       new Point(x: 1.0, y: 1.0),
                       new Point(x: 1.5, y: 0.5),
                       new Point(x: 0.0, y: 1.0),
                       new Point(x: 0.0, y: 0.0) 
-                      ]), 1e-15)));
+                      ]))));
   
 }
 
@@ -247,7 +248,7 @@ void testConcat() {
   
   test("test_linestring: concat $lstr1 and $lstr2",
       () => expect(lstr1.concat(lstr2),
-                   geometryEquals(expected, 1e-15)));
+                   equals(expected)));
   
   var lstr3 = new Linestring([new Point(x: 4.0, y: 4.0), new Point(x: 5.0, y:5.0)]);
   test("test_linestring: cannot concat $lstr1 and $lstr3",
@@ -260,5 +261,5 @@ void testConcat() {
                                     new Point(x:2.0, y: 2.0)]);
   test("test_linestring: concatenate with reverse",
       () => expect(lstr1.concat(lstr4, reverse: true),
-                  geometryEquals(expected2, 1e-15)));
+                  equals(expected2)));
 }

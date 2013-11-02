@@ -11,14 +11,10 @@ void pointEncloses(String test_lib, Geometry geom) {
   });
 }
 
-void pointIntersection(String test_lib, Geometry geom) {
-  group("relation_tests: $test_lib: Point: Intersection/Intersects: ", () {
-    test("Geometry intersection p1",
-        () => expect(geom.intersection(p1), equals(p1)));
+void pointIntersects(String test_lib, Geometry geom) {
+  group("relation_tests: $test_lib: Point: Intersects: ", () {
     test("Geometry intersects p1",
         () => expect(geom.intersects(p1), isTrue));
-    test("Geometry intersection p2 is null",
-        () => expect(geom.intersection(p2), isNull));
     test("Geometry intersects p2",
         () => expect(geom.intersects(p2), isFalse));
   });
@@ -35,38 +31,5 @@ void pointTouches(String test_lib, Geometry geom) {
         () => expect(geom.touches(p3), isFalse);
       });
     }
-  });
-}
-
-void pointDifference(String test_lib, Geometry geom) {
-  group("relation_tests: $test_lib: Point: Difference", () {
-    if (geom is Point || geom is MultiPoint) {
-      test("Taking an enclosed point from a point or multipoint removes the point", () {
-        expect(geom.difference(p1), disjoint(p1)); 
-      });
-    } else {
-      test("Taking a single point from a geometry leaves it unchanged", () {
-        //Taking a point from anything else 
-        expect(geom.difference(p1), equals(geom));
-      });
-    } 
-    test("Difference disjoint point", () {
-      expect(geom.difference(p2), equals(geom));
-    });
-  });
-}
-
-void pointUnion(String test_lib, Geometry geom) {
-  
-  group("relation_tests: $test_lib: Point: Union", () {
-    test("Union enclosed p1",
-        () => expect(geom.union(p1), equals(geom)));
-    test("Union disjoint p2", () {
-      if (geom is Multi) {
-        expect(geom.union(p2), contains(p2));
-      } else {
-        expect(geom.union(p2), unorderedEquals([geom, p2]));
-      }
-    });
   });
 }

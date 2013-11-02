@@ -130,6 +130,8 @@ class Point extends Geometry implements Nodal {
     throw "Point.encloses not implemented for ${geom.runtimeType}";
   }
   
+  bool enclosesProper(Geometry geom) => false;
+  
   bool intersects(Geometry geom) {
     if (geom is Point) {
       return geom.toPoint() == this;

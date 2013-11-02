@@ -114,6 +114,11 @@ abstract class Geometry {
    */
   bool encloses(Geometry geom);
   /**
+   * `true` iff [:geom:] is completely inside `this`
+   * and does not touch this.
+   */
+  bool enclosesProper(Geometry geom);
+  /**
    * `true` if `this` completely encloses [:geom:]
    */
   bool enclosedBy(Geometry geom)  => geom.encloses(this);
