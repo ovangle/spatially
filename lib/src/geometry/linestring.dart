@@ -167,6 +167,9 @@ class Linestring extends GeometryCollection<Point>
   Geometry difference(Geometry geom) {
     if (geom is Nodal || geom is MultiPoint) return this;
     if (geom is Linear) {
+      if (length == 1) {
+        return geom.encloses(single) ? null : single;
+      }
       final intersection = this & geom;
       if (intersection is Point || intersection is MultiPoint)
         return this;

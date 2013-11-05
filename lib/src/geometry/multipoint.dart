@@ -57,7 +57,7 @@ class MultiPoint extends GeometryCollection<Point> implements Multi<Point> {
       if (newPoints.isEmpty) return this;
       return addAll(newPoints);
     }
-    if (geom is LineSegment) {
+    if (geom is Linear) {
       final multiGeom = new MultiGeometry(where(geom.disjoint));
       final union = multiGeom.add(geom);
       return union.length == 1 ? union.single : union;
