@@ -124,6 +124,9 @@ class Linestring extends GeometryCollection<Point>
   Geometry intersection(Geometry geom) {
     if (isEmpty || (geom is GeometryCollection && geom.isEmpty)) 
       return null; 
+    if (length == 1) {
+      return geom.intersection(single);
+    }
     if (!boundsIntersects(geom)) return null;
     
     if (geom is Point) {
@@ -132,9 +135,6 @@ class Linestring extends GeometryCollection<Point>
     }
     
     if (geom is Linear) {
-      if (length == 1) {
-        return geom.intersection(single);
-      }
       if (segments.any((s) => encloses(geom))) {
         return geom;
       }

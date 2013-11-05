@@ -89,7 +89,7 @@ linesegmentOperatorTests(String test_lib, Geometry geom) {
 
 linestringRelationTests(String test_lib, Geometry geom) {
   if (geom is! Point) {
-    assert(geom.bounds == new Bounds(bottom: 0.0, top: 1.0, right: 0.0, left: 1.0));
+    assert(geom.bounds == new Bounds(bottom: 0.0, top: 1.0, left: 0.0, right: 1.0));
   }
   linestringTouches(test_lib, geom);
   linestringEncloses(test_lib, geom);
