@@ -132,6 +132,9 @@ class Linestring extends GeometryCollection<Point>
     }
     
     if (geom is Linear) {
+      if (length == 1) {
+        return geom.intersection(single);
+      }
       if (segments.any((s) => encloses(geom))) {
         return geom;
       }
@@ -356,7 +359,11 @@ class Linestring extends GeometryCollection<Point>
     return geom.touches(this);
   }
   
-  bool intersects(Geometry geom) => segments.any(geom.intersects);
+  bool intersects(Geometry geom) {
+    if (isEmpty) return false;
+    if (length == 1) return geom.intersects(single);
+    return segments.any(geom.intersects);
+  }
   
   Linestring toLinestring() => this;
   

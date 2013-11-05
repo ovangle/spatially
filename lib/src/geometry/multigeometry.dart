@@ -45,16 +45,16 @@ class MultiGeometry<T extends Geometry> extends GeometryCollection<T> implements
 
   
   MultiGeometry<T> translate({double dx: 0.0, double dy: 0.0}) 
-      => new MultiGeometry<T>.from(map((g) => (g as Geometry).translate(dx: dx, dy: dy)));
+      => new MultiGeometry<T>(map((g) => (g as Geometry).translate(dx: dx, dy: dy)));
   
   MultiGeometry<T> scale(double ratio, {Point origin : null}) {
     if (origin == null) origin = centroid;
-    return new MultiGeometry<T>.from(map((g) => (g as Geometry).scale(ratio, origin: origin)));
+    return new MultiGeometry<T>(map((g) => (g as Geometry).scale(ratio, origin: origin)));
   }
   
   MultiGeometry<T> rotate(double dt, {Point origin : null}) {
     if (origin == null) origin = centroid;
-    return new MultiGeometry<T>.from(map((g) => g.rotate(dt, origin: origin)));
+    return new MultiGeometry<T>(map((g) => g.rotate(dt, origin: origin)));
   }
   Geometry intersection(Geometry geom) {
     //If we're passed a point, return the intersection as a point
@@ -79,6 +79,24 @@ class MultiGeometry<T extends Geometry> extends GeometryCollection<T> implements
    */
   bool encloses(Geometry geom) =>
       fold(geom, (part, g) => (part != null) ? part - g : null) == null;
+  
+  bool touches(Geometry geom) {
+    bool foundTouch = false;
+    for (var g in this) {
+      if (g.touches(geom)) {
+        foundTouch = true;
+        continue;
+      }
+      var intersection = g & geom;
+      if (geom.enclosesProper(intersection)) {
+        return false;
+      }
+      if (g.enclosesProper(intersection)) {
+        return false;
+      }
+    }
+    return foundTouch;
+  }
   
   /**
    * Simplify for geometry lists does a couple of things, depending on the components
@@ -113,9 +131,9 @@ class MultiGeometry<T extends Geometry> extends GeometryCollection<T> implements
       geomlist.addAll(toAdd);
       return geomlist;
     }
-    if (length < 2) return new MultiGeometry<T>.from(this);
+    if (length < 2) return new MultiGeometry<T>(this);
     var simplifiedList = 
-        new MultiGeometry<T>.from(
+        new MultiGeometry<T>(
             fold(new MultiGeometry(), simplifyAdjacent)
             .map((g) => g.simplify())
         );

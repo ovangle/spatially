@@ -24,25 +24,24 @@ void intersectionTests(String test_lib, Geometry geom1, Geometry geom2) {
       });
     }
     if (geom1.encloses(geom2)) {
-      if (geom2 is! Multi) {
+      if (geom2 is! GeometryCollection) {
         test("If geom1 encloses geom2, "
             "then intersection is geom2\n$showGeoms", () {
               expect(geom1.intersection(geom2), equals(geom2));       
             });
       } else {
-        
-        if ((geom2 as Multi).isEmpty) {
+        if ((geom2 as GeometryCollection).isEmpty) {
           test("If geom1 encloses geom2, "
               " and geom1 multi and empty"
               "then intersection is null\n$showGeoms", () {
                 expect(geom1.intersection(geom2), isNull);       
               });
-        } else if ((geom2 as Multi).length == 1) {
+        } else if ((geom2 as GeometryCollection).length == 1) {
           test("If geom1 encloses geom2, "
-              " and geom1 multi and length == 1"
+              " and geom1 multi and length == 1 "
               "then intersection is the single element\n$showGeoms", () {
                 expect(geom1.intersection(geom2), 
-                       equals((geom2 as Multi).single));       
+                       equals((geom2 as GeometryCollection).single));       
               });
         } else {
           test("If geom1 encloses geom2, "
