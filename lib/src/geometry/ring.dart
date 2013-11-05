@@ -5,7 +5,7 @@ part of geometry;
  */
 class Ring extends GeometryCollection<Point> implements Planar {
   
-  Ring(Iterable<Point> vertices) : super(vertices, false) {
+  Ring(Iterable<Point> vertices) : super(vertices) {
     if (vertices.length <= 3) throw new InvalidGeometry("A ring must have at least three distinct coordinates");
     if (!Linestring._isClosed(vertices)) {
       vertices = [vertices, [vertices.first]].expand((i) => i);

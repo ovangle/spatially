@@ -5,8 +5,8 @@ abstract class GeometryCollection<T extends Geometry> extends Geometry with Iter
   
   Iterator<T> get iterator => _geometries.iterator;
   
-  GeometryCollection(Iterable<T> geometries, bool growable)
-      : _geometries = new List<T>.from(geometries, growable: growable);
+  GeometryCollection(Iterable<T> geometries)
+      : _geometries = new List<T>.from(geometries, growable: false);
   
   /**
    * Returns the minimum [Bounds] object which contains every [Geometry] in the collection.

@@ -2,7 +2,8 @@ part of geometry;
 
 class MultiPoint extends GeometryCollection<Point> implements Multi<Point> {
   
-  MultiPoint(Iterable<Nodal> nodes) : super(nodes, false);
+  MultiPoint([Iterable<Nodal> nodes]) 
+      : super(nodes != null ? nodes.map((n) => n.toPoint()) : []);
   
   Point get centroid {
     if (isEmpty) {

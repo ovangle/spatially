@@ -21,7 +21,8 @@ linesegmentEncloses(String test_lib, Geometry geom) {
   group("relation_tests: $test_lib: LineSegment: Encloses: ", () {
     test("geom encloses lseg0", () => expect(geom.encloses(lseg0), isTrue));
     if (geom is! Point && geom is! MultiPoint) {
-      test("geom encloses lseg1", () => expect(geom.encloses(lseg1), isTrue));
+      test("geom encloses lseg1", 
+          () => expect(geom.encloses(lseg1), isTrue));
     } else {
       test("Point and multipoint do not enclose lseg1",
           () => expect(geom.encloses(lseg1), isFalse));
@@ -65,72 +66,6 @@ linesegmentIntersects(String test_lib, Geometry geom) {
     }
     test("geom intersects lseg4", () {
       expect(geom.intersects(lseg4), isTrue);
-    });
-  });
-}
-
-linesegmentIntersection(String test_lib, Geometry geom) {
-  group("relation_tests: $test_lib: LineSegment: Interection: ", () {
-    test("geom intersection lseg0 is lseg0", () {
-      expect(geom.intersection(lseg0), equals(new Point(x: 0.0, y: 0.0)));
-    });
-    if (geom is! Point && geom is! MultiPoint) {
-      test("geom intersection lseg1 is lseg1", () {
-        expect(geom.intersection(lseg1), equals(lseg1));
-      });
-    }
-    test("geom intersection lseg2 is null", () {
-      expect(geom.intersection(lseg2), isNull);
-    });
-    if (geom is! Point) {
-      test("geom intersection lseg3 is not null", () {
-        expect(geom.intersection(lseg3), isNotNull);
-      });
-    }
-    test("geom intersection lseg4 is a Point or LineSegment", () {
-      expect(geom.intersection(lseg4), 
-             anyOf(new isInstanceOf<Point>(),
-             new isInstanceOf<LineSegment>()));
-    });
-  });
-}
-
-linesegmentUnion(String test_lib, Geometry geom) {
-  group("relation_tests: $test_lib: LineSegment: Union:", () {
-    if (geom is Point || geom is MultiPoint) {
-      test("Point or multipoint union point is lseg1", () {
-        expect(geom.union(lseg1), equals(lseg1));
-      });
-    } else {
-      test("geom union lseg1 is geom", () {
-        expect(geom.union(lseg1), equals(geom));
-      });
-    }
-    test("Geom union lseg2 contains geom and lseg2", () {
-      expect(geom.union(lseg2), encloses(lseg2));
-      expect(geom.union(lseg2), encloses(geom));
-    });
-  });
-}
-
-linesegmentDifference(String test_lib, Geometry geom) {
-  group("relation_tests: $test_lib: LineSegment: Difference", () {
-    if (geom is Point || geom is MultiPoint) {
-      test("lseg1 difference geom is lseg1", () {
-        expect(lseg1.difference(geom), equals(lseg1));
-      });
-    } else {
-      test("lseg1 difference geom is null", () {
-        expect(lseg1.difference(geom), isNull);
-      });
-      test("geom difference lseg4 is geom", () {
-        expect(geom.difference(lseg4), equals(geom));
-        expect(lseg4.difference(geom), equals(lseg4));
-      });
-    }
-    test("geom difference lseg2 is geom", () {
-      expect(geom.difference(lseg2), equals(geom));
-      expect(lseg2.difference(geom), equals(lseg2));
     });
   });
 }

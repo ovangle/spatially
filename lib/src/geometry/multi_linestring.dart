@@ -1,8 +1,8 @@
 part of geometry;
 
 class MultiLinestring extends GeometryCollection<Linestring> implements Multi {
-  MultiLinestring(Iterable<Linear> lines) 
-      : super(lines.map((l) => l.toLinestring()), false);
+  MultiLinestring([Iterable<Linear> lines]) 
+      : super(lines != null ? lines.map((l) => l.toLinestring()) : []);
   
   Point get centroid {
     if (isEmpty) {
@@ -32,6 +32,22 @@ class MultiLinestring extends GeometryCollection<Linestring> implements Multi {
   }
   
   bool contains(Linear item) => _geometries.contains(item.toLinestring());
+  
+  bool encloses(Geometry geom) {
+    if (geom is Point) {
+      return any(geom.enclosedBy);
+    }
+    if (geom is Linear) {
+      final partialGeom = fold(geom, (part, lstr) => (part != null) ? part - lstr : null);
+      return partialGeom == null;
+    }
+    if (geom is Planar) {
+      return any((lstr) => lstr.encloses(geom.boundary));
+    }
+    if (geom is Multi) {
+      return geom.every(encloses);
+    }
+  }
   
   bool operator ==(Object other) {
     if (other is MultiLinestring) {

@@ -24,12 +24,21 @@ final testLine1 = new Linestring(
 void main() {
   runStandardTests("Linestring (unitSquare)", unitSquare);
   runStandardTests("Linestring (testLine1)", testLine1);
+  final lstr = new Linestring([new Point(x: 0.0, y: 0.0),
+                               new Point(x: 0.5, y: 0.5),
+                               new Point(x: 0.75, y: 0.75),
+                               new Point(x: 1.0, y: 1.0)]);
+  pointRelationTests("LineString", lstr);
+  multipointRelationTests("Linestring", lstr);
+  linesegmentRelationTests("Linestring", lstr);
+  pointOperatorTests("Linestring", lstr);
+  multipointOperatorTests("Linestring", lstr);
+  linesegmentOperatorTests("Linestring", lstr);
   testSimplify();
   testFromSegments();
   testGeometryImpl();
   testInsert();
   testConcat();
-  testTouches();
 }
 
 void testSimplify() {
@@ -139,38 +148,6 @@ void testEncloses() {
                               new Point(x:0.0, y:1.0)]);
   test("test_linestring: $lstr2 does not enclose $lseg",
       () => expect(lstr2.encloses(lseg), isFalse));
-}
-
-void testTouches() {
-  final lstr = new Linestring([new Point(x: 0.0, y: 0.0), new Point(x: 1.0, y: 0.0), new Point(x: 1.0, y: 1.0)]);
-  
-  final p1 = new Point(x: 0.0, y: 0.0);
-  final p2 = new Point(x: 1.0, y: 0.0);
-  test("$lstr touches $p1",
-      () => expect(lstr.touches(p1), isTrue));
-  test("$lstr does not touch $p2",
-      () => expect(lstr.touches(p2), isFalse));
-  
-  final lseg1 = new LineSegment(new Point(x: 0.0, y: 0.0), new Point(x:1.0, y: 1.0));
-  final lseg2 = new LineSegment(new Point(x: 1.0, y: 0.0), new Point(x:0.0, y: 1.0));
-  test("$lstr touches $lseg1",
-      () => expect(lstr.touches(lseg1), isTrue));
-  test("$lstr touches $lseg2",
-      () => expect(lstr.touches(lseg2), isFalse));
-  
-  final ring1 = new Ring([new Point(x: -1.0, y: -1.0), 
-                          new Point(x: -1.0, y: 1.0),
-                          new Point(x: 0.5, y: 0.5),
-                          new Point(x: -1.0, y: -1.0)]);
-  final ring2 = new Ring([new Point(x: -0.5, y: -0.5),
-                          new Point(x: -0.5, y: 0.5),
-                          new Point(x: 0.6, y: 0.5),
-                          new Point(x: 0.5, y: -0.5),
-                          new Point(x: -0.5, y: -0.5)]);
-  test("test_linestring: $lstr touches $ring1",
-      () => expect(lstr.touches(ring1), isTrue));
-  test("test_linestring: $lstr does not touch $ring2",
-      () => expect(lstr.touches(ring2), isFalse));
 }
 
 void testGeometryImpl() {

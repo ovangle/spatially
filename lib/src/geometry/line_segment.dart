@@ -116,8 +116,8 @@ class LineSegment extends Geometry implements Linear {
       // the lines are approximately parallel.
       var isectStart, isectEnd;
      
-      if (intersectionEncloses(start))      isectStart = left;
-      if (intersectionEncloses(end))        isectEnd = right;
+      if (intersectionEncloses(start))      isectStart = start;
+      if (intersectionEncloses(end))        isectEnd = end;
       
       if (lseg.start.distanceToSqr(start) > lseg.end.distanceToSqr(end)) {
         lseg = lseg.reversed;
@@ -125,9 +125,8 @@ class LineSegment extends Geometry implements Linear {
       
       if (intersectionEncloses(lseg.start)) isectStart = lseg.start; 
       if (intersectionEncloses(lseg.end))   isectEnd   = lseg.end;
-      if (isectStart == isectEnd) {
-        return isectEnd;
-      }
+      if (isectStart == null || isectStart == isectEnd) return isectEnd;
+      if (isectEnd == null) return isectStart;
       return new LineSegment(isectStart, isectEnd);
     } else {
       final intersectionPoint = 
@@ -289,7 +288,7 @@ class LineSegment extends Geometry implements Linear {
    *    encloses either of the endpoints
    * -- `null`, if [:geom:] encloses `this`.
    */
-  LineSegment difference(Geometry geom) {
+  Geometry difference(Geometry geom) {
     switch (geom.runtimeType) {
       case Point:
       case MultiPoint:
@@ -297,10 +296,7 @@ class LineSegment extends Geometry implements Linear {
         return this;
       case LineSegment:
         var isect = _segmentIntersection(geom);
-        if (isect is Point) {
-          return this;
-        }
-        if (isect == null) {
+        if (isect == null || isect is Point) {
           return this;
         }
         final containsStart = isect.encloses(start);
@@ -308,21 +304,18 @@ class LineSegment extends Geometry implements Linear {
         if (containsStart && containsEnd) {
           return null;
         } else if (containsStart) {
-          final diffStart = 
-              isect.start.distanceToSqr(start) <= isect.end.distanceToSqr(start)
-              ? isect.start : isect.end;
-          return new LineSegment(diffStart, end);
+          return new LineSegment(isect.end, end);
         } else if (containsEnd) {
-          final diffEnd =
-              isect.end.distanceToSqr(end) <= isect.start.distanceToSqr(end)
-              ? isect.end : isect.start;
-          return new LineSegment(start, diffEnd);
+          return new LineSegment(start, isect.start);
         }
-        final resultStart = 
-            [start, end].contains(isect.start) ? isect.end : isect.start;
-        final resultEnd = 
-            [isect.start, isect.end].contains(start) ? end : start; 
-        return new LineSegment(resultStart, resultEnd);
+        return new MultiLinestring([new LineSegment(start, isect.start),
+                                    new LineSegment(end, isect.end)]);
+      case Linestring:
+        var isect = intersection(geom);
+        if (isect == null) return this;
+        if (isect is Point) return this;
+        
+        return null;
       default:
         throw 'LineSegment.difference not implemented for ${geom.runtimeType}';
     }

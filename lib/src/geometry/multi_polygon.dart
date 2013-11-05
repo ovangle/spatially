@@ -1,8 +1,8 @@
 part of geometry;
 
 class MultiPolygon extends GeometryCollection<Polygon> implements Multi {
-  MultiPolygon(Iterable<Planar> planes)
-      : super(planes.map((p) => p.toPolygon()), false);
+  MultiPolygon([Iterable<Planar> planes])
+      : super(planes != null ? planes.map((p) => p.toPolygon()) : []);
   
   Point get centroid {
     if (isEmpty) 

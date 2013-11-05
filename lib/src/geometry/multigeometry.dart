@@ -5,7 +5,7 @@ part of geometry;
  */
 class MultiGeometry<T extends Geometry> extends GeometryCollection<T> implements Multi<T> {
       
-  MultiGeometry([Iterable<T> geoms]) : super(geoms != null ? geoms : [], false);
+  MultiGeometry([Iterable<T> geoms]) : super(geoms != null ? geoms : []);
   
   //Implementation of Geometry
   Point get centroid {

@@ -170,6 +170,8 @@ abstract class Linear extends Geometry {
    * Append a [:node:] to the line, without modifying the result.
    */
   Linestring append(Nodal node);
+  
+  Linestring insert(Nodal node, int i);
   /**
    * Concatenates a [Linear] geometry onto the end of this geometry
    * Raises an [InvalidGeometry] if the start point of the line is not

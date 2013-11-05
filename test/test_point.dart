@@ -11,8 +11,8 @@ void main() {
   final sample_point = new Point(x: 15.2, y: 188.4);
   runStandardTests("Point", sample_point);
   pointRelationTests("Point", new Point(x: 0.0, y: 0.0));
-  linesegmentRelations("Point", new Point(x: 0.0, y: 0.0));
-  multipointRelations("Point", new Point(x: 0.0, y: 0.0));
+  linesegmentRelationTests("Point", new Point(x: 0.0, y: 0.0));
+  multipointRelationTests("Point", new Point(x: 0.0, y: 0.0));
   pointOperatorTests("Point", new Point(x: 0.0, y: 0.0));
   multipointOperatorTests("Point", new Point(x: 0.0, y: 0.0));
   linesegmentOperatorTests("Point", new Point(x: 0.0, y: 0.0));

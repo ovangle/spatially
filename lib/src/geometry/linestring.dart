@@ -3,8 +3,8 @@ part of geometry;
 class Linestring extends GeometryCollection<Point> 
                  implements Linear {
   
-  Point get start => first;
-  Point get end   => last;
+  Point get start => isNotEmpty ? first : null;
+  Point get end   => isNotEmpty ? last : null;
   
   static bool _isClosed(Iterable<Point> vertices) {
     return vertices.length > 3
@@ -14,7 +14,7 @@ class Linestring extends GeometryCollection<Point>
   /**
    * Creates a linestring from an iterable of [Point]s.
    */
-  Linestring([Iterable<Point> vertices]) : super((vertices != null) ? vertices : [], false);
+  Linestring([Iterable<Point> vertices]) : super((vertices != null) ? vertices : []);
   
   /**
    * Constructs a [Linestring] from a list of adjacent lines, connected by their endpoints.
@@ -45,7 +45,7 @@ class Linestring extends GeometryCollection<Point>
    * If [:preserve_closure:] is `true` and the linestring is
    * closed, then the resulting linestring will be closed
    */
-  Linestring insert(int i, Nodal p, {bool preserve_closure : false}) {
+  Linestring insert(Nodal p, int i, {bool preserve_closure : false}) {
     if (i < 0 || i > length) {
       throw new RangeError("Not a valid index into the linestring: $i");
     }
@@ -122,6 +122,8 @@ class Linestring extends GeometryCollection<Point>
    * --A [Point] if the the segment intersects another segment at a single point
    */
   Geometry intersection(Geometry geom) {
+    if (isEmpty || (geom is GeometryCollection && geom.isEmpty)) 
+      return null; 
     if (!boundsIntersects(geom)) return null;
     
     if (geom is Point) {
@@ -130,17 +132,18 @@ class Linestring extends GeometryCollection<Point>
     }
     
     if (geom is Linear) {
-      for (var seg in segments.where((s) => s.encloses(geom))) {
+      if (segments.any((s) => encloses(geom))) {
         return geom;
       }
+      final lstr = geom.toLinestring();
       Set segs = new Set.from(segments)
-          .union(geom.toLinestring().segments.toSet());
+          .union(lstr.segments.toSet());
       
       //Ignore any adjancencies at the non-terminating vertices of this
       //and non-terminating vertices of other.
       final adjacencies = new Set.from(
           [ this.take(length - 1).skip(1),
-            geom.toLinestring().take(length - 1).skip(1)
+            lstr.take(lstr.length - 1).skip(1)
           ].expand((i) => i));
       final intersections = new MultiGeometry(
           alg.bentleyOttmanIntersections(
@@ -159,10 +162,94 @@ class Linestring extends GeometryCollection<Point>
   }
   
   Geometry difference(Geometry geom) {
+    if (geom is Nodal || geom is MultiPoint) return this;
+    if (geom is Linear) {
+      final intersection = this & geom;
+      if (intersection is Point || intersection is MultiPoint)
+        return this;
+      var diff = new MultiLinestring();
+      var contiguous = new Linestring();
+      void addLine(Linear line) {
+        if (contiguous.isEmpty || contiguous.end == line.start) {
+          contiguous = contiguous.concat(line);
+        } else {
+          diff = diff.add(contiguous);
+          contiguous = new Linestring();
+        }
+      }
+      for (var seg in this.segments) {
+        final segIntersection = intersection & seg;
+        if (segIntersection == null || segIntersection is Point) {
+          addLine(seg);
+        } else if (segIntersection is LineSegment) {
+          var diff = seg - segIntersection;
+          if (diff != null) {
+            addLine(diff);
+          }
+        } else if (segIntersection is MultiLinestring) {
+          for (var l in seg - segIntersection) {
+            addLine(l);
+          }
+        }
+      }
+      if (diff.isEmpty) return null;
+      if (diff.length == 1) return diff.single;
+      return diff;
+    }
     throw 'Linestring.difference not implemented for ${geom.runtimeType}';
   }
   
   Geometry union(Geometry geom) {
+    if (geom is Point) {
+      return encloses(geom) ? this : new MultiGeometry([this, geom]);
+    } 
+    if (geom is MultiPoint) {
+      List<Geometry> unionGeoms = [];
+      for (var p in geom) {
+        if (!encloses(p)) {
+          unionGeoms.add(p);
+        }
+      }
+      unionGeoms.add(this);
+      return new MultiGeometry(unionGeoms);
+    }
+    if (geom is LineSegment) {
+      if (isEmpty) return geom.toLinestring();
+      final intersection = this & geom;
+      if (intersection is Point) {
+        if (intersection == end
+            && [geom.start, geom.end].contains(intersection)) {
+          return concat(geom, reverse: true);
+        }
+        if (intersection == start) {
+          if (intersection == geom.start) {
+            return geom.reversed.concat(this.reversed);
+          } else if (intersection == geom.end) {
+            return geom.concat(this);
+          }
+        }
+      }
+      if (intersection is LineSegment) {
+        if (encloses(geom.start) && encloses(geom.end)) return this;
+        if (encloses(start)) {
+          if (encloses(geom.end)) {
+            return insert(geom.start, 0);
+          }
+          if (encloses(geom.start)) {
+            return insert(geom.end, 0);
+          }
+        }
+        if (encloses(end)) {
+          if (encloses(geom.end)) {
+            return append(geom.end);
+          }
+          if (encloses(geom.start)) {
+            return append(geom.start);
+          }
+        }
+      }
+      return new MultiLinestring([this, geom.toLinestring()]);
+    }
     throw 'Linestring.union not implemented for ${geom.runtimeType}';
   }
   
@@ -193,27 +280,40 @@ class Linestring extends GeometryCollection<Point>
   
   bool encloses(Geometry geom) {
     if (geom is Point) {
+      if (isEmpty) return false;
+      if (length == 1) {
+        return this.first == geom;
+      }
       return segments.any((s) => s.encloses(geom));
     }
     
-    if (geom is LineSegment) {
+    if (geom is Linear) {
+      if (isEmpty) return false;
+      if (length == 1) return this[0].encloses(geom);
+      
       var partialGeom = geom;
       for (var seg in segments) {
         if (seg.encloses(partialGeom)) return true;
         final segIntersection = seg & geom;
         if (segIntersection is LineSegment) {
-          partialGeom = seg - segIntersection;
+          partialGeom = partialGeom - segIntersection;
+        } else if (segIntersection is GeometryCollection) {
+          for (var isectComp in segIntersection) {
+            partialGeom = partialGeom - isectComp;
+          }
         }
+        if (partialGeom == null) return true; 
       }
-    }
-    
-    if (geom is Linestring) {
-      return geom.segments.every(encloses);
+      return partialGeom == null;
     }
     
     if (geom is Planar) {
       return encloses(geom.boundary);
     }
+    if (geom is Multi) {
+      return geom.every(this.encloses);
+    }
+    throw "Linestring.encloses not implemented for ${geom.runtimeType}";
   }
   
   bool enclosesProper(Geometry geom) {
@@ -250,7 +350,8 @@ class Linestring extends GeometryCollection<Point>
       if (isect is MultiPoint) {
         return touches(isect);
       }
-      return isect is Point;
+      return isect is Point
+          && touches(isect);
     }
     return geom.touches(this);
   }
@@ -295,7 +396,7 @@ class Linestring extends GeometryCollection<Point>
     if (other is Linear) {
       final lstr = other.toLinestring();
       if (lstr.length != length) return false;
-      return range(length).any((i) => this[i] != lstr[i]);
+      return range(length).every((i) => this[i] == lstr[i]);
     }
     return false;
   }

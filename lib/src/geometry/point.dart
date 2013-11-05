@@ -121,11 +121,11 @@ class Point extends Geometry implements Nodal {
     if (geom is Point) {
       return geom == this;
     }
-    if (geom is MultiPoint) {
-      return geom.every(this.encloses);
-    }
     if (geom is LineSegment) {
       return encloses(geom.start) && encloses(geom.end); 
+    }
+    if (geom is GeometryCollection) {
+      return geom.every(this.encloses);
     }
     throw "Point.encloses not implemented for ${geom.runtimeType}";
   }

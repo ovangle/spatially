@@ -43,7 +43,8 @@ MultiGeometry bentleyOttmanIntersections(Set<LineSegment> lineSegments,
   
   int iterCount = 0;
   while (eventQueue.isNotEmpty) {
-    /* util.IFDEF_DEBUG(() { 
+    /*
+    util.IFDEF_DEBUG(() { 
       print("Iteration: $iterCount");
       print('\tEvent queue: ');
       for (var k in eventQueue.keys) {

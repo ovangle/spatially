@@ -128,7 +128,8 @@ void multipointDifference(String test_lib, Geometry geom) {
     test("Difference empty multipoint", () => expect(geom.difference(mp1), equals(geom)));
     test("geom difference mp2", () {
       expect(mp2.difference(geom), isNull);
-      expect(geom.difference(mp2), anyOf(isNull, enclosedBy(geom)));
+      expect(geom.difference(mp2), 
+             anyOf(isNull, enclosedBy(geom)));
     });
     test("geom difference mp4", () {
       if (geom is MultiPoint) {

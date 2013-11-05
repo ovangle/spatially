@@ -97,6 +97,7 @@ void differenceTests(String test_lib, Geometry geom1, Geometry geom2) {
   final showGeoms = 
       "\tgeom1: $geom1\n"
       "\tgeom2: $geom2\n";
+  print(showGeoms);
   final diff = geom1.difference(geom2);
   group("operator_tests: $test_lib: Difference", () {
     if (geom1.disjoint(geom2)) {
