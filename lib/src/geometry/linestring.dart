@@ -37,7 +37,7 @@ class Linestring extends GeometryCollection<Point>
    * then the returned [Linestring] will also be closed.
    */
   Linestring append(Nodal p, {bool preserve_closure: false}) =>
-      insert(length, p, preserve_closure: preserve_closure);
+      insert(p, length, preserve_closure: preserve_closure);
   
   /**
    * Insert the given point into the linestring at index [:i:].
@@ -157,6 +157,9 @@ class Linestring extends GeometryCollection<Point>
         return null;
       } else if (intersections.length == 1) {
         return intersections.single;
+      }
+      if (intersections.every((g) => g is Point)) {
+        return new MultiPoint(intersections);
       }
       return intersections;
     }

@@ -12,7 +12,6 @@ void main() {
       new Point(x: 1.0, y: 0.0));
   runStandardTests("LineSegment", lseg);
   final lseg1 = new LineSegment(new Point(x: 0.0, y: 0.0), new Point(x: 1.0, y: 1.0));
-  
   pointRelationTests("LineSegment", lseg1);
   linesegmentRelationTests("LineSegment", lseg1);
   multipointRelationTests("LineSegment", lseg1);

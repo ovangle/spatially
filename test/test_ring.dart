@@ -3,7 +3,7 @@ library test_ring;
 import 'package:unittest/unittest.dart';
 
 import 'package:spatially/geometry.dart';
-import 'src/geometry/std_tests.dart';
+import 'geometry_tests.dart';
 
 final unitSquare = new Ring([new Point(x: 0.0, y: 0.0),
                              new Point(x: 1.0, y: 0.0),
@@ -41,7 +41,7 @@ void testPermuted() {
                                new Point(x: 0.0, y: 0.0),
                                new Point(x: 3.0, y: 0.0)]); 
   test("test_ring: permute defaults to 1",
-      () => expect(cShape.permute(), geometryEquals(cShape1, 1e-15)));
+      () => expect(cShape.permute(), equals(cShape1)));
   final cShape4    = new Ring([new Point(x: 2.0, y: 2.0),
                                new Point(x: 3.0, y: 2.0),
                                new Point(x: 3.0, y: 3.0),
@@ -52,9 +52,9 @@ void testPermuted() {
                                new Point(x: 2.0, y: 1.0),
                                new Point(x: 2.0, y: 2.0)]);
   test("test_ring: permute 4", 
-      () => expect(cShape.permute(4), geometryEquals(cShape4, 1e-15)));
+      () => expect(cShape.permute(4), equals(cShape4)));
   test("test_ring: permute wraps around (length - 1)",
-      () => expect(cShape.permute(cShape.length - 1), geometryEquals(cShape, 1e-15)));
+      () => expect(cShape.permute(cShape.length - 1), equals(cShape)));
 }
 
 void testEncloses() {
@@ -104,22 +104,22 @@ void testIntersection() {
   test("test_ring: unitSquare intersects p1",
       () => expect(unitSquare.intersects(p1), isTrue));
   test("test_ring: unitSqure intersection $p1 is $p1",
-      () => expect(unitSquare.intersection(p1), geometryEquals(p1, 1e-15)));
+      () => expect(unitSquare.intersection(p1), equals(p1, 1e-15)));
   
   final lseg1 = new LineSegment(new Point(x: 1.5, y: 1.5), new Point(x: 2.5, y:1.5));
   test("test_ring: cShape intersects $lseg1",
       () => expect(cShape.intersects(lseg1), isTrue));
   final expected1 = new LineSegment(new Point(x: 1.5, y: 1.5), new Point(x: 2.0, y: 1.5));
   test("test_ring: cShape intersection $lseg1 is $expected1",
-      () => expect(cShape.intersection(lseg1), geometryEquals(expected1, 1e-15)));
+      () => expect(cShape.intersection(lseg1), equals(expected1, 1e-15)));
   
   final lseg2 = new LineSegment(new Point(x: 2.5, y:1.0), new Point(x: 2.5, y: 2.5));
-  final expected2 = new MultiGeometry.from(
+  final expected2 = new MultiGeometry(
       [ new Point(x: 2.5, y: 1.0),
         new LineSegment(new Point(x: 2.5, y: 2.0), new Point(x: 2.5, y: 2.5))
       ]);
   test("test_ring: cShape intersection $lseg2 is $expected2",
-      () => expect(cShape.intersection(lseg2), geometryEquals(expected2, 1e-15)));
+      () => expect(cShape.intersection(lseg2), equals(expected2, 1e-15)));
 }
 
 testTesselation() {
@@ -144,5 +144,5 @@ testSimplify() {
                             new Point(x: -1.0, y: 0.0),
                             new Point(x: 1.0, y: 0.0)]);
   test("test_ring: colinear around start of ring",
-      () => expect(r1.simplify(), geometryEquals(expect1, 1e-15)));
+      () => expect(r1.simplify(), equals(expect1)));
 }
