@@ -24,7 +24,8 @@ bool intersects(Coordinate p, Geometry geom) {
  * -- [LinearRing]s do not enclose any area -- points inside the
  * ring are still int the EXTERIOR of the ring.
  */
-int locateCoordinateIn(Coordinate c, Geometry geom, [lb_rule.VertexInBoundaryRule boundaryRule]) {
+int locateCoordinateIn(Coordinate c, Geometry geom, 
+                       [lb_rule.VertexInBoundaryRule boundaryRule = lb_rule.OGC_BOUNDARY_RULE]) {
   if (geom.isEmptyGeometry) {
     return loc.EXTERIOR;
   }
@@ -38,7 +39,6 @@ int locateCoordinateIn(Coordinate c, Geometry geom, [lb_rule.VertexInBoundaryRul
     GeometryList geomList = geom as GeometryList;
     bool isIn = false;
     int boundaryCount = 0;
-    boundaryRule = lb_rule.ogcDefaultIfNull(boundaryRule);
     for (var g in geom) {
       int componentLocation = locateCoordinateIn(c, g);
       if (componentLocation == loc.INTERIOR) isIn = true;
