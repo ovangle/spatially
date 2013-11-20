@@ -4,8 +4,5 @@ author: Thomas Stephenson
 description: A sample web application
 homepage: www.github.com/dart-spatially
 dependencies:
-  meta: any
   range: any
-  tuple:
-    path: /home/ovangle/dart/tuple
-  unittest: any
+  unittest: 0.8.10+3

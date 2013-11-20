@@ -9,25 +9,35 @@ library algorithm.boundary_node_rule;
 typedef bool VertexInBoundaryRule(int boundaryCount);
 
 /**
+ * Utility method for setting the default boundaryRule from an optional
+ * parameter.
+ * 
+ * The *OGC SFS* default boundary rule is the [MOD2_BOUNDARY_RULE]
+ */
+const VertexInBoundaryRule OGC_BOUNDARY_RULE = MOD2_BOUNDARY_RULE;
+
+
+
+/**
  * Specifies that points are in the boundary of a geometry
  * iff the point lies on the boundary of an odd number 
  * of components.
  * 
- * Under this rule, [LinearRing]s and closed [Linestring]s
+ * Under this rule, [Ring]s and closed [Linestring]s
  * have an empty boundary.
  * 
  * This is the rule specified by the *OGC SFS*, and is the
  * default rule in [:spatially:]
  */
-final VertexInBoundaryRule MOD2_BOUNDARY_RULE =
-    (int boundaryCount) => boundaryCount % 2 == 0;
+const VertexInBoundaryRule MOD2_BOUNDARY_RULE = _mod2BoundaryRule;
+bool _mod2BoundaryRule(int boundaryCount) => boundaryCount % 2 == 1;
 
 /**
  * Specifies that any points which are endpoints
  * of [Lineal] components are in the boundary of the 
  * parent geometry.
  * 
- * Under this rule [LinearRing]s have a non-empty boundary
+ * Under this rule [Ring]s have a non-empty boundary
  * (the common endpoint of the underlying [Linestring]).
  * 
  * When dealing with linear networks, the usual network
@@ -42,8 +52,8 @@ final VertexInBoundaryRule MOD2_BOUNDARY_RULE =
  * The endpoint rule does distinguish between these cases,
  * so is more appropriate for this situation
  */
-final VertexInBoundaryRule ENDPOINT_BOUNDARY_RULE =
-  (int boundaryCount) => boundaryCount > 0;
+final VertexInBoundaryRule ENDPOINT_BOUNDARY_RULE = _endpointBoundaryRule;
+bool _endpointBoundaryRule(int boundaryCount) => boundaryCount > 0;
   
 /**
  * A [BounaryNodeRule] which determines that endpoints
@@ -53,8 +63,8 @@ final VertexInBoundaryRule ENDPOINT_BOUNDARY_RULE =
  * being all the "attached" endpoints, but not the 
  * "unattached" ones
  */
-final VertexInBoundaryRule MULTIVALENT_ENDPOINT_BOUNDARY_RULE = 
-  (int boundaryCount) => boundaryCount > 1;
+final VertexInBoundaryRule MULTIVALENT_ENDPOINT_BOUNDARY_RULE = _multivalentEndpointRule;
+bool _multivalentEndpointRule(int boundaryCount) => boundaryCount > 1;
   
 /**
  * A [VertexInBoundaryRule] which determines that only endpoints
@@ -63,6 +73,6 @@ final VertexInBoundaryRule MULTIVALENT_ENDPOINT_BOUNDARY_RULE =
  * This corresponds to the boundary of a [MultiLinestring]
  * being all the "unattached" ones.
  */
-final VertexInBoundaryRule MONOVALENT_ENDPOINT_BOUNDARY_RULE =
-  (int boundaryCount) => boundaryCount == 1;      
+final VertexInBoundaryRule MONOVALENT_ENDPOINT_BOUNDARY_RULE = _monovalentEndpointRule;
+_monovalentEndpointRule(int boundaryCount) => boundaryCount == 1;      
 

@@ -2,7 +2,7 @@ library test_geom;
 
 import 'package:unittest/unittest.dart';
 
-import 'package:spatially/base.dart';
+import '../lib/base/array.dart';
 import 'package:spatially/geom/intersection_matrix.dart';
 import 'package:spatially/geom/dimension.dart' as dim;
 

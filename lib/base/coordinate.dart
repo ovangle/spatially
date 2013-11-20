@@ -1,9 +1,9 @@
-library geom.coordinate;
+library base.coordinate;
 
 import 'dart:math' as math;
 
 import 'package:range/range.dart';
-import 'package:spatially/base.dart';
+import 'array.dart';
 
 part 'src/coordinate/coordinate_array.dart';
 
@@ -31,25 +31,29 @@ class Coordinate implements Comparable<Coordinate> {
   static const int X = 0;
   static const int Y = 1;
   static const int Z = 2;
+  static const int M = 3;
   
   double x;
   double y;
   double z;
+  double m;
   
   /**
-   * Constructs a [Coordinate] at (x, y, z)
+   * Constructs a [Coordinate] at (x, y, z, m)
    */
-  Coordinate(double this.x, double this.y, [double this.z = double.NAN]);
+  Coordinate(double this.x, double this.y, [double this.z = double.NAN, double this.m = double.NAN]);
   
   /**
-   * Constructs a [Coordinate] at (0.0, 0.0, NaN)
+   * Constructs a [Coordinate] at (0.0, 0.0, NaN, NaN)
    */
   Coordinate.origin() : this(0.0, 0.0);
   
   /**
    * Creates a copy of the specified [Coordinate]
    */
-  Coordinate.copy(Coordinate c) : this(c.x, c.y, c.z);
+  Coordinate.copy(Coordinate c) : this(c.x, c.y, c.z, c.m);
+  
+  bool get is2d => z.isNaN;
   
   /** 
    * Get the [Coordinate] for the given index.
@@ -60,6 +64,7 @@ class Coordinate implements Comparable<Coordinate> {
       case X: return x;
       case Y: return y;
       case Z: return z;
+      case M: return m;
       throw new ArgumentError("Invalid ordinate index: $index");
     }
   }
@@ -79,6 +84,9 @@ class Coordinate implements Comparable<Coordinate> {
       case Z:
         this.z = value;
         return;
+      case M:
+        this.m = value;
+        return;
       default:
         throw new ArgumentError ("Invalid ordinate index: $index");
     }
@@ -89,11 +97,11 @@ class Coordinate implements Comparable<Coordinate> {
    * are equal, or if [:other:] lies in a disc around `this` of 
    * radius [:tolerance:]
    */
-  bool equals2d(Coordinate other, [double tolerance]) {
-    if (tolerance == null) {
+  bool equals2d(Coordinate other, [double tolerance = 0.0]) {
+    if (tolerance == 0.0) {
       return x == other.x && y == other.y;
     }
-    return distance(other) < tolerance;
+    return distance(other) <= tolerance;
   }
   
   /**

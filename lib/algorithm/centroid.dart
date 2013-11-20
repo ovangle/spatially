@@ -2,12 +2,12 @@ library algorithm.centroid;
 
 import 'package:range/range.dart';
 
-import 'package:spatially/base.dart';
+import '../base/array.dart';
 
 import 'package:spatially/algorithm/cg_algorithms.dart'
     as cg_algorithms;
 
-import 'package:spatially/geom/coordinate.dart';
+import '../base/coordinate.dart';
 import 'package:spatially/geom/base.dart';
 
 /**
@@ -108,13 +108,15 @@ Coordinate centroidArea(Geometry geom) {
   //keeping 3 * the total in the sum and dividing by 3 at the end
   Coordinate centroidSum = new Coordinate.origin();
   void addTriangle(Coordinate a, Coordinate b, Coordinate c, bool isPositiveArea) {
-    final s = isPositiveArea ? 1.0 : 0.0;
+    final s = isPositiveArea ? 1.0 : -1.0;
     
     //This is twice the area of the triangle,
     //but since we add 2* the area to the total
     //and weight the centroid sum by 2* the area,
     //The result will cancel when calculating the centroid
-    var area = (b.x - a.x) * (c.y - a.y) - (c.x - a.x);
+    var area = a.x * (b.y - c.y)
+             + b.x * (c.y - a.y)
+             + c.x * (a.y - b.y);
     
     //Add 3 times the (weighted) triangle centroid to the _centroidSum
     centroidSum.x += s * area * (a.x + b.x + c.x);
@@ -142,14 +144,16 @@ Coordinate centroidArea(Geometry geom) {
   
   //Add the polygon to the centroid
   void addPolygon(Polygon poly) {
-    var shell = poly.exteriorRing;
+    var shell = poly.exteriorRing.coordinates;
     addShell(shell);
-    poly.interiorRings.forEach((h) => addHole(shell, h));
+    poly.interiorRings.forEach((h) => addHole(shell, h.coordinates));
   }
   
   void addGeometryList(GeometryList geomList) {
-    geomList.where((g) => (g) is Polygon).forEach(addPolygon);
-    geomList.where((g) => (g) is GeometryList).forEach(addGeometryList);
+    for (var g in geomList) {
+      if (g is Polygon) addPolygon(g);
+      if (g is GeometryList) addGeometryList(g);
+    }
   }
   
   if (geom is Polygon) addPolygon(geom);

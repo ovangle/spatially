@@ -1,11 +1,15 @@
 library operation.distance;
 
-import 'package:tuple/tuple.dart';
-
-import 'package:spatially/geom/coordinate.dart';
+import '../base/coordinate.dart';
 import 'package:spatially/geom/base.dart';
-import 'package:spatially/algorithm/point_locator.dart';
+import 'package:spatially/geom/location.dart' as loc;
+import 'package:spatially/algorithm/coordinate_locator.dart'
+    as coord_locator;
 
+
+part 'src/distance/location.dart';
+part 'src/distance/containment_distance.dart';
+part 'src/distance/facet_distance.dart';
 double distance(Geometry g1, Geometry g2, [double terminateDistance=0.0]) {
   Tuple2 minDistanceLocations = 
       _computeMinimumDistance(
@@ -29,7 +33,7 @@ double distance(Geometry g1, Geometry g2, [double terminateDistance=0.0]) {
  * 
  * Throws a [StateError] if either of the geometries are empty.
  */
-Tuple2<Coordinate,Coordinate> nearestCoordinates(Geometry g1, Geometry g2,
+Map<String,Coordinate> nearestCoordinates(Geometry g1, Geometry g2,
                                                  [double terminateDistance=0.0]) {
   if (g1.isEmptyGeometry || g2.isEmptyGeometry) {
     throw new StateError("Empty geometry has no nearest coordinate");
@@ -44,63 +48,3 @@ Tuple2<Coordinate,Coordinate> nearestCoordinates(Geometry g1, Geometry g2,
                    minDistanceLocations.$2.coordinate);
 }
 
-Tuple2 _flipTuple(Tuple2 tup) => new Tuple2(tup.$2, tup.$1);
-
-Tuple2<_Location,_Location> _computeMinimumDistance(
-    Tuple2<Geometry,Geometry> geoms, 
-    double terminateDistance,
-    PointLocator pointLocator,
-    Tuple3<_Location,_Location, double> currentApprox) {
-  
-  //Compute the next approximation from the containment distance
-  currentApprox = _computeContainmentDistance(
-      geoms,
-      terminateDistance,
-      pointLocator,
-      currentApprox);
-  final minDistance = currentApprox.$3;
-  if (minDistance <= terminateDistance) {
-    //The current approximation is good enoughs
-    return currentApprox;
-  }
-  
-}
-
-/**
- * The containment distance is the distance between a point
- * contained in a polygon and 
- */
-Tuple3<_Location,_Location, double> _computeContainmentDistance(
-    Tuple2<Geometry,Geometry> geoms,
-    double terminateDistance,
-    PointLocator pointLocator,
-    Tuple3<_Location,_Location, double> currentApprox) {
-  
-}
-                          
-
-class _Location {
-  /**
-   * A special value of [:segmentIndex:] used for locations inside
-   * area geometries. These locations are not located on a segment, thus
-   * do not have a [:segmentIndex:]
-   */
-  static const int INSIDE_AREA = -1;
-  
-  final Geometry component;
-  final int segmentIndex;
-  final Coordinate coordinate;
-  
-  /**
-   * Create a [GeometryLocation] specifing a point in a geometry
-   * If segmentIndex is not provided, assumed to be a point inside the
-   * area of a geometry.
-   */
-  _Location(Geometry this.component, Coordinate this.coordinate, 
-            [int this.segmentIndex=INSIDE_AREA]);
-  
-  /**
-   * Test whether this location is a point inside an area geometry
-   */
-  bool get isInsideArea => segmentIndex == INSIDE_AREA;
-}

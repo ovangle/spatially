@@ -4,8 +4,8 @@ import 'dart:math' as math;
 
 import 'package:range/range.dart';
 
-import 'package:spatially/base.dart';
-import 'package:spatially/geom/coordinate.dart';
+import '../base/array.dart';
+import '../base/coordinate.dart';
 import 'package:spatially/geom/location.dart' as location;
 
 /**
@@ -53,6 +53,7 @@ const int STRAIGHT = COLLINEAR;
  */
 int orientationIndex(Coordinate c1, Coordinate c2, Coordinate q) {
   //TODO: Implement this.
+  throw 'NotImplemented';
 }
 
 /**
@@ -102,13 +103,13 @@ bool isCounterClockwise(Array<Coordinate> ring) {
   //Previous distinct point before hiCoord
   int iPrev = hiCoordAt;
   do {
-    iPrev = (iPrev >= 0) ? iPrev - 1 : ring.length;
+    iPrev = (iPrev - 1) % numPoints;
   } while (ring[iPrev] == highCoord && iPrev != hiCoordAt);
 
   //Next distinct point after hiCoord
   int iNext = hiCoordAt;
   do {
-    iNext = (iNext < ring.length) ? iNext + 1 : 0;
+    iNext = (iNext + 1) % numPoints;
   } while (ring[iNext] == highCoord && iNext != hiCoordAt);
   
   var prev = ring[iPrev];

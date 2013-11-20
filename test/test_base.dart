@@ -1,7 +1,7 @@
 library test_base;
 
 import 'package:unittest/unittest.dart';
-import 'package:spatially/base.dart';
+import '../lib/base/array.dart';
 
 void main() {
   testArray();

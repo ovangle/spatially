@@ -2,8 +2,8 @@ library geom.coordinate_sequence;
 
 import 'dart:math' as math;
 
-import 'package:spatially/base.dart';
-import 'package:spatially/geom/coordinate.dart';
+import '../base/array.dart';
+import '../base/coordinate.dart';
 import 'package:range/range.dart';
 
 import 'envelope.dart';

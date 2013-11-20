@@ -29,7 +29,7 @@ class Polygon extends Geometry {
   
   Array<Coordinate> get coordinates {
     if (isEmptyGeometry) return new Array(0);
-    List<Ring> coords = new List<Ring>();
+    List<Coordinate> coords = new List<Coordinate>();
     _rings.forEach((r) => coords.addAll(r.coordinates));
     return new Array.from(coords);
   }
@@ -99,7 +99,7 @@ class Polygon extends Geometry {
       //Close the ring
       ringCoords[ringCoords.length - 1] = ringCoords[0];
       
-      if (cg_algorithms.isClockwise(ringCoords)) {
+      if (cg_algorithms.isCounterClockwise(ringCoords)) {
         ringCoords.reverse();
       }
     }

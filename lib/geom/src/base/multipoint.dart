@@ -18,7 +18,7 @@ class MultiPoint extends GeometryList<Point> {
     return super.equalsExact(g, tolerance);
   }
   
-  MultiPoint operator[](int i) => super[i];
+  Point operator[](int i) => super[i];
   void operator[]=(int i, Point p) {
     super[i] = p;
   }

@@ -1,7 +1,7 @@
 library geom.precision_model;
 
 import 'dart:math' as math;
-import 'coordinate.dart';
+import '../base/coordinate.dart';
 
 /**
  * Specifies the precision model of the [Coordinate]s

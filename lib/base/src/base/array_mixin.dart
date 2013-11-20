@@ -1,4 +1,4 @@
-part of base;
+part of base.array;
 
 /**
  * Abstract implementation of an [Array].

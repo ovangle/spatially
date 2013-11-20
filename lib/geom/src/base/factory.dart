@@ -1,25 +1,37 @@
 part of geom.base;
 
 class GeometryFactory {
-  final PrecisionModel precisionModel;
-  final CoordinateSequenceFactory coordinateSequenceFactory;
+  
+  final PrecisionModel _precisionModel;
+  PrecisionModel get precisionModel =>
+      _precisionModel != null 
+      ? _precisionModel 
+      : new PrecisionModel(PrecisionModel.PREC_FLOATING);
+  
+  final CoordinateSequenceFactory _coordinateSequenceFactory;
+  CoordinateSequenceFactory get coordinateSequenceFactory =>   
+      _coordinateSequenceFactory != null
+      ? _coordinateSequenceFactory
+      : DefaultCoordinateSequence.factory;
+  
   final int srid;
   
   /**
    * Create a new [GeometryFactory] with the given
    * [PrecisionModel], [CoordinateSequenceFactory] and spatial reference system identifier.
    */
-  GeometryFactory([PrecisionModel precisionModel,
-                   CoordinateSequenceFactory coordinateSequenceFactory,
-                   int this.srid = 0])
-      : this.precisionModel = 
-            (precisionModel != null) 
-            ? precisionModel 
-            : new PrecisionModel(PrecisionModel.PREC_FLOATING),
-        this.coordinateSequenceFactory = 
-            (coordinateSequenceFactory != null) 
-            ? coordinateSequenceFactory 
-            : DefaultCoordinateSequence.factory;
+   GeometryFactory([PrecisionModel this._precisionModel,
+                    CoordinateSequenceFactory this._coordinateSequenceFactory,
+                    int this.srid = 0]);
+   
+  /**
+   * Parses a geometry from the WKT string representation of the geometry.
+   */
+  Geometry fromWkt(String wktGeom) {
+    wkt.WktCodec wktCodec = new wkt.WktCodec(this);
+    return wktCodec.decoder.convert(wktGeom);
+  }
+   
   
   Point createEmptyPoint() {
     CoordinateSequence _coords = coordinateSequenceFactory(0);
@@ -64,8 +76,10 @@ class GeometryFactory {
       throw new ArgumentError(
           "Coordinates must form a closed ring");
     }
+    CoordinateSequence coordSeq = coordinateSequenceFactory(coords.length);
+    coordSeq.setAll(0, coords);
     coords.forEach(precisionModel.makePreciseCoordinate);
-    return new Ring._(coords, this);
+    return new Ring._(coordSeq, this);
   }
   
   Polygon createEmptyPolygon() {
@@ -93,7 +107,7 @@ class GeometryFactory {
   MultiPoint createEmptyMultiPoint() {
     return new MultiPoint._([], this);
   }
-  MultiPoint createMultiPoint(Iterable<MultiPoint> points) {
+  MultiPoint createMultiPoint(Iterable<Point> points) {
     return new MultiPoint._(new List<Point>.from(points), this);
   }
   

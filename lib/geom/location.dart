@@ -27,7 +27,7 @@ const int EXTERIOR = 2;
 /**
  * Uninitialized location value
  */
-const int LOC_NONE = -1;
+const int NONE = -1;
 
 /**
  * Convert the given [:locationValue:] to its
@@ -40,6 +40,8 @@ String toLocationSymbol(int locationValue) {
     case BOUNDARY:
       return 'b';
     case INTERIOR:
+      return 'i';
+    case NONE:
       return '-';
     default:
       throw new ArgumentError("Unrecognised location value: $locationValue");

@@ -1,7 +1,7 @@
 library geom.envelope;
 
 import 'dart:math' as math;
-import 'coordinate.dart';
+import '../base/coordinate.dart';
 
 /**
  * Defines a rectangluar region of the 2d coordinate plane. 
@@ -168,6 +168,21 @@ class Envelope {
         && y <= maxy && y >= miny;
   }
   
+  /**
+   * Check if [:env:] is disjoint from `this`
+   */
+  bool disjointEnvelope(Envelope env) => !intersectsEnvelope(env);
+  
+  /**
+   * Check if `this` is disjoint from [:c:]
+   */
+  bool disjointCoordinate(Coordinate c) => !intersectsCoordinate(c);
+  
+  /**
+   * Check if `this` is disjoint from the coordinate defined by the given
+   * [:x:] and [:y:] ordinates
+   */
+  bool disjointXY(double x, double y) => !intersectsXY(x, y);
   /**
    * Determines whether `this` encloses the given [Envelope],
    * including it's boundary.

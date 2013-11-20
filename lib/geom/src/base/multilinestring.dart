@@ -16,10 +16,7 @@ class MultiLinestring extends GeometryList<Linestring> {
   int get boundaryDimension =>
       isNotEmptyGeometry && isClosed ? dim.EMPTY : 0;
   
-  Geometry get boundary {
-    //TODO: MultiLinestring.boundary
-    throw 'Unimplemented';
-  }
+  Geometry get boundary => bnd.boundaryOf(this);
   
   bool equalsExact(Geometry geom, [double tolerance=0.0]) {
     if (geom is! MultiLinestring) return false;

@@ -31,10 +31,7 @@ class Linestring extends Geometry {
   int get boundaryDimension => 
       (isEmptyGeometry || isClosed) ? dim.EMPTY : dim.POINT;
   
-  Geometry get boundary {
-    //TODO: Linestring.boundary
-    throw 'Unimplemented';
-  }
+  Geometry get boundary => bnd.boundaryOf(this);
         
   bool get isClosed => isNotEmptyGeometry 
                     && (_coords.first == _coords.last);

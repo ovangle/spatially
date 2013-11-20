@@ -1,4 +1,4 @@
-part of geom.coordinate;
+part of base.coordinate;
 
 // Utility methods for dealing with Array<Coordinate>s   
 /**

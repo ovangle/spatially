@@ -4,15 +4,20 @@ import 'dart:math' as math;
 import 'dart:collection';
 
 import 'package:range/range.dart';
-import 'package:spatially/base.dart';
+import 'package:spatially/base/coordinate.dart';
+import 'package:spatially/base/array.dart';
 import 'package:spatially/algorithm/lb_rule.dart'
           as lb_rule;
 import 'package:spatially/algorithm/cg_algorithms.dart'
           as cg_algorithms;
 import 'package:spatially/algorithm/centroid.dart'
           as cent;
+import 'package:spatially/algorithm/interior_point.dart'  
+          as interior;
+import 'package:spatially/operation/boundary.dart' as bnd;
+import 'package:spatially/convert/wkt.dart' as wkt;
 
-import 'coordinate.dart';
+
 import 'envelope.dart';
 import 'coordinate_sequence.dart';
 import 'precision_model.dart';
@@ -166,7 +171,7 @@ abstract class Geometry implements Comparable<Geometry>{
    * Tests whether the geometry is degenerate.
    * 
    * If the geometry has dimension `0`, it is considered degenerate
-   * if it is empty.
+   * if it is the empty geometry.
    * 
    * If the geometry has dimension `1`, it is considered degenerate
    * if has a [:topologicalLength:] of `0.0`.
@@ -177,7 +182,7 @@ abstract class Geometry implements Comparable<Geometry>{
   bool get isDegenerate {
     if (dimension == dim.AREA) return topologicalArea == 0.0;
     if (dimension == dim.LINE) return topologicalLength == 0.0; 
-    return isGeometryEmpty;
+    return isEmptyGeometry;
   }
   
   /**
@@ -200,9 +205,8 @@ abstract class Geometry implements Comparable<Geometry>{
    * contribute zero weight to the centroid).
    * The centroid of the void geometry is the empty Point.
    *
-   * Throws a [StateError] if the geometry is empty
-   * or degenerate. 
-   *
+   * Throws a [StateError] if the geometry is empty or degenerate.
+   * Note: This behaviour differs from JTS. 
    */
   Point get centroid {
     if (isEmptyGeometry) {
@@ -224,26 +228,27 @@ abstract class Geometry implements Comparable<Geometry>{
    * Returns an [:interiorPoint:] of `this`.
    * The point is guaranteed to lie in the interior if possible, otherwise
    * will be on the boundary of the geometry.
+   * The point will lie as close to the centroid of the polygon as feasible,
+   * so is a good point to place labels on geometries.
    * The interior point of an empty geometry is the empty Point.
    */
   Point get interiorPoint {
     if (isEmptyGeometry) return factory.createEmptyPoint();
-    InteriorPoint interiorPoint;
-    var dimension = this.dimension;
+    Coordinate interiorCoord;
     switch(dimension) {
       case dim.POINT:
-        interiorPoint = new InteriorPointPoint(this);
+        interiorCoord = interior.interiorPointPoint(this);
         break;
       case dim.LINE:
-        interiorPoint = new InteriorPointLine(this);
+        interiorCoord = interior.interiorPointLine(this);
         break;
       case dim.AREA:
-        interiorPoint = new InteriorPointArea(this);
+        interiorCoord = interior.interiorPointArea(this);
         break;
       default:
-        throw new dim.DimensionRangeError.actual(dimension);
+        throw 'Unrecognised dimension value: $dimension';
     }
-    return factory.createPoint(interiorPoint.coordinate);
+    return factory.createPoint(interiorCoord);
   }
   
   /**
@@ -252,7 +257,7 @@ abstract class Geometry implements Comparable<Geometry>{
    * of a geometry is always a collection of geometries of dimension
    * one lower than the dimension of `this`.
    * 
-   * The boundary of a [Point] is an empty [GeometryCollection].
+   * The boundary of a [Point] imetryCollection].
    */
   Geometry get boundary;
   
@@ -510,8 +515,64 @@ abstract class Geometry implements Comparable<Geometry>{
    * 
    * For more information, see the OpenGIS simple Features Specification
    */
-  relateMatches(Geometry g, String relatePattern) {
+  bool relateMatches(Geometry g, String relatePattern) {
     return _relate("relateMatches", g).matches(relatePattern);
+  }
+  
+  /**
+   * Computes a [Geometry] representing the point-set which is common
+   * to both `this` and [:geom:].
+   * 
+   * The intersection of two geometries of different dimension produces
+   * a geometry with dimension less than or equal to the minimum dimension
+   * of the two geometries.
+   * 
+   * The result may be a heterogeneous [GeometryList]
+   * Intersection of [GeometryList]s is supported only for homogenous 
+   * collections.
+   * If the result is empty, the result is an empty geometry with dimension
+   * equal to the minimum of the two dimensions.
+   */
+  Geometry intersection(Geometry geom) {
+    //TODO: Geometry.intersection
+    throw 'NotImplemented';
+  }
+  
+  /**
+   * Computes a [Geometry] which is equal to the point-set which is contained
+   * in both `this` and [:geom:].
+   * 
+   * The [:union:] of two geometries of different dimension produces a geometry
+   * of dimension equal to the maximum dimension of the input geometries.
+   * The result may be a heterogeneous [GeometryList]
+   * 
+   * Non-empty [GeometryList]s (homogeneous or otherwise) are ot supported
+   */
+  Geometry union(Geometry geom) {
+    //TODO: Geometry.union
+    throw 'NotImplemented';
+  }
+  
+  /**
+   * Computes a [Geometry] representing the closure of the point-set of points
+   * in `this` which are not in [:geom:]
+   * 
+   * Non-empty [GeometryList]s (homogeneous or otherwise) are not supported
+   */
+  Geometry difference(Geometry geom) {
+    //TODO: Geometry.difference
+    throw 'NotImplemented';
+  }
+  
+  /**
+   * Computes a [Geometry] representing the closure of the point-set formed by
+   * the union of `this.difference(geom)` and `geom.difference(this)`.
+   * 
+   * Non-empty [GeometryList]s (homogeneous or otherwise) are not supported.
+   */
+  Geometry symmetricDifference(Geometry geom) {
+    //TODO: Geometry.symmetricDifference
+    throw 'NotImplemented';
   }
   
   /**
@@ -584,6 +645,11 @@ abstract class Geometry implements Comparable<Geometry>{
   bool operator ==(Object o) => o is Geometry && equalsExact(o);
   
   int get hashCode => coordinates.fold(31, (h, v) => h * 31 + v.hashCode);
+  
+  String toString() {
+    var codec = new wkt.WktCodec(factory);
+    return codec.encode(this);
+  }
 }
 
 void _checkNotGeometryList(String methodName, Geometry g) {

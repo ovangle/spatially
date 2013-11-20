@@ -94,4 +94,9 @@ class GeometryList<T extends Geometry> extends Geometry with ListMixin<T> {
   void operator []=(int i, Geometry value) {
    _geometries[i] = value; 
   }
+  
+  String toString() {
+    var wktCodec = new wkt.WktCodec(factory);
+    return wktCodec.encoder.convert(this);
+  }
 }
