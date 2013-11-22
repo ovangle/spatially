@@ -7,6 +7,7 @@ import '../base/array.dart';
 import 'package:spatially/algorithm/cg_algorithms.dart'
     as cg_algorithms;
 
+import 'package:spatially/base/longdouble.dart';
 import '../base/coordinate.dart';
 import 'package:spatially/geom/base.dart';
 
@@ -103,11 +104,43 @@ Coordinate centroidLine(Geometry geom) {
 Coordinate centroidArea(Geometry geom) {
   //The total sum of the areas in geoms
   double areaSum = 0.0;
+  longdouble areaSum_ld = new longdouble(0.0);
   //The total centroid. Since we add the centroid a triangle
   //of the polygon at a time, we avoid repeated divisions by
   //keeping 3 * the total in the sum and dividing by 3 at the end
   Coordinate centroidSum = new Coordinate.origin();
+  longdouble centroidSum_xld = new longdouble.zero();
+  longdouble centroidSum_yld = new longdouble.zero();
+  
+  //Do we want to use the more expensive longdouble calculation?
+  bool use_ld = false;
+  
+  /**
+   * Add the triangle using longdouble arithmetic.
+   * Should only be hit if the first time through we obtain a zero areaSum.
+   */
+  void addTriangle_ld(Coordinate a, Coordinate b, Coordinate c, bool isPositiveArea) {
+    var s = isPositiveArea ? 1.0 : -1.0;
+    
+    var ax = new longdouble(a.x); var ay = new longdouble(a.y);
+    var bx = new longdouble(b.x); var by = new longdouble(b.y);
+    var cx = new longdouble(c.x); var cy = new longdouble(c.y);
+    
+    var area_ld = ax * (by - cy)
+                + bx * (cy - ay)
+                + cx * (ay - by);
+    
+    centroidSum_xld += area_ld * (ax + bx + cx) * s;
+    centroidSum_yld += area_ld * (ay + by + cy) * s;
+    
+    areaSum_ld += area_ld * s;
+  }
+  
   void addTriangle(Coordinate a, Coordinate b, Coordinate c, bool isPositiveArea) {
+    if (use_ld) {
+      addTriangle_ld(a, b, c, isPositiveArea);
+      return;
+    }
     final s = isPositiveArea ? 1.0 : -1.0;
     
     //This is twice the area of the triangle,
@@ -125,14 +158,18 @@ Coordinate centroidArea(Geometry geom) {
     areaSum += s * area;   
   }
   
+ 
+  
   void addAllTriangles(Coordinate triangleBase, Array<Coordinate> ring, bool isPositiveArea) {
     range(1, ring.length)
         .forEach((i) => addTriangle(triangleBase, ring[i-1], ring[i], isPositiveArea));
   }
   //A shell contributes a positive area if its coordinates are clockwise
-  bool shellPositiveArea(Array<Coordinate> coords) => !cg_algorithms.isCounterClockwise(coords); 
+  bool shellPositiveArea(Array<Coordinate> coords) => 
+      !cg_algorithms.isCounterClockwise(coords); 
   //A hole contributes a positive area if its coordinates are counter-clockwise
-  bool holePositiveArea(Array<Coordinate> coords) => cg_algorithms.isCounterClockwise(coords);
+  bool holePositiveArea(Array<Coordinate> coords) => 
+      cg_algorithms.isCounterClockwise(coords);
   
   //Adds the shell
   void addShell(Array<Coordinate> shell) =>
@@ -160,7 +197,15 @@ Coordinate centroidArea(Geometry geom) {
   if (geom is GeometryList) addGeometryList(geom);
  
   if (areaSum == 0.0) {
-    throw new StateError("Cannot calculate area-weighted centroid for polygon with area 0.0");
+    use_ld = true;
+    if (geom is Polygon) addPolygon(geom);
+    if (geom is GeometryList) addGeometryList(geom);
+    if (areaSum_ld.toDouble() == 0.0) {
+      throw new StateError("Cannot calculate area-weighted centroid for polygon with area 0.0");
+    }
+    return new Coordinate(
+        (centroidSum_xld / (areaSum_ld * 3)).toDouble(),
+        (centroidSum_yld / (areaSum_ld * 3)).toDouble());
   }
   
   return new Coordinate(

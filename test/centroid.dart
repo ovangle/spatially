@@ -132,7 +132,7 @@ void testCentroid() {
                           56.528833333300 25.2103333333,
                           56.528666666700 25.2101666667))
               """);
-          var centroid = geomFactory.fromWkt("POINT (56.52883333335 25.21033333335)");
+          var centroid = geomFactory.fromWkt("POINT (56.52883333333333 25.210333333333335)");
           expect(poly.centroid, equals(centroid));
           
         });

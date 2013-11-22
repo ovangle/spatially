@@ -1,6 +1,11 @@
-library base.doubledouble;
+library base.longdouble;
 
 import 'dart:math' as math;
+import 'dart:convert';
+
+import 'math_dd.dart' as math_ld;
+
+part 'src/longdouble/convert.dart';
 
 /**
   * Implementation of 106 bit precision floating point 
@@ -29,14 +34,33 @@ class longdouble implements Comparable<longdouble>{
   static const longdouble INFINITY = 
       const longdouble(double.INFINITY, double.INFINITY);
   
+  static const longdouble NEGATIVE_INFINITY = 
+      const longdouble(double.NEGATIVE_INFINITY, double.NEGATIVE_INFINITY);
+  
   static const longdouble MAX_FINITE = 
       const longdouble(double.MAX_FINITE, double.MAX_FINITE);
   
   static const longdouble MIN_POSITIVE = 
       const longdouble(0.0, double.MIN_POSITIVE);
   
-  static longdouble parse(String num) {
-    throw 'NotImplemented';
+  /**
+   * Parse [input] as a longdouble literal.
+   * 
+   * A longdouble literal will match the same pattern as a double literal,
+   * with an optional sign, followed by a mantissal and exponent.
+   * 
+   * Leading and trailing whitespace is ignored.
+   */
+  
+  static longdouble parse(String input, [longdouble onError(String input)]) {
+    try {
+      return _LD_CODEC.decode(input);
+    } on FormatException catch (e) {
+      if (onError != null) {
+        return onError(input);
+      }
+      throw e;
+    }
   }
   
   final double hi;
@@ -46,28 +70,21 @@ class longdouble implements Comparable<longdouble>{
    * Initialize a [longdouble] with the given [:hi:]
    * and [:lo:] double values.
    */
-  const longdouble(double this.hi, double this.lo);
+  const longdouble(double this.hi, [double this.lo = 0.0]);
   
   const longdouble.zero() : this(0.0, 0.0);
   
   /**
-   * Create a [longdouble] with the given double precision
-   * value.
+   * Return the value of `1.0 / this`. 
+   * Since it's impossible to implement operators on double taking a left value of a [longdouble],
+   * the only way to divide by a [longdouble] is to multiply by the reciprocal
    */
-  const longdouble.fromDouble(double d) :
-    this(d, 0.0);
-  
-  /**
-   * Create a [longdouble] with the given quadruple presicion
-   * value.
-   */
-  longdouble.fromDoubleDouble(longdouble dd) :
-    this(dd.hi, dd.lo);
+  longdouble get reciprocal => _longdouble_division(new longdouble(1.0), this);
   
   /**
    * Retrieve the result as a double value
    */
-  double asDouble() => hi + lo;
+  double toDouble() => hi + lo;
   
   /**
    * scale the [longdouble] by the given [double] value
@@ -98,18 +115,18 @@ class longdouble implements Comparable<longdouble>{
     }
   }
   
-  int floor() => asDouble().floor();
-  double floorToDouble() => asDouble().floorToDouble();
+  int floor() => toDouble().floor();
+  double floorToDouble() => toDouble().floorToDouble();
   
-  int ceil() => asDouble().ceil();
-  double ceilToDouble() => asDouble().ceilToDouble();
+  int ceil() => toDouble().ceil();
+  double ceilToDouble() => toDouble().ceilToDouble();
   
   longdouble operator -() => new longdouble(-hi, -lo);
   
   longdouble operator *(dynamic v) {
     if (v is num) {
-      var t0 = _multDoubles(hi, v as double);
-      var d  = _multDoubles(lo, v as double);
+      var t0 = _multDoubles(hi, v.toDouble());
+      var d  = _multDoubles(lo, v.toDouble());
       
       var t1 = _addDoubles(t0.lo, d.hi);
       var t2 = d.lo + t1.lo;
@@ -124,7 +141,7 @@ class longdouble implements Comparable<longdouble>{
       var t1 = _addDoubles(multHiHi.lo, multHiLo.hi, multLoHi.hi);
       var t2 = multHiLo.lo + multLoHi.lo + multLoLo + t1.lo;
       
-      return _normalizeThree(multHiHi.hi, t1, t2);
+      return _normalizeThree(multHiHi.hi, t1.hi, t2);
     } else {
       throw new ArgumentError("right multiplicand of '*' must be a num or longdouble");
     }
@@ -133,7 +150,7 @@ class longdouble implements Comparable<longdouble>{
   longdouble operator +(dynamic v) {
     if (v is num) {
       
-      var t0 = _addDoubles(hi, v as double);
+      var t0 = _addDoubles(hi, v.toDouble());
       var t1 = _addDoubles(lo, t0.lo);
       
       return _normalizeThree(t0.hi, t1.hi, t1.lo);
@@ -152,7 +169,7 @@ class longdouble implements Comparable<longdouble>{
   
   longdouble operator -(dynamic v) {
     if (v is num) {
-      final t0 = _subtractDoubles(hi, v as double);
+      final t0 = _subtractDoubles(hi, v.toDouble());
       final t1 = _subtractDoubles(lo, t0.lo);
       return _normalizeThree(t0.hi, t1.hi, t1.lo);
     } else if (v is longdouble) {
@@ -170,9 +187,9 @@ class longdouble implements Comparable<longdouble>{
   
   longdouble operator /(dynamic v) {
     if (v is num) {
-      _longdouble_division(this, new longdouble.fromDouble(v as double));
+      return _longdouble_division(this, new longdouble(v.toDouble()));
     } else if (v is longdouble) {
-      _longdouble_division(this, v);
+      return _longdouble_division(this, v);
     } else {
       throw new ArgumentError("right operand of '/' must be num or longdouble");
     }
@@ -191,6 +208,10 @@ class longdouble implements Comparable<longdouble>{
   bool operator >=(longdouble v) => compareTo(v) >= 0;
   bool operator <(longdouble v) => compareTo(v) < 0;
   bool operator <=(longdouble v) => compareTo(v) <= 0;
+  
+  int get hashCode => 17 * hi.hashCode + lo.hashCode;
+  
+  String toString() => "longdouble($hi|$lo)";
 }
 
 /**
@@ -219,7 +240,7 @@ longdouble _normalizeThree(double a, double b, double c) {
     s0 = _normalizeTwo(s1.hi, s0.lo);
     newLo = s0.lo;
   }
-  return new longdouble(s0.hi, newLo);
+  return new longdouble(s1.hi, newLo);
 }
 
 //Cached constant used in split, to prevent recalculation
@@ -275,7 +296,7 @@ longdouble _addDoubles(double a, double b, [double c = null]) {
 longdouble _subtractDoubles(double a, double b) {
   final diff = a - b;
   final amtSubtracted = diff - a;
-  final err = (a - (diff - amtSubtracted)) - (b - amtSubtracted);
+  final err = (a - (diff - amtSubtracted)) - (b + amtSubtracted);
   return new longdouble(diff, err);
 }
 

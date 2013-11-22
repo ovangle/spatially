@@ -1,16 +1,19 @@
+/**
+ * Various fundamental computational geometric algorithms.
+ */
 library algorithm.cg_algorithms;
 
 import 'dart:math' as math;
 
 import 'package:range/range.dart';
 
-import '../base/array.dart';
-import '../base/coordinate.dart';
+import 'package:spatially/base/array.dart';
+import 'package:spatially/base/coordinate.dart';
 import 'package:spatially/geom/location.dart' as location;
 
-/**
- * Various fundamental computational geometric algorithms.
- */
+import 'cg_algorithms_ld.dart' as cg_algorithms_ld;
+
+
 
 /**
  * A clockwise, or right turn
@@ -51,10 +54,11 @@ const int STRAIGHT = COLLINEAR;
  * `-1` if the point is clockwise (right) of [:c1:]->[:c2:]
  * `0` if the point is collinear with [:c1:]->[:c2:]
  */
-int orientationIndex(Coordinate c1, Coordinate c2, Coordinate q) {
-  //TODO: Implement this.
-  throw 'NotImplemented';
-}
+//FIXME: See comment in CGAlgorithms.orentiationIndex.
+//       This algorithm fails for some coordinates.
+//       Should be alright for the moment.
+int orientationIndex(Coordinate c1, Coordinate c2, Coordinate q) =>
+    cg_algorithms_ld.orientationIndex(c1, c2, q);
 
 /**
  * Tests wether the point lies inside or on a ring. The ring may
