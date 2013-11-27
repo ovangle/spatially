@@ -11,14 +11,7 @@ part 'src/distance/location.dart';
 part 'src/distance/containment_distance.dart';
 part 'src/distance/facet_distance.dart';
 double distance(Geometry g1, Geometry g2, [double terminateDistance=0.0]) {
-  Tuple2 minDistanceLocations = 
-      _computeMinimumDistance(
-          new Tuple2(g1, g2),
-          terminateDistance, 
-          new PointLocator(), 
-          new Tuple3(null, null, double.INFINITY));
-  return minDistanceLocations.$1.coordinate
-      .distanceTo(minDistanceLocations.$2.coordinate);
+  throw 'distance.distance not implemented';
 }
 
 /**
@@ -33,18 +26,7 @@ double distance(Geometry g1, Geometry g2, [double terminateDistance=0.0]) {
  * 
  * Throws a [StateError] if either of the geometries are empty.
  */
-Map<String,Coordinate> nearestCoordinates(Geometry g1, Geometry g2,
-                                                 [double terminateDistance=0.0]) {
-  if (g1.isEmptyGeometry || g2.isEmptyGeometry) {
-    throw new StateError("Empty geometry has no nearest coordinate");
-  }
-  Tuple2 minDistanceLocations = 
-      _computeMinimumDistance(
-          new Tuple2(g1, g2),
-          terminateDistance, 
-          new PointLocator(), 
-          new Tuple3(null, null, double.INFINITY));
- return new Tuple2(minDistanceLocations.$1.coordinate, 
-                   minDistanceLocations.$2.coordinate);
+Map<String,Coordinate> nearestCoordinates(Geometry g1, Geometry g2, [double terminateDistance=0.0]) {
+  throw 'distance.nearestCoordinates not implemented';
 }
 

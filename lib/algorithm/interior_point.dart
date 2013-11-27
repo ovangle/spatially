@@ -2,8 +2,8 @@ library algorithms.interior_point;
 
 import 'package:range/range.dart';
 
-import '../base/array.dart';
-import '../base/coordinate.dart';
+import 'package:spatially/base/array.dart';
+import 'package:spatially/base/coordinate.dart';
 import 'package:spatially/geom/envelope.dart';
 import 'package:spatially/geom/base.dart';
 
@@ -22,10 +22,10 @@ interiorPointPoint(Geometry geom) {
   Coordinate interiorPoint = null;
   double minDistance = double.INFINITY;
   void addCoordinate(Coordinate c) {
-    var dist = c.distance(centroid);
+    final dist = c.distance(centroid);
     if (dist < minDistance) {
       interiorPoint = c;
-      dist = minDistance;
+      minDistance = dist;
     }
   }
   void add(Geometry geom) {
@@ -35,6 +35,7 @@ interiorPointPoint(Geometry geom) {
       geom.forEach(add);
     }
   }
+  add(geom);
   if (interiorPoint == null) 
     throw new StateError("Interior point of degenerate geometry");
   return interiorPoint;
@@ -151,6 +152,7 @@ Coordinate interiorPointArea(Geometry geom) {
       geom.forEach(add);
     }
   }
+  add(geom);
   
   return interiorPoint;
 }

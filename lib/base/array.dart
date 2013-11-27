@@ -2,7 +2,6 @@ library base.array;
 
 import 'dart:collection';
 import 'dart:math' as math;
-import 'dart:async';
 
 import 'package:range/range.dart';
 

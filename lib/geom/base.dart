@@ -533,9 +533,9 @@ abstract class Geometry implements Comparable<Geometry>{
    * If the result is empty, the result is an empty geometry with dimension
    * equal to the minimum of the two dimensions.
    */
-  Geometry intersection(Geometry geom) {
+  Geometry intersection(Geometry geom) { 
     //TODO: Geometry.intersection
-    throw 'NotImplemented';
+    throw 'Geometry.intersection NotImplemented';
   }
   
   /**

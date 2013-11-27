@@ -112,12 +112,10 @@ class Envelope {
     if (isEmpty) {
       return new Envelope._(x, x, y, y);
     } else {
-      var minx, maxx, miny, maxy;
-      if (x < minx) minx = x;
-      if (x > maxx) maxx = x;
-      if (y < miny) miny = y;
-      if (y > maxy) maxy = y;
-      return new Envelope._(minx, maxx, miny, maxy);
+      return new Envelope._(math.min(x, minx),
+                            math.max(x, maxx),
+                            math.min(y, miny),
+                            math.max(y, maxy));
     }
   }
   

@@ -1,31 +1,11 @@
 import 'dart:math';
 
-import 'package:spatially/base/coordinate.dart';
-
-import 'package:spatially/base/longdouble.dart';
-
 void main() {
-  Coordinate a = new Coordinate(10.0, 10.0);
-  Coordinate b = new Coordinate(100.0, 100.0);
-  Coordinate c = new Coordinate(10.0, 10.0);
-
-  var ax = new longdouble(a.x); var ay = new longdouble(a.y);
-  var bx = new longdouble(b.x); var by = new longdouble(b.y);
-  var cx = new longdouble(c.x); var cy = new longdouble(c.y);
+  print(0.0.compareTo(double.NAN));
+  print(double.NAN.compareTo(double.NAN));
   
-  print(by - cy);
-  print(ay - cy);
-  
-  var area_ld = 
-        ax * (by - cy)
-      + bx * (cy - ay)
-      + cx * (ay - cy);
-  
-  print("ax * (by - cy): ${ax * (by - cy)}");
-  print("bx * (cy - ay): ${bx * (cy - ay)}");
-  print("cx * (ay - cy): ${cx * (ay - cy)}");
-  
-  print(area_ld);
+  print(double.NAN == double.NAN);
+  print(double.NAN.compareTo(double.INFINITY));
 }
   /*
   print(log(pow(2, 53)) / log(10));

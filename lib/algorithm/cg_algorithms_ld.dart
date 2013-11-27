@@ -4,7 +4,7 @@
  */
 library algorithm.cg_algorithms_ld;
 
-import 'package:spatially/base/longdouble.dart';
+import 'package:longdouble/longdouble.dart';
 import 'package:spatially/base/coordinate.dart';
 
 /**

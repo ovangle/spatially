@@ -6,7 +6,12 @@ part of base.array;
 class Array<T> extends Object with IterableMixin<T> {
   final List<T> _delegate;
   
-  Array(int length) : _delegate = new List(length);
+  Array(int length) : 
+    _delegate = new List(length);
+  
+  Array.filled(int length, T fill) :
+    _delegate = new List.filled(length, fill);
+  
   Array.from(Iterable<T> iter) :
     _delegate = new List<T>.from(iter, growable: false);
 

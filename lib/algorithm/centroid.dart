@@ -7,8 +7,8 @@ import '../base/array.dart';
 import 'package:spatially/algorithm/cg_algorithms.dart'
     as cg_algorithms;
 
-import 'package:spatially/base/longdouble.dart';
-import '../base/coordinate.dart';
+import 'package:longdouble/longdouble.dart';
+import 'package:spatially/base/coordinate.dart';
 import 'package:spatially/geom/base.dart';
 
 /**
