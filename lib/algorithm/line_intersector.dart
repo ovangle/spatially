@@ -14,11 +14,7 @@ Coordinate coordinateIntersection(LineSegment lseg, Coordinate c) {
   if (lseg.envelope.intersectsCoordinate(c)) {
     if (cg_algorithms.orientationIndex(lseg, c) == 0
         && cg_algorithms.orientationIndex(lseg.reversed, c) == 0) {
-      
-      if (lseg.start ==c || lseg.end == c) {
-        return c;
-      }
-      
+      return c;
     }
   }
   return null;
