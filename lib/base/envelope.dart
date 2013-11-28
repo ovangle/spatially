@@ -149,7 +149,7 @@ class Envelope {
     return env.minx <= maxx
         && env.maxx >= minx
         && env.miny <= maxy
-        && env.maxy <= miny;
+        && env.maxy >= miny;
   }
   
   /**

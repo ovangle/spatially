@@ -5,35 +5,37 @@ import 'package:spatially/base/envelope.dart';
 import 'package:spatially/base/line_segment.dart';
 import 'package:spatially/algorithm/cg_algorithms.dart' as cg_algorithms;
 
-/** The segments do not intersect */
-const int NO_INTERSECTION         = 0;
-/* The segments intersect at a single point */
-const int POINT_INTERSECTION      = 1;
-/** The segments intersect at a line segment */
-const int COLLINEAR_INTERSECTION  = 2;
-
 /**
  * The result of intersecting the given [LineSegment]
- * with a [Coordinate]
+ * with a [Coordinate]. Returns the coordinate if it intersects
+ * the line segment, otherwise returns `null`.
  */
-int coordinateIntersection(LineSegment lseg, Coordinate c) {
+Coordinate coordinateIntersection(LineSegment lseg, Coordinate c) {
   if (lseg.envelope.intersectsCoordinate(c)) {
     if (cg_algorithms.orientationIndex(lseg, c) == 0
         && cg_algorithms.orientationIndex(lseg.reversed, c) == 0) {
       
       if (lseg.start ==c || lseg.end == c) {
-        return POINT_INTERSECTION;
+        return c;
       }
       
     }
   }
-  return NO_INTERSECTION;
+  return null;
 }
 
-Map segmentIntersection(LineSegment lseg1, LineSegment lseg2) {
+/**
+ * Returns the result of intersecting two segments. 
+ * The result will be:
+ * A [Coordinate], if the segments intersect at a single point.
+ * A [LineSegment], if the segments intersect along a non-degenerate
+ * line segment.
+ * `null`, if the segments do not intersect.
+ */
+dynamic /* Point | LineSegment */ segmentIntersection(LineSegment lseg1, LineSegment lseg2) {
   //If the envelopes don't intersect, neither do the segments
   if (!lseg1.envelope.intersectsEnvelope(lseg2.envelope)) {
-    return { "type": NO_INTERSECTION};
+    return null;
   }
   
   //Compare the orientations of both endpoints of the 
@@ -45,16 +47,16 @@ Map segmentIntersection(LineSegment lseg1, LineSegment lseg2) {
   final lseg1ToEnd   = cg_algorithms.orientationIndex(lseg1, lseg2.end);
   
   if (lseg1ToStart > 0 && lseg1ToEnd > 0
-      || lseg1ToStart < 0 && lseg1ToEnd > 0) {
-    return {"type" : NO_INTERSECTION };
+      || lseg1ToStart < 0 && lseg1ToEnd < 0) {
+    return null;
   }
   
   final lseg2ToStart = cg_algorithms.orientationIndex(lseg2, lseg1.start);
   final lseg2ToEnd   = cg_algorithms.orientationIndex(lseg2, lseg1.end);
 
   if (lseg2ToStart > 0 && lseg2ToEnd > 0
-      || lseg2ToStart < 0 && lseg2ToEnd > 0) {
-    return {"type" : NO_INTERSECTION };
+      || lseg2ToStart < 0 && lseg2ToEnd < 0) {
+    return null;
   }
   
   if (lseg1ToStart == 0 
@@ -66,8 +68,6 @@ Map segmentIntersection(LineSegment lseg1, LineSegment lseg2) {
   
   //The segments aren't intersecting,
   //so the result must be a point intersection
-  
-  int intersectionType = POINT_INTERSECTION;
   Coordinate intersectionCoord = null;
   
   //Check explicitly for equal endpoints
@@ -77,7 +77,7 @@ Map segmentIntersection(LineSegment lseg1, LineSegment lseg2) {
   }
   
   if (lseg1.end == lseg2.start
-      || lseg2.end == lseg2.end) {
+      || lseg1.end == lseg2.end) {
     intersectionCoord = lseg1.end;
   }
   
@@ -91,22 +91,21 @@ Map segmentIntersection(LineSegment lseg1, LineSegment lseg2) {
     intersectionCoord = lseg1.end;
   }
   
-  if (intersectionCoord != null) {
-    return { "type" : POINT_INTERSECTION,
-             "intersection" : intersectionCoord };
-  }
   
-  intersectionCoord = _computeIntersectionNormalized(lseg1, lseg2); 
+  if (intersectionCoord == null) {
+    intersectionCoord = _computeIntersectionNormalized(lseg1, lseg2); 
+  }
+  return intersectionCoord;
 }
 
-Map _collinearIntersection(LineSegment lseg1, LineSegment lseg2) {
+dynamic /*Coordinate | LineSegment */ _collinearIntersection(LineSegment lseg1, LineSegment lseg2) {
   /**
    * Test whether the start of a is in the envelope of b
    */
   bool inEnvelopeOf(Coordinate a, LineSegment b) =>
       b.envelope.intersectsCoordinate(a);
   
-  List<Coordinate> coords;
+  Set<Coordinate> coords = new Set<Coordinate>();
   
   if (inEnvelopeOf(lseg1.start, lseg2)) {
     coords.add(lseg1.start);
@@ -117,20 +116,19 @@ Map _collinearIntersection(LineSegment lseg1, LineSegment lseg2) {
   if (inEnvelopeOf(lseg2.start, lseg1)) {
     coords.add(lseg2.start);
   }
-  if (inEnvelopeOf(lseg1.end, lseg2)) {
+  if (inEnvelopeOf(lseg2.end, lseg1)) {
     coords.add(lseg2.end);
   }
-  Set<Coordinate> uniqCoords = coords.toSet();
   
-  switch (uniqCoords.length) {
+  switch (coords.length) {
     case 0: 
-      return { "type" : NO_INTERSECTION };
+      return null;
     case 1: 
-      return { "type" : POINT_INTERSECTION,
-               "intersection" : uniqCoords.single };
+      return coords.single;
     case 2: 
-      return { "type" : COLLINEAR_INTERSECTION,
-               "intersection" : new LineSegment(uniqCoords.first, uniqCoords.last) };
+      List<Coordinate> sorted = new List.from(coords)
+                  ..sort();
+      return new LineSegment(sorted.first, sorted.last);
     default:
       print("Too many coordinates in collinear intersection:\n"
             "\tlseg1: $lseg1\n"
@@ -162,12 +160,12 @@ Coordinate _computeIntersectionNormalized(LineSegment lseg1, LineSegment lseg2) 
  */
 Coordinate _computeIntersection(LineSegment lseg1, 
                                 LineSegment lseg2) {
-  final w1 = lseg1.start.x * lseg1.end.x - lseg1.end.x * lseg1.start.y;
+  final w1 = lseg1.start.x * lseg1.end.y - lseg1.end.x * lseg1.start.y;
   final w2 = lseg2.start.x * lseg2.end.y - lseg2.end.x * lseg2.start.y;
-  final w = lseg1.dx * lseg2.dy - lseg2.dy * lseg1.dy;
+  final w = lseg1.dx * lseg2.dy - lseg2.dx * lseg1.dy;
   
-  final x = (lseg1.dy * w2 - lseg2.dy * w1) / w;
-  final y = (lseg2.dx * w1 - lseg1.dx * w2) / w;
+  final x = (lseg1.dx * w2 - lseg2.dx * w1) / w;
+  final y = (lseg1.dy * w2 - lseg2.dy * w1) / w;
   
   return new Coordinate(x, y);
 }
