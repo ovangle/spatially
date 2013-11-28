@@ -6,7 +6,7 @@ import '../base/array.dart';
 import '../base/coordinate.dart';
 import 'package:range/range.dart';
 
-import 'envelope.dart';
+import '../base/envelope.dart';
 
 part 'src/coordinate_sequence/factory.dart';
 part 'src/coordinate_sequence/utils.dart';

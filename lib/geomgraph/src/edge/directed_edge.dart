@@ -13,11 +13,10 @@ class DirectedEdge {
    */
   final Node endNode;
   /**
-   * A vector parallel the first segment of the
-   * linestring or ring represented by the edge, 
-   * in the direction of the edge.
+   * The first segment of the edge represented
+   * by this vector.
    */
-  final Coordinate directionVector;
+  final LineSegment directionVector;
   
   bool _isForward;
   
@@ -33,20 +32,12 @@ class DirectedEdge {
    */
   bool get isBackward => !_isForward;
   
-  /**
-   * The end of the direction vector.
-   */
-  final Coordinate _dirVectorEnd;
-  
   DirectedEdge(Node startNode, 
                Node endNode,
-               Coordinate directionVector) :
+               LineSegment directionVector) :
     this.startNode  = startNode,
     this.endNode    = endNode,
-    this.directionVector = directionVector,
-    _dirVectorEnd = new Coordinate(
-        startNode.coordinate.x + directionVector.x,
-        startNode.coordinate.y + directionVector.y);
+    this.directionVector = directionVector;
   
   
   UnmodifiableListView<Coordinate> get coordinates =>
@@ -59,10 +50,10 @@ class DirectedEdge {
   }
   
   int get _quadrant {
-    if (directionVector.y >= 0) {
-      return (directionVector.x >= 0) ? 1 /* NE */ : 2 /* NW */;
+    if (directionVector.projy >= 0) {
+      return (directionVector.projx >= 0) ? 1 /* NE */ : 2 /* NW */;
     } else {
-      return (directionVector.x >= 0) ? 4 /* SE */ : 3 /* SW */;
+      return (directionVector.projx >= 0) ? 4 /* SE */ : 3 /* SW */;
     }
   }
   
@@ -77,8 +68,7 @@ class DirectedEdge {
    * The angle that `this` makes with the positive x-axis
    * as a number between 0 and 2*PI
    */
-  double get angle =>
-     math.atan2(directionVector.y, directionVector.x);
+  double get angle => directionVector.angle;
   
   /**
    * [DirectedEdge]s have a [compareTo] method, which compares
@@ -102,9 +92,8 @@ class DirectedEdge {
     if (cmpQuadrants != 0) return cmpQuadrants;
     
     return cg_algorithms.orientationIndex(
-                startNode.coordinate,
-                de._dirVectorEnd,
-                _dirVectorEnd);
+                 de.directionVector,
+                 directionVector.end);
   }
   
   /**

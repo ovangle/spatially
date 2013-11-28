@@ -48,6 +48,10 @@ class Linestring extends Geometry {
     verts.setAll(0, _coords.map((c) => factory.createPoint(c)));
     return verts;
   }
+  
+  Iterable<LineSegment> get segments =>
+      range(1,_coords.length)
+      .map((i) => new LineSegment(_coords[i - 1], _coords[i]));
  
   Point get startPoint {
     if (isEmptyGeometry) {

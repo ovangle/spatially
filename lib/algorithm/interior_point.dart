@@ -4,7 +4,7 @@ import 'package:range/range.dart';
 
 import 'package:spatially/base/array.dart';
 import 'package:spatially/base/coordinate.dart';
-import 'package:spatially/geom/envelope.dart';
+import '../base/envelope.dart';
 import 'package:spatially/geom/base.dart';
 
 

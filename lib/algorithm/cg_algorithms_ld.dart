@@ -6,6 +6,7 @@ library algorithm.cg_algorithms_ld;
 
 import 'package:longdouble/longdouble.dart';
 import 'package:spatially/base/coordinate.dart';
+import 'package:spatially/base/line_segment.dart';
 
 /**
  * The index of the direction of the point [:q:] relative
@@ -16,19 +17,19 @@ import 'package:spatially/base/coordinate.dart';
  * `-1` if the point is clockwise (right) of [:c1:]->[:c2:]
  * `0` if the point is collinear with [:c1:]->[:c2:]
  */
-int orientationIndex(Coordinate c1, Coordinate c2, Coordinate q) {
-  longdouble c1x = new longdouble(c1.x);
-  longdouble c1y = new longdouble(c1.y);
-  longdouble c2x = new longdouble(c2.x);
-  longdouble c2y = new longdouble(c2.y);
+int orientationIndex(LineSegment lseg, Coordinate q) {
+  longdouble start_x = new longdouble(lseg.start.x);
+  longdouble start_y = new longdouble(lseg.start.y);
+  longdouble end_x = new longdouble(lseg.end.x);
+  longdouble end_y = new longdouble(lseg.end.y);
   longdouble qx  = new longdouble(q.x);
   longdouble qy  = new longdouble(q.y);
   
-  final dx1 = c2x - c1x;
-  final dy1 = c2y - c1y;
+  final dx1 = start_x - end_x;
+  final dy1 = start_y - end_y;
   
-  final dx2 = qx - c2x;
-  final dy2 = qy - c2y;
+  final dx2 = qx - end_x;
+  final dy2 = qy - end_y;
   
   return ((dx1 * dy2) - (dy1 * dx2)).compareToNum(0);
 }

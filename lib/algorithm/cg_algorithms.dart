@@ -9,6 +9,7 @@ import 'package:range/range.dart';
 
 import 'package:spatially/base/array.dart';
 import 'package:spatially/base/coordinate.dart';
+import 'package:spatially/base/line_segment.dart';
 import 'package:spatially/geom/location.dart' as location;
 
 import 'cg_algorithms_ld.dart' as cg_algorithms_ld;
@@ -57,8 +58,8 @@ const int STRAIGHT = COLLINEAR;
 //FIXME: See comment in CGAlgorithms.orentiationIndex.
 //       This algorithm fails for some coordinates.
 //       Should be alright for the moment.
-int orientationIndex(Coordinate c1, Coordinate c2, Coordinate q) =>
-    cg_algorithms_ld.orientationIndex(c1, c2, q);
+int orientationIndex(LineSegment lseg, Coordinate q) =>
+    cg_algorithms_ld.orientationIndex(lseg, q);
 
 /**
  * Tests wether the point lies inside or on a ring. The ring may
@@ -127,7 +128,7 @@ bool isCounterClockwise(Array<Coordinate> ring) {
     return false;
   }
   
-  int orientation = orientationIndex(prev, highCoord, next);
+  int orientation = orientationIndex(new LineSegment(prev, highCoord), next);
 
   if (orientation == 0) {
     //The three points are collinear.

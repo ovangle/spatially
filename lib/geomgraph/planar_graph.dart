@@ -3,6 +3,7 @@ library geom_graph.planar_graph;
 import 'dart:collection';
 import 'package:spatially/base/array.dart';
 import 'package:spatially/base/coordinate.dart';
+import 'package:spatially/base/line_segment.dart';
 import 'package:spatially/algorithm/lb_rule.dart' as lb_rule;
 import 'package:spatially/geom/location.dart' as loc;
 import 'package:spatially/geom/base.dart';
@@ -45,23 +46,23 @@ class PlanarGraph {
     assert(_nodeMap.containsKey(coords.first));
     assert(_nodeMap.containsKey(coords.last));
     
-    Coordinate forwardDirVector = 
-        new Coordinate(coords[1].x - coords[0].x,
-                       coords[1].y - coords[0].y);        
+    LineSegment forwardDirVector = 
+        new LineSegment(coords[0], coords[1]);   
+    LineSegment backwardDirVector = 
+        new LineSegment(coords[coords.length - 2],
+                        coords[coords.length - 1]);
+    
     DirectedEdge forward = 
         new DirectedEdge(_nodeMap[coords.first],
                          _nodeMap[coords.last],
                          forwardDirVector);
     
-    final lastCoord   = coords[coords.length - 2];
-    final sndLastCoord = coords[coords.length - 1];
-    Coordinate backwardDirVector =
-        new Coordinate(sndLastCoord.x - lastCoord.x,
-                       sndLastCoord.y - lastCoord.y);
     DirectedEdge backward = 
         new DirectedEdge(_nodeMap[coords.last],
                          _nodeMap[coords.first],
                          backwardDirVector);
+    _nodeMap[coords.first].addEdge(forward);
+    _nodeMap[coords.last].addEdge(backward);
     
     Edge e = new Edge(forward, backward, coords);
     e.coordinates = coords;
@@ -76,12 +77,11 @@ class PlanarGraph {
                  int rightLoc: loc.NONE}) {
     assert(isRing(coords));
     assert(_nodeMap.containsKey(coords.first));
-    Coordinate forwardDirVector = 
-        new Coordinate(coords[1].x - coords[0].x,
-                       coords[1].y - coords[0].y);
-    Coordinate backwardDirVector =
-        new Coordinate(coords[coords.length - 2].x - coords[coords.length - 1].x,
-                       coords[coords.length - 2].y - coords[coords.length - 2].y);
+    LineSegment forwardDirVector = 
+        new LineSegment(coords[0], coords[1]);
+    LineSegment backwardDirVector =
+        new LineSegment(coords[coords.length - 2], 
+                        coords[coords.length - 1]);
     DirectedEdge forward =
         new DirectedEdge(_nodeMap[coords.first],
                          _nodeMap[coords.last],
@@ -90,6 +90,8 @@ class PlanarGraph {
         new DirectedEdge(_nodeMap[coords.first],
                          _nodeMap[coords.last],
                          backwardDirVector);
+    _nodeMap[coords.first].addEdge(forward);
+    _nodeMap[coords.first].addEdge(backward);
     Edge e = new Edge(forward, backward, coords);
     e.label = new Label.planarLabel(geom, onLoc: onLoc, leftLoc: leftLoc, rightLoc: rightLoc);
     _edges.add(e);
@@ -124,28 +126,26 @@ class PlanarGraph {
    * Remove an edge and its associated [DirectedEdge]s
    * from their terminating nodes and from the graph.
    * Does not remove the terminating ndes.
+   * 
+   * Note that there is no way of removing a [DirectedEdge]
+   * without removing it's symmetric edge or parent.
    */
   void removeEdge(Edge e) {
-    removeDirectedEdge(e.forward);
-    removeDirectedEdge(e.backward);
+    _dirEdges.remove(e.forward);
+    _dirEdges.remove(e.backward);
     _edges.remove(e);
     e.remove();
   }
   
   /**
-   * Remove the [DirectedEdge] from the graph.
-   */
-  void removeDirectedEdge(DirectedEdge de) {
-    _dirEdges.remove(de);
-    de.remove();
-  }
-  
-  /**
    * Remove the [Node] from the graph, along with any
-   * edges or directed edges which terminate at the node
+   * edges or directed edges which start at the node
    */
   void removeNode(Node node) {
     Iterable<DirectedEdge> outEdges = node.outEdges;
-    throw 'PlanarGraph.removeNode not implemented';
+    for (var de in outEdges) {
+      removeEdge(de.parentEdge);
+    }
+    _nodeMap.remove(node.coordinate);
   }
 }

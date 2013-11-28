@@ -5,6 +5,7 @@ import 'dart:math' as math;
 
 import 'package:spatially/base/array.dart';
 import 'package:spatially/base/coordinate.dart';
+import 'package:spatially/base/line_segment.dart';
 
 import 'package:spatially/algorithm/cg_algorithms.dart'
     as cg_algorithms;

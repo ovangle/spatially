@@ -155,6 +155,13 @@ class Coordinate implements Comparable<Coordinate> {
   }
   
   /**
+   * A new [Coordinate], translated along the x-axis by dx
+   * and along the y-axis by dy
+   */
+  Coordinate translated(double dx, double dy) =>
+      new Coordinate(x + dx, y + dx);
+  
+  /**
    * A string representation of the [Coordinate] in the form (x, y, z)
    */
   String toString() => "($x, $y, $z)";

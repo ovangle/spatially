@@ -24,6 +24,12 @@ abstract class Label {
                              int rightLoc}) {
     return new PlanarLabel._(componentOf, onLoc, leftLoc, rightLoc);
   }
+  
+  /**
+   * The location on the geometry represented by the labelled graph
+   * component
+   */
+  int get onLocation;
 }
 
 class NodalLabel extends Label {
@@ -42,8 +48,17 @@ class LinearLabel extends Label {
 
 class PlanarLabel extends Label {
   final int onLocation;
+  /**
+   * The location to the left of the [Ring] represented by the 
+   * labelled edge
+   */
   final int leftLocation;
+  /**
+   * The location to the right of the [Ring] represented by
+   * the labelled edge.
+   */
   final int rightLocation;
+  
   PlanarLabel._(Geometry componentOf, 
                  int this.onLocation, 
                  int this.leftLocation,

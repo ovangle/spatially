@@ -5,6 +5,7 @@ import 'dart:collection';
 
 import 'package:range/range.dart';
 import 'package:spatially/base/coordinate.dart';
+import 'package:spatially/base/line_segment.dart';
 import 'package:spatially/base/array.dart';
 import 'package:spatially/algorithm/lb_rule.dart'
           as lb_rule;
@@ -18,7 +19,7 @@ import 'package:spatially/operation/boundary.dart' as bnd;
 import 'package:spatially/convert/wkt.dart' as wkt;
 
 
-import 'envelope.dart';
+import '../base/envelope.dart';
 import 'coordinate_sequence.dart';
 import 'precision_model.dart';
 import 'intersection_matrix.dart';
