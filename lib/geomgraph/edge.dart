@@ -1,7 +1,8 @@
 library geomgraph.edge;
 
 import 'dart:collection';
-import 'dart:math' as math;
+
+import 'package:range/range.dart';
 
 import 'package:spatially/base/array.dart';
 import 'package:spatially/base/coordinate.dart';
@@ -9,33 +10,47 @@ import 'package:spatially/base/line_segment.dart';
 
 import 'package:spatially/algorithm/cg_algorithms.dart'
     as cg_algorithms;
+import 'package:spatially/geom/base.dart';
 
 import 'node.dart';
 import 'label.dart';
+import 'index.dart';
+import 'planar_graph.dart';
 
 part 'src/edge/directed_edge.dart';
+part 'src/edge/edge_intersection.dart';
 
 class Edge {
+  PlanarGraph parentGraph;
   DirectedEdge _forward;
   DirectedEdge _backward;
   
   Label label;
   
+  EdgeIntersections _edgeIntersections;
   UnmodifiableListView<Coordinate> _coordinates;
   
-  Edge(DirectedEdge forward, 
+  Edge(PlanarGraph parentGraph,
+       DirectedEdge forward, 
        DirectedEdge backward,
-       Array<Coordinate> _coordinates) {
-    this.forward = forward;
-    this.backward = backward;
-    this._coordinates = new UnmodifiableListView(_coordinates);
+       Array<Coordinate> coordinates) :
+    this.parentGraph = parentGraph,
+    this._forward = forward,
+    this._backward = backward,
+    this._coordinates = new UnmodifiableListView(coordinates) {
+    _edgeIntersections = new EdgeIntersections(this);
   }
+
   
   UnmodifiableListView<Coordinate> get coordinates =>
      _coordinates;
   void set coordinates(Iterable<Coordinate> coords) {
     this._coordinates = new UnmodifiableListView(coords);
   }
+  
+  Iterable<LineSegment> get segments =>
+      range(1, _coordinates.length - 1)
+      .map((i) => new LineSegment(_coordinates[i-1], _coordinates[i]));
   
   DirectedEdge get forward => _forward;
   void set forward(DirectedEdge de) {
@@ -89,5 +104,24 @@ class Edge {
       _backward._parentEdge = null;
       _backward = null;
     }
+    parentGraph = null;
   }
-}
+  
+  void addIntersections(List<IntersectionInfo> intersections) {
+    intersections.forEach(addIntersection);
+  }
+  
+  void addIntersection(IntersectionInfo intersection) {
+    var isectCoord;
+    if (intersection is Coordinate) {
+      isectCoord = intersection;
+    } else if (intersection is LineSegment) {
+      isectCoord = intersection.start;
+    } else {
+      throw new ArgumentError("Intersection must be a Coordinate or LineSegment");
+    }
+    int segmentIndex = 
+        coordinates.firstWhere((c) => isectCoord);
+    _edgeIntersections.add(intersection, segmentIndex, dist);
+  }
+} 

@@ -7,7 +7,7 @@ part of base.coordinate;
  * 
  * Self-intersection is not checked
  */
-bool isRing(Array<Coordinate> coords) =>
+bool isRing(Iterable<Coordinate> coords) =>
     coords.isEmpty || (coords.length >= 4 && coords.first == coords.last);
 
 /**

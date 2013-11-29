@@ -49,13 +49,7 @@ class DirectedEdge {
     parentEdge.label = label;
   }
   
-  int get _quadrant {
-    if (directionVector.projy >= 0) {
-      return (directionVector.projx >= 0) ? 1 /* NE */ : 2 /* NW */;
-    } else {
-      return (directionVector.projx >= 0) ? 4 /* SE */ : 3 /* SW */;
-    }
-  }
+  int get _quadrant => directionVector.quadrant;
   
   /**
    * Returns the edge in the opposite direction

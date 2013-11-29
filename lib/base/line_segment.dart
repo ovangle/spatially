@@ -1,14 +1,46 @@
 library base.line_segment;
 
 import 'dart:math' as math;
+import 'package:range/range.dart';
 
 import 'coordinate.dart';
 import 'envelope.dart';
 
 /**
+ * Returns an iterable over all the [LineSegment]s obtained between
+ * adjacent coordinate pairs in a list of coordinates.
+ */
+Iterable<LineSegment> coordinateSegments(List<Coordinate> coords) =>
+    range(1, coords.length)
+    .map((i) => new LineSegment(coords[i - 1], coords[i]));
+
+/**
  * Represents the [LineSegment] between two [Coordinate]s
  */
 class LineSegment {
+
+  /**
+   * The [LineSegment] is in the [NORTH_EAST] quadrant
+   * if `dx >= 0` and `dy >= 0`.
+   */
+  static const int NORTH_EAST = 0;
+  /**
+   * A [LineSegment] is in the [NORTH_WEST] quadrant
+   * if `dx < 0` and `dy >= 0`.
+   */
+  static const int NORTH_WEST = 1;
+  /**
+   * A [LineSegment] is in the [SOUTH_EAST] quadrant
+   * if `dx < 0` and `dy < 0`.
+   */
+  static const int SOUTH_EAST = 2;
+  /**
+   * A [LineSegment] is in the [SOUTH_WEST] quadrant
+   * if `dx >= 0` and `dy < 0`.
+   */
+  static const int SOUTH_WEST = 3;
+
+  
   final Coordinate start;
   final Coordinate end;
   
@@ -27,6 +59,22 @@ class LineSegment {
    * Equivalent to end.y - start.y
    */
   double get dy => end.y - start.y;
+  
+  /**
+   * The [quadrant] of a [LineSegment] represents the
+   * section of the plane towards which the line segment
+   * is directed. 
+   * The quadrants are numbered in an anti-clockwise 
+   * fashion around the origin, with the north east quadrant
+   * numbered `0` and the south east quadrant numbered `3`.
+   */
+  int get quadrant {
+    if (dy >= 0) {
+      return (dx >= 0) ? NORTH_EAST : NORTH_WEST;
+    } else {
+      return (dx >= 0) ? SOUTH_EAST : SOUTH_WEST;
+    }
+  }
   
   /**
    * The angle that this [LineSegment] makes with the

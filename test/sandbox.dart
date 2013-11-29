@@ -1,11 +1,19 @@
 import 'dart:math';
 
 void main() {
+  List l = [1,2,3,4,5];
+  print(l.length);
+  int i = -1;
+  while (++i < l.length && l[i]<1);
+  l.insert(i, 10);
+  print(l);
+  /*
   print(0.0.compareTo(double.NAN));
   print(double.NAN.compareTo(double.NAN));
   
   print(double.NAN == double.NAN);
   print(double.NAN.compareTo(double.INFINITY));
+  */
 }
   /*
   print(log(pow(2, 53)) / log(10));

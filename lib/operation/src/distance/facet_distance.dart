@@ -20,4 +20,4 @@ Iterable<Point> extractPoints(Geometry geom) {
   return [];
 }
 
-Map computeFacetDistance(Geometry g)
+Map computeFacetDistance(Geometry g) {}

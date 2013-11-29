@@ -21,6 +21,37 @@ Coordinate coordinateIntersection(LineSegment lseg, Coordinate c) {
 }
 
 /**
+ * Check if the intersection of [:lseg1:] and [:lseg2:] is proper.
+ * An intersection is proper if it lies entirely within
+ * the interior of both the argument [LineSegment]s.
+ * 
+ * [:intersectionResult:] is an optional argument with the result
+ * of intersecting the arguments unsing [segmentIntersection].
+ * Providing it will prevent recalculating the intersection, to 
+ * improve efficiency
+ */
+bool isProperIntersection(LineSegment lseg1, 
+                          LineSegment lseg2, 
+                          [dynamic /* Coordinate | LineSegment */intersectionResult = 0 ]) {
+  if (intersectionResult == 0) {
+    //We can't use null as the default argument
+    //because `null` is a valid value for the intersection
+    //of the two linesegments
+    intersectionResult = segmentIntersection(lseg1, lseg2);
+  }
+  if (intersectionResult is! Coordinate) {
+    //Collinear intersections must always contain at least one of the endpoints
+    //If there is no intersection, it can't be proper
+    return false;
+  }
+  Coordinate coord = intersectionResult as Coordinate;
+  return coord != lseg1.start
+      && coord != lseg1.end
+      && coord != lseg2.start
+      && coord != lseg2.end;
+}
+
+/**
  * Returns the result of intersecting two segments. 
  * The result will be:
  * A [Coordinate], if the segments intersect at a single point.

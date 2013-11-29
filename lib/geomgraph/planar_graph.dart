@@ -64,7 +64,7 @@ class PlanarGraph {
     _nodeMap[coords.first].addEdge(forward);
     _nodeMap[coords.last].addEdge(backward);
     
-    Edge e = new Edge(forward, backward, coords);
+    Edge e = new Edge(this, forward, backward, coords);
     e.coordinates = coords;
     e.label = new Label.linearLabel(geom, onLoc);
     _edges.add(e);
@@ -92,7 +92,7 @@ class PlanarGraph {
                          backwardDirVector);
     _nodeMap[coords.first].addEdge(forward);
     _nodeMap[coords.first].addEdge(backward);
-    Edge e = new Edge(forward, backward, coords);
+    Edge e = new Edge(this, forward, backward, coords);
     e.label = new Label.planarLabel(geom, onLoc: onLoc, leftLoc: leftLoc, rightLoc: rightLoc);
     _edges.add(e);
   }
