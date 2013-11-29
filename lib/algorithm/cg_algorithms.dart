@@ -142,27 +142,27 @@ bool isCounterClockwise(Array<Coordinate> ring) {
  * Computes the distance from a [Coordinate] to the
  * line segment defined from [:a:] to [:b:]
  */
-double distanceToLine(Coordinate c, Coordinate A, Coordinate B) {
-  if (A == B) {
-    return c.distance(A);
+double distanceToLine(Coordinate c, LineSegment lseg) {
+  if (lseg.start == lseg.end) {
+    return c.distance(lseg.start);
   }
   
   // l = || AB ||^2
-  var lenSqr = A.distanceSqr(B);
+  var lenSqr = lseg.start.distanceSqr(lseg.end);
   // r = (AC . AB) / (l)
-  var ac_dot_ab = (c.x - A.x) * (B.x - A.x)
-                + (c.y - A.y) * (B.y - A.y);
+  var ac_dot_ab = (c.x - lseg.start.x) * (lseg.end.x - lseg.start.x)
+                + (c.y - lseg.start.y) * (lseg.end.y - lseg.start.y);
   var r = ac_dot_ab / lenSqr;
   if (r <= 0.0) {
     //Point is on the backward extension of AB
-    return c.distance(A);
+    return c.distance(lseg.start);
   }
   if (r >= 1.0) {
     //Point is on forward extension of AB
-    return c.distance(B);
+    return c.distance(lseg.end);
   }
   
-  return perpendicularDistanceToLine(c, A, B);
+  return perpendicularDistanceToLine(c, lseg);
 }
 
 /**
@@ -170,15 +170,15 @@ double distanceToLine(Coordinate c, Coordinate A, Coordinate B) {
  * to the infinite line passing through AB
  * It is assumed that A != B
  */
-double perpendicularDistanceToLine(Coordinate c, Coordinate A, Coordinate B) {
+double perpendicularDistanceToLine(Coordinate c, LineSegment lseg) {
   // l = || AB ||^2
-  var lenSqr = A.distanceSqr(c);
+  var lenSqr = lseg.start.distanceSqr(c);
   
   // s = (Ay - Cy)(Bx - Ax) - (Ax - Cx)(By - Ay)
   //     ---------------------------------------
   //                        l
-  var s = (A.y - c.y) * (B.x - A.x)
-        - (A.x - c.x) * (B.y - A.y); 
+  var s = (lseg.start.y - c.y) * (lseg.end.x - lseg.start.x)
+        - (lseg.start.x - c.x) * (lseg.end.y - lseg.start.y); 
   s /= lenSqr;
   
   // The distance to c is |s|*l
@@ -195,7 +195,7 @@ double pointToLineDistance(Coordinate c, Array<Coordinate> line) {
   }
   var minDist = c.distance(line[0]);
   for (var i in range(1, line.length)) {
-    double dist = distanceToLine(c, line[i - 1], line[i]);
+    double dist = distanceToLine(c, new LineSegment(line[i - 1], line[i]));
     minDist = (dist < minDist) ? dist : minDist;
   }
   return minDist;
@@ -205,24 +205,25 @@ double pointToLineDistance(Coordinate c, Array<Coordinate> line) {
  * Calculates the distance between the line segment A->B
  * and the line segment C->D
  */
-double lineToLineDistance(Coordinate A, Coordinate B, 
-                          Coordinate C, Coordinate D) {
-  if (A == B) return distanceToLine(A, C, D);
-  if (C == D) return distanceToLine(D, A, B);
+double lineToLineDistance(LineSegment lseg1, 
+                          LineSegment lseg2) {
+  if (lseg1.start == lseg1.end) return distanceToLine(lseg1.start, lseg2);
+  if (lseg2.start == lseg2.end) return distanceToLine(lseg2.start, lseg1);
   
   //The distance if the lines don't intersect
   //Is the minimum distance from any endpoint
   //to the other line
   double distNoIntersection() {
-    var distances = [ distanceToLine(A, C, D),
-                      distanceToLine(B, C, D),
-                      distanceToLine(C, A, B),
-                      distanceToLine(D, A, B) ];
+    var distances = [ distanceToLine(lseg1.start, lseg2),
+                      distanceToLine(lseg1.end, lseg2),
+                      distanceToLine(lseg2.start, lseg1),
+                      distanceToLine(lseg2.end, lseg1) ];
     return distances.fold(double.INFINITY, math.min);
   }
   
   // d = (B.x - A.x)(D.y - C.y) - (B.y - A.y)(D.x - C.x)
-  final d = (B.x - A.x) * (D.y - C.y) - (B.y - A.y) * (D.x - C.x);
+  final d = (lseg1.end.x - lseg1.start.x) * (lseg2.end.y - lseg2.start.y) 
+          - (lseg1.end.y - lseg1.start.y) * (lseg2.end.x - lseg2.start.x);
   
   // If d == 0, AB is parallel to CD
   if (d == 0) 
@@ -233,14 +234,16 @@ double lineToLineDistance(Coordinate A, Coordinate B,
   //     -----------------------------------------------
   //                            d
   
-  final r1 = (A.y - C.y) * (D.x - C.x) - (A.x - C.x) * (D.y - C.y); 
+  final r1 = (lseg1.start.y - lseg2.start.y) * (lseg2.end.x - lseg2.start.x) 
+           - (lseg1.start.x - lseg2.start.x) * (lseg2.end.y - lseg2.start.y); 
   final r = r1 / d;
   
-  // s = (A.y - C.y)(B.x - A.x) - (A.x - C.x)(B.y - A.y)
+  // s = (lseg1.start.y - lseg2.start.y)(lseg1.end.x - lseg1.start.x) - (lseg1.start.x - lseg2.start.x)(lseg1.end.y - lseg1.start.y)
   //     -----------------------------------------------
   //                            d
   
-  final s1 = (A.y - C.y) * (B.x - A.x) - (A.x - C.x) * (B.x - A.y);
+  final s1 = (lseg1.start.y - lseg2.start.y) * (lseg1.end.x - lseg1.start.x) 
+           - (lseg1.start.x - lseg2.start.x) * (lseg1.end.x - lseg1.start.y);
   final s = s1 / d;  
   
   // If 0 <= r <= 1 && 0 <= s <= 1, AB intersects CD
