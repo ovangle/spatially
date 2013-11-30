@@ -6,7 +6,7 @@ part of geomgraph.index;
  * Although having the same worst case complexity of the simple intersector,
  * the average case should perform a lot faster.
  */
-List<IntersectionInfo> _monotoneChainSweepLineIntersector(
+Set<IntersectionInfo> _monotoneChainSweepLineIntersector(
     List<Edge> edges, 
     { bool testAll: false }) {
   /* FIXME: currently the testAll argument is ignored */
@@ -28,7 +28,7 @@ List<IntersectionInfo> _monotoneChainSweepLineIntersector(
   events.sort((evt1, evt2) => evt1.compareTo(evt2));
   int overlapCount = 0;
   
-  Iterable<int> insertEvtIdxs =
+  var insertEvtIdxs =
       range(events.length).where((i) => events[i].evtType == SweeplineEvent.INSERT_EVT);
   var deleteEvtIdxs =
       range(events.length).where((i) => events[i].evtType == SweeplineEvent.DELETE_EVT);
@@ -43,7 +43,7 @@ List<IntersectionInfo> _monotoneChainSweepLineIntersector(
         deleteEvtIdxs.firstWhere((j) => events[j].mchain == events[i].mchain);
     intersections.addAll(_intersectionsBetween(events, insertEvent, i, deleteEvtIdx));
   }
-  return intersections.toList();
+  return intersections;
 }
 
 Set<IntersectionInfo> _intersectionsBetween(List<SweeplineEvent> events, 
@@ -51,11 +51,12 @@ Set<IntersectionInfo> _intersectionsBetween(List<SweeplineEvent> events,
                                             int start, 
                                             int end) {
   var mchain0 = insertEvent.mchain;
-  var intersections = new List();
+  var intersections = new Set();
   for (var i in range(start, end)
                 .where((i) => events[i].evtType == SweeplineEvent.INSERT_EVT)) {
     var mchain1 = events[i].mchain;
     intersections.addAll(mchain0.intersectionsWith(mchain1));
+    intersections.addAll(mchain1.intersectionsWith(mchain0));
   }
   return intersections;
 }
@@ -91,8 +92,13 @@ class MonotoneChain extends Object with IterableMixin<Coordinate> {
    */
   Edge get edge => _mchains.edge;
   
-  Iterator<Coordinate> get iterator => 
-      edge.coordinates.getRange(start,end).iterator;
+  Iterator<Coordinate> get iterator {
+    final coords = edge.coordinates;
+    //Add one to end, to include the first coordinate of the next monotone chain
+    //in the coordinates of the current one (since ranges are half closed intervals)
+    //Otherwise there will be gaps in the partition.
+    return coords.getRange(start,end + 1).iterator;
+  }
   
   Iterable<LineSegment> get segments =>
       coordinateSegments(edge.coordinates.sublist(start, end));
@@ -102,7 +108,7 @@ class MonotoneChain extends Object with IterableMixin<Coordinate> {
    */
   Envelope get envelope => new Envelope.fromCoordinates(first, last);
   
-  Set<IntersectionInfo> intersectionsWith(MonotoneChain mc1) {
+  Iterable<IntersectionInfo> intersectionsWith(MonotoneChain mc1) {
     //No intersections with self.
     if (this == mc1) return new Set();
     //If the envelopes don't intersect, the chains can't intersect.
@@ -117,26 +123,33 @@ class MonotoneChain extends Object with IterableMixin<Coordinate> {
     if (end0 - start0 == 1 && end1 - start1 == 1) {
       Set infos = new Set();
       infos.add(_getIntersectionInfo(e0, start0, e1, start1));
+      return infos;
     }
     var subchain1 = new MonotoneChain._(_mchains, start0, end0);
     var subchain2 = new MonotoneChain._(_mchains, start0, end0);
     
-    if (!subchain1.envelope.intersectsEnvelope(subchain2)) {
+    if (!subchain1.envelope.intersectsEnvelope(subchain2.envelope)) {
       return new Set();
     }
-    var mid0 = (start0 + end0) / 2;
-    var mid1 = (start1 + end1) / 2;
+    var mid0 = (start0 + end0) ~/ 2;
+    var mid1 = (start1 + end1) ~/ 2;
     
     var infos = new Set();
-    if (mid0 > start0) infos.addAll(_searchSubchains(e0, start0, mid0, e1, start1, end1));
-    if (mid0 < end0)   infos.addAll(_searchSubchains(e0, mid0,   end0, e1, start1, end1));
-    if (mid1 > start1) infos.addAll(_searchSubchains(e0, start0, end0, e1, start1, mid1));
-    if (mid1 > start1) infos.addAll(_searchSubchains(e0, start0, end0, e1, mid1,   end1));
+    if (end0 - start0 > 1) {
+      if (mid0 > start0) infos.addAll(_searchSubchains(e0, start0, mid0, e1, start1, end1));
+      if (mid0 < end0)   infos.addAll(_searchSubchains(e0, mid0,   end0, e1, start1, end1));
+    }
+    if (end1 - start1 > 1) {
+      if (mid1 > start1) infos.addAll(_searchSubchains(e0, start0, end0, e1, start1, mid1));
+      if (mid1 > start1) infos.addAll(_searchSubchains(e0, start0, end0, e1, mid1,   end1));
+    }
     return infos;
   }
   
   bool operator ==(Object other) {
-    if (other is MonotoneChain && other.length == length) {
+    if (other is MonotoneChain 
+        && edge == other.edge
+        && other.length == length) {
       Iterator<Coordinate> otherIter = other.iterator;
       for (var coord in this) {
         bool hasNext = otherIter.moveNext();
@@ -176,7 +189,7 @@ class MonotoneChainPartition extends Object with IterableMixin<MonotoneChain> {
    * The resulting collection of sublists of coordinates satisfy
    * the requirements for being monotone chains.
    */
-  static UnmodifiableListView<int> _indexChainStarts(List<Coordinate> coordinates) {
+  static UnmodifiableListView<int> _indexChainStarts(Iterable<Coordinate> coordinates) {
     assert(coordinates.length >= 2);
     List<int> chainStarts = [];
     var coordSegs = coordinateSegments(coordinates).toList();
@@ -200,8 +213,8 @@ class MonotoneChainPartition extends Object with IterableMixin<MonotoneChain> {
   
   int _chainStart(int i) => _chainStarts[i];
   int _chainEnd(int i) {
-    if (i >= _chainStarts.length - 2) {
-      return null;
+    if (i >= _chainStarts.length - 1) {
+      return _coordinates.length - 1;
     }
     return _chainStarts[i + 1];
   }

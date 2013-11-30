@@ -2,7 +2,7 @@ library geomgraph.edge;
 
 import 'dart:collection';
 
-import 'package:range/range.dart';
+import 'package:quiver/iterables.dart';
 
 import 'package:spatially/base/array.dart';
 import 'package:spatially/base/coordinate.dart';
@@ -14,7 +14,7 @@ import 'package:spatially/geom/base.dart';
 
 import 'node.dart';
 import 'label.dart';
-import 'index.dart';
+import 'intersector.dart';
 import 'planar_graph.dart';
 
 part 'src/edge/directed_edge.dart';
