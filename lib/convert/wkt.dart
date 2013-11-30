@@ -3,9 +3,9 @@ library convert.wkt;
 import 'dart:convert';
 import 'dart:collection';
 
-import 'package:range/range.dart';
+import 'package:quiver/iterables.dart';
 import 'package:spatially/geom/base.dart';
-import '../base/coordinate.dart';
+import 'package:spatially/base/coordinate.dart';
 
 /**
  * A [Codec] for converting [Geometry] objects to their 

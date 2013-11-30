@@ -1,7 +1,7 @@
 library base.line_segment;
 
 import 'dart:math' as math;
-import 'package:range/range.dart';
+import 'package:quiver/iterables.dart';
 
 import 'coordinate.dart';
 import 'envelope.dart';
@@ -10,10 +10,11 @@ import 'envelope.dart';
  * Returns an iterable over all the [LineSegment]s obtained between
  * adjacent coordinate pairs in a list of coordinates.
  */
-Iterable<LineSegment> coordinateSegments(List<Coordinate> coords) =>
-    range(1, coords.length)
-    .map((i) => new LineSegment(coords[i - 1], coords[i]));
-
+Iterable<LineSegment> coordinateSegments(Iterable<Coordinate> coords) {
+  List<Coordinate> coordList = coords.toList();
+  return range(1, coords.length)
+        .map((i) => new LineSegment(coordList[i - 1], coordList[i]));
+}
 /**
  * Represents the [LineSegment] between two [Coordinate]s
  */

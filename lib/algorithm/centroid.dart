@@ -1,8 +1,8 @@
 library algorithm.centroid;
 
-import 'package:range/range.dart';
+import 'package:quiver/iterables.dart';
 
-import '../base/array.dart';
+import 'package:spatially/base/array.dart';
 
 import 'package:spatially/algorithm/cg_algorithms.dart'
     as cg_algorithms;

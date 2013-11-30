@@ -2,11 +2,11 @@ library geom.coordinate_sequence;
 
 import 'dart:math' as math;
 
-import '../base/array.dart';
-import '../base/coordinate.dart';
-import 'package:range/range.dart';
+import 'package:spatially/base/array.dart';
+import 'package:spatially/base/coordinate.dart';
+import 'package:quiver/iterables.dart';
 
-import '../base/envelope.dart';
+import 'package:spatially/base/envelope.dart';
 
 part 'src/coordinate_sequence/factory.dart';
 part 'src/coordinate_sequence/utils.dart';

@@ -4,8 +4,7 @@
 library algorithm.cg_algorithms;
 
 import 'dart:math' as math;
-
-import 'package:range/range.dart';
+import 'package:quiver/iterables.dart';
 
 import 'package:spatially/base/array.dart';
 import 'package:spatially/base/coordinate.dart';

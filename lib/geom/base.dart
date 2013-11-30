@@ -3,7 +3,7 @@ library geom.base;
 import 'dart:math' as math;
 import 'dart:collection';
 
-import 'package:range/range.dart';
+import 'package:quiver/iterables.dart';
 import 'package:spatially/base/coordinate.dart';
 import 'package:spatially/base/line_segment.dart';
 import 'package:spatially/base/array.dart';

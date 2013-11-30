@@ -1,7 +1,7 @@
 library geom.intersection_matrix;
 
-import 'package:range/range.dart';
-import '../base/array.dart';
+import 'package:quiver/iterables.dart';
+import 'package:spatially/base/array.dart';
 
 import 'dimension.dart' show DimensionRangeError, 
                              isDimensionNonEmpty, 

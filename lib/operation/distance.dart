@@ -1,6 +1,6 @@
 library operation.distance;
 
-import '../base/coordinate.dart';
+import 'package:spatially/base/coordinate.dart';
 import 'package:spatially/geom/base.dart';
 import 'package:spatially/geom/location.dart' as loc;
 import 'package:spatially/algorithm/coordinate_locator.dart'

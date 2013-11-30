@@ -1,7 +1,7 @@
 library algorithm.coordinate_locator;
 
 import 'package:spatially/geom/base.dart';
-import '../base/coordinate.dart';
+import 'package:spatially/base/coordinate.dart';
 import 'package:spatially/geom/location.dart' as loc;
 import 'cg_algorithms.dart' as cg_algorithms;
 import 'lb_rule.dart' as lb_rule;

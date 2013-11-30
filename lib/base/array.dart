@@ -3,7 +3,7 @@ library base.array;
 import 'dart:collection';
 import 'dart:math' as math;
 
-import 'package:range/range.dart';
+import 'package:quiver/iterables.dart';
 
 part 'src/base/array.dart';
 part 'src/base/array_mixin.dart';
