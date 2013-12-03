@@ -55,6 +55,8 @@ class MockEdge implements Edge {
   Iterable<List<Coordinate>> splitCoordinates(Iterable<IntersectionInfo> intersections) {
     throw 'NotImplemented';
   }
+  
+  bool isPointwiseEqual(Edge edge) => throw 'NotImplemented';
 }
 
 class MockGraph extends PlanarGraph {
