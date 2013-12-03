@@ -20,6 +20,9 @@ class MockEdge implements Edge {
   Iterable<LineSegment> get segments => lstr.segments;
   set segments(Iterable<LineSegment> segs) => throw 'NotImplemented';
   
+  bool get isPlanar => throw 'NotImplemented';
+  bool get isLinear => throw 'NotImplemented';
+  
   DirectedEdge getFromStartNode(Node startNode) {
     throw 'NotImplemented';
   }
@@ -48,6 +51,10 @@ class MockEdge implements Edge {
     throw 'NotImplemented';
   }
   toString() => "edge$edgeNum";
+  
+  Iterable<List<Coordinate>> splitCoordinates(Iterable<IntersectionInfo> intersections) {
+    throw 'NotImplemented';
+  }
 }
 
 class MockGraph extends PlanarGraph {

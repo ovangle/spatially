@@ -45,6 +45,7 @@ PlanarGraph graphOfPoint(Point p, [lb_rule.VertexInBoundaryRule boundaryRule = l
 PlanarGraph graphOfLinestring(Linestring lstr, [lb_rule.VertexInBoundaryRule boundaryRule = lb_rule.OGC_BOUNDARY_RULE]) {
   PlanarGraph lstrGraph = new PlanarGraph(boundaryRule: boundaryRule);
   _addLinestringToGraph(lstrGraph, lstr);
+  lstrGraph.intersectSelf();
   return lstrGraph;
 }
 
@@ -57,6 +58,7 @@ PlanarGraph graphOfLinestring(Linestring lstr, [lb_rule.VertexInBoundaryRule bou
 PlanarGraph graphOfPolygon(Polygon poly, [lb_rule.VertexInBoundaryRule boundaryRule = lb_rule.OGC_BOUNDARY_RULE]) {
   PlanarGraph polyGraph = new PlanarGraph(boundaryRule: boundaryRule);
   _addPolygonToGraph(polyGraph, poly);
+  polyGraph.intersectSelf();
   return polyGraph;
 }
 
@@ -96,6 +98,7 @@ PlanarGraph graphOfGeometryList(GeometryList geomList, [lb_rule.VertexInBoundary
   for (var geom in geomList) {
     _addGeometryToGraph(geomListGraph, geom, geomList);
   }
+  geomListGraph.intersectSelf();
   return geomListGraph;
 }
 

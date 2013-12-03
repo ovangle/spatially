@@ -78,6 +78,21 @@ class IntersectionInfo {
   bool get isSelfIntersection => edge0 == edge1;
   
   /**
+   * The [IntersectionInfo] obtained by replacing 
+   * edge0 with edge1, 
+   * segIndex0 with segIndex1 and 
+   * edgeDistance0 with edgeDistance1
+   */
+  IntersectionInfo get symmetric =>
+      new IntersectionInfo(
+          this.edge1, this.segIndex1, this.edgeDistance1,
+          this.edge0, this.segIndex0, this.edgeDistance0,
+          this.intersection,
+          this.isProper,
+          this.isProperInterior);
+                  
+  
+  /**
    * Two [IntersectionInfo]s are considered equal if their corresponding
    * edges and segment indexes compare equal or if opposite edges and opposite
    * segments compare equal.

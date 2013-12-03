@@ -11,8 +11,6 @@ import 'package:spatially/geomgraph/node.dart';
 import 'package:spatially/geomgraph/planar_graph.dart';
 import 'package:spatially/geomgraph/intersector.dart';
 
-import 'dart:async';
-
 part 'mock/intersector.dart';
 
 void main() {
