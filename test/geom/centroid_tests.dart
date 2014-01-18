@@ -1,4 +1,4 @@
-library test_centroid;
+library spatially.geom.centroid_tests;
 
 import 'package:unittest/unittest.dart';
 import 'package:spatially/geom/base.dart';
@@ -57,10 +57,10 @@ void testCentroid() {
           var multilstr = geomFactory.fromWkt(
               """MULTILINESTRING ((0 0, 0 200, 200 200, 200 0, 0 0), 
                                   (60 180, 20 180, 20 140, 60 140, 60 180))
-              """);  
+              """);
           var centroid = geomFactory.fromWkt("POINT (90 110)");
           expect(multilstr.centroid, equals(centroid));
-        }); 
+        });
         test("complicated symmetrical collection of lines", () {
           var multilstr = geomFactory.fromWkt(
               """
@@ -107,9 +107,9 @@ void testCentroid() {
                           (60 180, 20 180, 20 140, 60 140, 60 180), 
                           (180 60, 140 60, 140 20, 180 20, 180 60))
               """);
-          var centroid = geomFactory.fromWkt("POINT (100 100)"); 
+          var centroid = geomFactory.fromWkt("POINT (100 100)");
           expect(poly.centroid, equals(centroid));
-              
+
         });
         test("degenerate box", () {
           var poly = geomFactory.fromWkt("POLYGON ((40 160, 160 160, 160 160, 40 160, 40 160))");
@@ -123,7 +123,7 @@ void testCentroid() {
           var poly = geomFactory.fromWkt("POLYGON EMPTY");
           var centroid = geomFactory.fromWkt("POINT EMPTY");
           expect(() => poly.centroid, throwsA(new isInstanceOf<StateError>()));
-          
+
         });
         test("almost degenerate triangle", () {
           var poly = geomFactory.fromWkt(
@@ -134,7 +134,7 @@ void testCentroid() {
               """);
           var centroid = geomFactory.fromWkt("POINT (56.52883333333333 25.210333333333335)");
           expect(poly.centroid, equals(centroid));
-          
+
         });
       });
       group("multipolygon: ", () {
@@ -155,7 +155,7 @@ void testCentroid() {
               """);
           var centroid = geomFactory.fromWkt("POINT (102.5 97.5)");
           expect(geomList.centroid, equals(centroid));
-        }); 
+        });
         test("", () {
           var geomList = geomFactory.fromWkt(
               """GEOMETRYCOLLECTION (LINESTRING (80 0, 80 120, 120 120, 120 0), 
@@ -168,7 +168,7 @@ void testCentroid() {
           var geomList = geomFactory.fromWkt(
               """ GEOMETRYCOLLECTION (POLYGON ((0 40, 40 40, 40 0, 0 0, 0 40)), 
                                       LINESTRING (80 0, 80 80, 120 40))
-              """); 
+              """);
           var centroid = geomFactory.fromWkt("POINT (20 20)");
           expect(geomList.centroid, equals(centroid));
         });
@@ -180,7 +180,7 @@ void testCentroid() {
               """);
           var centroid = geomFactory.fromWkt("POINT (20 20)");
           expect(geomList.centroid, equals(centroid));
-              
+
         });
         test("overlapping polygons", () {
             var geomList = geomFactory.fromWkt(
@@ -189,9 +189,9 @@ void testCentroid() {
               """);
          var centroid = geomFactory.fromWkt(" POINT (40 40)");
          expect(geomList.centroid, equals(centroid));
-              
+
         });
-            
+
       });
     });
   });

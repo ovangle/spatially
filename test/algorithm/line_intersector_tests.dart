@@ -1,5 +1,4 @@
-library algorithm.test_line_intersector;
-
+library spatially.algorithm.line_intersector_tests;
 import 'package:unittest/unittest.dart';
 import 'package:spatially/base/coordinate.dart';
 import 'package:spatially/base/line_segment.dart';
@@ -30,7 +29,7 @@ void testCollinear() {
       var lseg2 = new LineSegment(
           new Coordinate(5.0, 5.0),
           new Coordinate(20.0, 20.0));
-      var expectIntersection = 
+      var expectIntersection =
           new LineSegment(
               new Coordinate(5.0, 5.0),
               new Coordinate(10.0, 10.0));
@@ -87,15 +86,15 @@ void testCollinear() {
 
 void testRobustness() {
   test("equal endpoints", () {
-    final lseg1 = 
+    final lseg1 =
         new LineSegment(
-            new Coordinate(19.850257749638203,46.29709338043669), 
+            new Coordinate(19.850257749638203,46.29709338043669),
             new Coordinate(20.31970698357233, 46.76654261437082 ));
-    final lseg2 = 
+    final lseg2 =
         new LineSegment(
-            new Coordinate(-48.51001596420236, -22.063180333403878), 
+            new Coordinate(-48.51001596420236, -22.063180333403878),
             new Coordinate(19.850257749638203, 46.29709338043669 ));
-    final expectIntersection = 
+    final expectIntersection =
         new Coordinate(19.850257749638203,46.29709338043669);
     final actualIntersection =
         segmentIntersection(lseg1, lseg2);
@@ -103,10 +102,10 @@ void testRobustness() {
   });
   test("Rounding error", () {
     var lseg1 = new LineSegment(
-        new Coordinate(2089426.5233462777, 1180182.3877339689), 
+        new Coordinate(2089426.5233462777, 1180182.3877339689),
         new Coordinate(2085646.6891757075, 1195618.7333999649));
     var lseg2 = new LineSegment(
-        new Coordinate(1889281.8148903656,1997547.0560044837), 
+        new Coordinate(1889281.8148903656,1997547.0560044837),
         new Coordinate(2259977.3672235999,483675.17050843034));
     var actualIntersection = segmentIntersection(lseg1, lseg2);
     expect(lseg1.envelope.intersectsCoordinate(actualIntersection), isTrue);

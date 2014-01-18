@@ -1,4 +1,4 @@
-library test_boundary;
+library spatially.geom.boundary_tests;
 
 import 'package:spatially/geom/base.dart';
 import 'package:unittest/unittest.dart';
@@ -24,7 +24,7 @@ void testBoundary() {
       expect(lstr.boundary, equals(boundary));
     });
   test("Line boundary -- closed", () {
-      final lstr = 
+      final lstr =
           factory.fromWkt("LINESTRING(10.0 10.0, 20.0 20.0, 20.0 10.0, 10.0 10.0)");
       expect(lstr.boundary, equals(factory.createEmptyMultiPoint()));
     });
@@ -41,7 +41,7 @@ void testBoundary() {
       var boundary = factory.fromWkt(
           "MULTIPOINT((10 10), (30 30))");
       expect(multilstr.boundary, equals(boundary));
-      
+
     });
     test("multilinestring - three lines with common endpoint", () {
       var multilstr = factory.fromWkt(

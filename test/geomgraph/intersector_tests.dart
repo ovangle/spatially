@@ -1,15 +1,13 @@
 library geomgraph.test_intersector;
 import 'dart:math' as math;
-import 'dart:collection';
 
+import 'package:collection/wrappers.dart';
 import 'package:unittest/unittest.dart';
 import 'package:spatially/base/coordinate.dart';
-import 'package:spatially/base/line_segment.dart';
+import 'package:spatially/base/tuple.dart';
 import 'package:spatially/geom/base.dart';
-import 'package:spatially/geomgraph/edge.dart';
-import 'package:spatially/geomgraph/node.dart';
-import 'package:spatially/geomgraph/planar_graph.dart';
-import 'package:spatially/geomgraph/intersector.dart';
+import 'package:spatially/geomgraph2/geometry_graph.dart' as geomgraph;
+import 'package:spatially/geomgraph2/intersector.dart';
 
 part 'mock/intersector.dart';
 
@@ -32,31 +30,31 @@ testSimpleIntersector() {
     var self_intersecting = geomFactory.fromWkt(
         "LINESTRING(0 0, 10 0, 0 10, 10 10, 0 0)");
     var edge = new MockEdge(0, self_intersecting);
-    var intersections = 
+    var intersections =
          [ new IntersectionInfo(edge, 1, 2 * math.sqrt(5.0),
                                 edge, 3, 2 * math.sqrt(5.0),
                                 new Coordinate(5.0, 5.0),
                                 true, true)
          ];
-    expect(intersector([edge], testAll: true), equals(intersections));
+    expect(intersector([edge], testAll: true), intersections);
   });
   test("Intesections from different segments", () {
     var edge1 = new MockEdge(1, geomFactory.fromWkt("LINESTRING(0 0, 10 10)"));
     var edge2 = new MockEdge(2, geomFactory.fromWkt("LINESTRING(10 0, 0 10)"));
-    var intersections = 
+    var intersections =
         [ new IntersectionInfo(edge1, 0, 2 * math.sqrt(5.0),
                                edge2, 0, 2 * math.sqrt(5.0),
                                new Coordinate(5.0, 5.0),
                                true,true)
         ];
-    expect(intersector([edge1, edge2]), unorderedEquals(intersections));                         
+    expect(intersector([edge1, edge2]), unorderedEquals(intersections));
   });
 }
 
 testMonotoneChain() {
   GeometryFactory geomFactory = new GeometryFactory();
   test("monotone partition", () {
-    Edge edge = new MockEdge(0, geomFactory.fromWkt("LINESTRING(0 0, 10 10, 10 15, 20 20, 20 0, 20 -20))"));
+    MockEdge edge = new MockEdge(0, geomFactory.fromWkt("LINESTRING(0 0, 10 10, 10 15, 20 20, 20 0, 20 -20))"));
     MonotoneChainPartition partition = new MonotoneChainPartition(edge);
     expect(partition.length, equals(2));
     expect(partition.first, equals([new Coordinate(0.0, 0.0),
@@ -84,7 +82,7 @@ testSweeplineIntersector() {
     var self_intersecting = geomFactory.fromWkt(
         "LINESTRING(0 0, 10 0, 0 10, 10 10, 0 0)");
     var edge = new MockEdge(0, self_intersecting);
-    var intersections = 
+    var intersections =
          [ new IntersectionInfo(edge, 1, 2 * math.sqrt(5.0),
                                 edge, 3, 2 * math.sqrt(5.0),
                                 new Coordinate(5.0, 5.0),
@@ -95,13 +93,13 @@ testSweeplineIntersector() {
   test("Intesections from different segments", () {
     var edge1 = new MockEdge(1, geomFactory.fromWkt("LINESTRING(0 0, 10 10)"));
     var edge2 = new MockEdge(2, geomFactory.fromWkt("LINESTRING(10 0, 0 10)"));
-    var intersections = 
+    var intersections =
         [ new IntersectionInfo(edge1, 0, 2 * math.sqrt(5.0),
                                edge2, 0, 2 * math.sqrt(5.0),
                                new Coordinate(5.0, 5.0),
                                true,true)
         ];
-    expect(intersector([edge1, edge2]), unorderedEquals(intersections));                         
+    expect(intersector([edge1, edge2]), unorderedEquals(intersections));
   });
   test("long chains", () {
     var edge1 = new MockEdge(1, geomFactory.fromWkt(

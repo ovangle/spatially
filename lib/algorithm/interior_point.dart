@@ -11,10 +11,10 @@ import 'package:spatially/geom/base.dart';
 /**
  * Computes a point in the interior of a [Geometry] with dimension `0`,
  * closest to the centroid of the geometry.
- * 
+ *
  * If the [Geometry] is a [GeometryList], only components with dimension `0`
  * will be tested as interior points.
- * 
+ *
  * Throws a [StateError] if the geometry is degenerate.
  */
 interiorPointPoint(Geometry geom) {
@@ -36,7 +36,7 @@ interiorPointPoint(Geometry geom) {
     }
   }
   add(geom);
-  if (interiorPoint == null) 
+  if (interiorPoint == null)
     throw new StateError("Interior point of degenerate geometry");
   return interiorPoint;
 }
@@ -45,21 +45,21 @@ interiorPointPoint(Geometry geom) {
  * Finds a vertex in the interior of the geometry of dimension `1` which is
  * closest to the centroid of the geometry. If there is no interior vertex
  * of the geometry, finds an endpoint which is closest to the centroid.
- * 
+ *
  * If the [Geometry] is a [GeometryList], only components with dimension `1`
  * will be tested for interior points.
- * 
+ *
  * Throws a [StateError] if the geometry is degenerate.
  */
 Coordinate interiorPointLine(Geometry geom) {
   Coordinate centroid = geom.centroid.coordinate;
   double minDistance = double.INFINITY;
   Coordinate interiorPoint = null;
-  
+
   if (geom.isDegenerate) {
     throw new StateError("Interior point of degenerate geometry");
   }
-  
+
   void addCoordinate(Coordinate c) {
     final dist = centroid.distance(c);
     if (dist < minDistance) {
@@ -67,9 +67,9 @@ Coordinate interiorPointLine(Geometry geom) {
       interiorPoint = c;
     }
   }
-  void addCoordsAt(Iterable<int> indexes, Array<Coordinate> coords) =>
+  void addCoordsAt(Iterable<num> indexes, Array<Coordinate> coords) =>
       indexes.forEach((i) => addCoordinate(coords[i]));
-  
+
   void addEndpoints(Geometry geom) {
     if (geom is Linestring) {
       var endpointIndicies = [1, geom.length - 1];
@@ -78,7 +78,7 @@ Coordinate interiorPointLine(Geometry geom) {
       geom.forEach(addEndpoints);
     }
   }
-  
+
   void addInterior(Geometry geom) {
     if (geom is Linestring) {
       var interiorIndicies = range(1, geom.length - 1);
@@ -88,7 +88,7 @@ Coordinate interiorPointLine(Geometry geom) {
     }
   }
   addInterior(geom);
-  if (interiorPoint == null) 
+  if (interiorPoint == null)
     addEndpoints(geom);
   return interiorPoint;
 }
@@ -96,10 +96,10 @@ Coordinate interiorPointLine(Geometry geom) {
  * Computes a pont in the interior of an [Geometry] with dimension `2`.
  * Finds all intersections of the geometry with the bisector of the [Geometry]s
  * envelope and returns the midpoint of the largest intersection.
- * 
+ *
  * If the [Geometry] is a [GeometryList], only components with dimension `2`
  * will be tested for interior points.
- * 
+ *
  * NOTE: If a fixed precision model is used, this method may return a point which
  * does not lie in the interior
  */
@@ -108,7 +108,7 @@ Coordinate interiorPointArea(Geometry geom) {
   Coordinate interiorPoint = null;
   double maxWidth = 0.0;
   double avg(double d1, double d2) => (d1 + d2) / 2;
-  
+
   Linestring horizontalBisector(Geometry geom) {
     Envelope envelope = geom.envelope;
     var avgy = avg(envelope.miny, envelope.maxy);
@@ -117,19 +117,19 @@ Coordinate interiorPointArea(Geometry geom) {
           new Coordinate(envelope.maxx, avgy)
         ]);
   }
-  
+
   /**
    * If [:geom:] is a [GeometryList], returns the widest component
    * otherwise, returns geom.
    */
   Geometry widestGeometry(Geometry geom) {
     if (geom is GeometryList && !geom.isEmpty) {
-      return geom.fold(geom[0], 
+      return geom.fold(geom[0],
           (widest, g) => (g.envelope.width > widest.envelope.width) ? g : widest);
     }
     return geom;
   }
- 
+
   /**
    * Find a reasonable point to label a [Geometry]
    */
@@ -137,14 +137,14 @@ Coordinate interiorPointArea(Geometry geom) {
     var bisector = horizontalBisector(polygon);
     var intersections = bisector.intersection(polygon);
     var widestIntersection = widestGeometry(intersections);
-    
+
     double width = widestIntersection.envelope.width;
     if (interiorPoint == null || width > maxWidth) {
       interiorPoint = widestIntersection.envelope.centre;
       maxWidth = width;
     }
   }
-  
+
   void add(Geometry geom) {
     if (geom is Polygon) {
       addPolygon(geom);
@@ -153,8 +153,7 @@ Coordinate interiorPointArea(Geometry geom) {
     }
   }
   add(geom);
-  
+
   return interiorPoint;
 }
-  
-  
+

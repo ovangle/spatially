@@ -1,7 +1,7 @@
-library test_wkt;
+library spatially.convert.wkt_tests.dart;
 
 import 'package:unittest/unittest.dart';
-import '../../lib/base/coordinate.dart';
+import 'package:spatially/base/coordinate.dart';
 import 'package:spatially/geom/base.dart';
 import 'package:spatially/convert/wkt.dart';
 

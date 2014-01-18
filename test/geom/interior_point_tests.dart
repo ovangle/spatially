@@ -1,10 +1,11 @@
-library test_interior_point;
+library spatially.geom.interior_point_tests.dart;
 import 'package:unittest/unittest.dart';
 import 'package:spatially/geom/base.dart';
 
 void main() {
   testInteriorPoint();
 }
+
 
 void testInteriorPoint() {
   GeometryFactory geomFactory = new GeometryFactory();
@@ -61,7 +62,7 @@ void testInteriorPoint() {
         var interior_point = geomFactory.fromWkt("POINT(5 5)");
         expect(poly.interiorPoint, equals(interior_point));
       });
-      
+
     });
     group("multipolygon: ", () {
         test("polygons with holes", () {
@@ -72,13 +73,13 @@ void testInteriorPoint() {
                   (200 280, 140 260, 180 160, 240 140, 200 280)), 
                 ( (380 280, 300 260, 340 100, 440 80, 380 280), 
                   (380 220, 340 200, 400 100, 380 220)))
-             """); 
+             """);
           var interior_point = geomFactory.fromWkt("POINT(138 200)");
           expect(multipoly.interiorPoint, equals(interior_point));
         });
     });
     group("geometrylist: ", () {
-      
+
     });
   });
 }

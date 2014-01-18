@@ -21,5 +21,5 @@ class NodeMap extends SplayTreeMap<Coordinate,Node> {
   
   Iterable<Node> get nodes => super.values;
   Iterable<Node> get boundaryNodes =>
-      super.values.where((n) => n.label.onLocation == loc.BOUNDARY);
+      super.values.where((n) => n.label0.onLocation == loc.BOUNDARY);
 }

@@ -11,7 +11,7 @@ import 'package:spatially/geom/location.dart' as loc;
 
 import 'planar_graph.dart';
 
-PlanarGraph graphOf(Geometry geom, 
+PlanarGraph graphOf(Geometry geom,
                     [lb_rule.VertexInBoundaryRule boundaryRule = lb_rule.OGC_BOUNDARY_RULE]) {
   if (geom is Point) {
     return graphOfPoint(geom, boundaryRule);
@@ -31,7 +31,7 @@ PlanarGraph graphOf(Geometry geom,
  * of the point.
  */
 PlanarGraph graphOfPoint(Point p, [lb_rule.VertexInBoundaryRule boundaryRule = lb_rule.OGC_BOUNDARY_RULE]) {
-  PlanarGraph pointGraph = new PlanarGraph(boundaryRule: boundaryRule);
+  PlanarGraph pointGraph = new PlanarGraph(p, boundaryRule: boundaryRule);
   _addPointToGraph(pointGraph, p);
   return pointGraph;
 }
@@ -43,9 +43,8 @@ PlanarGraph graphOfPoint(Point p, [lb_rule.VertexInBoundaryRule boundaryRule = l
  * boundary points of the [Linestring]
  */
 PlanarGraph graphOfLinestring(Linestring lstr, [lb_rule.VertexInBoundaryRule boundaryRule = lb_rule.OGC_BOUNDARY_RULE]) {
-  PlanarGraph lstrGraph = new PlanarGraph(boundaryRule: boundaryRule);
+  PlanarGraph lstrGraph = new PlanarGraph(lstr, boundaryRule: boundaryRule);
   _addLinestringToGraph(lstrGraph, lstr);
-  lstrGraph.intersectSelf();
   return lstrGraph;
 }
 
@@ -56,19 +55,18 @@ PlanarGraph graphOfLinestring(Linestring lstr, [lb_rule.VertexInBoundaryRule bou
  * a point on each ring which is on the boundary.
  */
 PlanarGraph graphOfPolygon(Polygon poly, [lb_rule.VertexInBoundaryRule boundaryRule = lb_rule.OGC_BOUNDARY_RULE]) {
-  PlanarGraph polyGraph = new PlanarGraph(boundaryRule: boundaryRule);
+  PlanarGraph polyGraph = new PlanarGraph(poly, boundaryRule: boundaryRule);
   _addPolygonToGraph(polyGraph, poly);
-  polyGraph.intersectSelf();
   return polyGraph;
 }
 
 /**
  * Create a new [PlanarGraph] representing the
  * given [MultiPoint]. The resulting graph contains
- * a node for each point in the multipoint and 
+ * a node for each point in the multipoint and
  * contains no edges.
  */
-PlanarGraph graphOfMultipoint(MultiPoint multipoint, [lb_rule.VertexInBoundaryRule boundaryRule = lb_rule.OGC_BOUNDARY_RULE]) => 
+PlanarGraph graphOfMultipoint(MultiPoint multipoint, [lb_rule.VertexInBoundaryRule boundaryRule = lb_rule.OGC_BOUNDARY_RULE]) =>
     graphOfGeometryList(multipoint, boundaryRule);
 
 /**
@@ -94,11 +92,10 @@ PlanarGraph graphMultipolygon(MultiPolygon multipoly, [lb_rule.VertexInBoundaryR
  * to the component geometry.
  */
 PlanarGraph graphOfGeometryList(GeometryList geomList, [lb_rule.VertexInBoundaryRule boundaryRule = lb_rule.OGC_BOUNDARY_RULE]) {
-  PlanarGraph geomListGraph = new PlanarGraph(boundaryRule: boundaryRule);
+  PlanarGraph geomListGraph = new PlanarGraph(geomList, boundaryRule: boundaryRule);
   for (var geom in geomList) {
     _addGeometryToGraph(geomListGraph, geom, geomList);
   }
-  geomListGraph.intersectSelf();
   return geomListGraph;
 }
 
@@ -119,20 +116,22 @@ void _addGeometryToGraph(PlanarGraph graph, Geometry geom, [Geometry componentOf
 
 /**
  * Adds a node representing the interior of the point to the graph.
- * 
+ *
  * If [:componentOf:] is provided and non-null, then the geometry is considered
  * to be a component of the argument, and the node will be labelled with the
  * parent geometry.
  */
 void _addPointToGraph(PlanarGraph graph, Point p, [Geometry componentOf=null]) {
   if (componentOf == null) componentOf = p;
-  graph.addNode(componentOf, p.coordinate, onLoc: loc.INTERIOR);
+  if (!p.isEmptyGeometry) {
+    graph.addNode(componentOf, p.coordinate, onLoc: loc.INTERIOR);
+  }
 }
 
 /**
  * Adds an edge representing the interior of the linestring to the graph and two nodes
  * representing the boundary of the linestring.
- * 
+ *
  * If [:componentOf:] is provided and non-null, then the geometry is considered
  * to be a component of the argument, and the node will be labelled with the
  * parent geometry.
@@ -158,7 +157,7 @@ void _addLinestringToGraph(PlanarGraph lstrGraph, Linestring lstr, [Geometry com
  * Adds an edge representing the shell of the polygon, and an edge for each of the
  * holes. Also adds a node for each of the rings of the polygon representing the
  * boundary of the polygon.
- * 
+ *
  * If [:componentOf:] is provided and non-null, then the geometry is considered
  * to be a component of the argument, and the node will be labelled with the
  * parent geometry.
@@ -184,17 +183,17 @@ void _addPolygonToGraph(PlanarGraph graph, Polygon poly, [Geometry componentOf=n
       locIndexRight = isCounterClockwise ? loc.EXTERIOR : loc.INTERIOR;
     }
     //And add a node representing the start of the boundary.
-    graph.addNode(componentOf, 
-                  ringCoords[0], 
-                  onLoc: loc.BOUNDARY); 
+    graph.addNode(componentOf,
+                  ringCoords[0],
+                  onLoc: loc.BOUNDARY);
     //Add the edge representing the ring to the graph
-    graph.addPlanarEdge(componentOf, 
-                        ringCoords, 
-                        onLoc: loc.BOUNDARY, 
-                        leftLoc: locIndexLeft, 
+    graph.addPlanarEdge(componentOf,
+                        ringCoords,
+                        onLoc: loc.BOUNDARY,
+                        leftLoc: locIndexLeft,
                         rightLoc: locIndexRight);
   }
- 
+
   //Add an edge
   addRingEdge(poly.exteriorRing, false);
   for (var hole in poly.interiorRings) {

@@ -2,78 +2,73 @@ library geomgraph.edge;
 
 import 'dart:collection';
 
+import 'package:quiver/core.dart';
 import 'package:quiver/iterables.dart';
 
-import 'package:spatially/base/array.dart';
 import 'package:spatially/base/coordinate.dart';
 import 'package:spatially/base/line_segment.dart';
 
 import 'package:spatially/algorithm/cg_algorithms.dart'
     as cg_algorithms;
-import 'package:spatially/geom/base.dart';
 
 import 'node.dart';
 import 'label.dart';
-import 'intersector.dart';
+import '../geomgraph2/intersector.dart';
 import 'planar_graph.dart';
 
 part 'src/edge/directed_edge.dart';
-part 'src/edge/edge_intersection.dart';
 
 class Edge {
   PlanarGraph parentGraph;
   DirectedEdge _forward;
   DirectedEdge _backward;
-  
-  Label label;
-  
-  EdgeIntersections _edgeIntersections;
+
+  Label forwardLabel0;
+  Optional<Label> forwardLabel1;
+
   UnmodifiableListView<Coordinate> _coordinates;
-  
+
   Edge(PlanarGraph parentGraph,
-       DirectedEdge forward, 
+       DirectedEdge forward,
        DirectedEdge backward,
        Iterable<Coordinate> coordinates) :
     this.parentGraph = parentGraph,
     this._forward = forward,
     this._backward = backward,
-    this._coordinates = new UnmodifiableListView(coordinates) {
-    _edgeIntersections = new EdgeIntersections(this);
-  }
+    this._coordinates = new UnmodifiableListView(coordinates);
 
-  
+
   UnmodifiableListView<Coordinate> get coordinates =>
      _coordinates;
   void set coordinates(Iterable<Coordinate> coords) {
     this._coordinates = new UnmodifiableListView(coords);
   }
-  
-  bool get isLinear => label is LinearLabel;
-  bool get isPlanar => label is PlanarLabel;
-  
+
+  bool get isPlanar => forwardLabel0.isPlanar;
+
   Iterable<LineSegment> get segments =>
       range(1, _coordinates.length - 1)
       .map((i) => new LineSegment(_coordinates[i-1], _coordinates[i]));
-  
+
   DirectedEdge get forward => _forward;
   void set forward(DirectedEdge de) {
     _forward = de;
     de._parentEdge = this;
     de._isForward = true;
   }
-  
+
   DirectedEdge get backward => _backward;
   void set backward(DirectedEdge de) {
     _backward = de;
     de._parentEdge = this;
     de._isForward = false;
   }
-  
+
   void setDirectedEdges(DirectedEdge forward, DirectedEdge backward) {
     this.forward = forward;
     this.backward = backward;
   }
-  
+
   /**
    * Returns the edge with the given startNode.
    * Returns `null` if neither edge starts at the given node.s
@@ -83,7 +78,7 @@ class Edge {
     if (backward.startNode == startNode) return backward;
     return null;
   }
-  
+
   /**
    * If the given node is the start node of one of the
    * edges, returns the other edge.
@@ -94,9 +89,9 @@ class Edge {
     if (edge == null) return null;
     return edge.isForward ? backward : forward;
   }
-  
+
   /**
-   * Removes this and any children from the graph 
+   * Removes this and any children from the graph
    */
   bool remove() {
     if (_forward != null) {
@@ -119,7 +114,7 @@ class Edge {
   List<List<Coordinate>> splitCoordinates(Iterable<IntersectionInfo> intersectionInfos) {
     var splitStart = 0;
     var nextStartCoord;
-    
+
     /*
      * Returns the coordinates in the split starting at [:splitStart:]
      * and up to the end of the intersection.
@@ -134,7 +129,7 @@ class Edge {
       //Advance the pointer to the next split start.
       splitStart = info.segIndex0 + 1;
       if (info.intersection is Coordinate) {
-        if (info.intersection != coordsBefore.last) { 
+        if (info.intersection != coordsBefore.last) {
           coordsBefore.add(info.intersection);
         }
         nextStartCoord = info.intersection;
@@ -157,7 +152,7 @@ class Edge {
       }
       return coordsBefore;
     }
-    
+
     /*
      * If the intersection is a line segment, we also have to create
      * another split covering the portion of the line segment which
@@ -175,14 +170,14 @@ class Edge {
           nextStartCoord = info.intersection.start;
           return [info.intersection.end, info.intersection.start];
         } else {
-          nextStartCoord = segStart; 
+          nextStartCoord = segStart;
         }
       }
       //coordinate or segment with 0 length
       return [];
     }
-    
-    var sortedInfos = 
+
+    var sortedInfos =
         intersectionInfos
         //We are only interested in intersections involving the current edge
         .where((info) => info.edge0 == this || info.edge1 == this)
@@ -194,13 +189,13 @@ class Edge {
           if (cmpSegs != 0) return cmpSegs;
           return info1.edgeDistance0.compareTo(info2.edgeDistance0);
         });
-    
+
     var splitCoords =
         sortedInfos
         .expand((info) => [_coordsBeforeIntersection(info), _coordsAtIntersection(info)])
         .where((coords) => coords.isNotEmpty)
         .toList();
-    
+
     if (nextStartCoord == null) {
       //We never had to split the edge.
       return [coordinates];
@@ -212,9 +207,9 @@ class Edge {
     }
     return splitCoords;
   }
-  
+
   /**
-   * Two edges are equal if their coordinates are equal, or one has 
+   * Two edges are equal if their coordinates are equal, or one has
    * the reverse of the coordinates of the other.
    */
   bool operator ==(Object other) {
@@ -237,11 +232,11 @@ class Edge {
     }
     return false;
   }
-  
+
   bool isPointwiseEqual(Edge e) {
     if (coordinates.length != e.coordinates.length) return false;
     return range(coordinates.length)
         .every((i) => coordinates[i] == e.coordinates[i]);
   }
-  
+
 }

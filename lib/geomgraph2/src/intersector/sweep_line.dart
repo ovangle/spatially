@@ -1,4 +1,4 @@
-part of geomgraph.index;
+part of spatially.geomgraph.intersector;
 
 /**
  * A sweep line algorithm is one which moves an infinite
@@ -14,27 +14,27 @@ class SweeplineEvent implements Comparable<SweeplineEvent> {
    */
   final SweeplineEvent _insertEvt;
   /* One of INSERT_EVT | DELETE_EVT */
-  int get evtType => 
+  int get evtType =>
       _insertEvt == null ? INSERT_EVT : DELETE_EVT;
   List<Edge> edgeSet;
   /**
-   * The position along the x-axis at which 
+   * The position along the x-axis at which
    * the event will occur.
    */
   final double sweepLinePosition;
   final MonotoneChain mchain;
-  
-  SweeplineEvent.insertEvent(double this.sweepLinePosition, 
-                             this.edgeSet, 
+
+  SweeplineEvent.insertEvent(double this.sweepLinePosition,
+                             this.edgeSet,
                              this.mchain) :
       _insertEvt = null;
-  
-  SweeplineEvent.deleteEvent(double this.sweepLinePosition, 
+
+  SweeplineEvent.deleteEvent(double this.sweepLinePosition,
                              SweeplineEvent insertEvent) :
       _insertEvt = insertEvent,
       edgeSet = insertEvent.edgeSet,
       mchain  = insertEvent.mchain;
-      
+
   /**
    * SweepLineEvents are sorted first by their position
    * along the x-axis and then by the event type, with
