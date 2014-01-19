@@ -17,14 +17,14 @@ bool intersects(Coordinate p, Geometry geom) {
  * Computes the topological [Location] of a single [Coordinate] relative to a [Geometry].
  * A [VertexInBoundaryRule] may be specified to control evaluation of whether
  * the point lies on the boundary or not.
- * 
+ *
  * The default rule is the *SFS Boundary Determination Rule*
- * 
+ *
  * NOTE:
  * -- [LinearRing]s do not enclose any area -- points inside the
  * ring are still int the EXTERIOR of the ring.
  */
-int locateCoordinateIn(Coordinate c, Geometry geom, 
+int locateCoordinateIn(Coordinate c, Geometry geom,
                        [lb_rule.VertexInBoundaryRule boundaryRule = lb_rule.OGC_BOUNDARY_RULE]) {
   if (geom.isEmptyGeometry) {
     return loc.EXTERIOR;
@@ -44,8 +44,8 @@ int locateCoordinateIn(Coordinate c, Geometry geom,
       if (componentLocation == loc.INTERIOR) isIn = true;
       if (componentLocation == loc.BOUNDARY) boundaryCount++;
     }
-    
-    if (boundaryRule(boundaryCount)) 
+
+    if (boundaryRule(boundaryCount))
       return loc.BOUNDARY;
     if (boundaryCount > 0 || isIn) {
       return loc.INTERIOR;
@@ -77,16 +77,16 @@ int _locateInPolygonRing(Coordinate c, Ring ring) {
   if (ring.envelope.disjointCoordinate(c)) {
     return loc.EXTERIOR;
   }
-  return cg_algorithms.locatePointInRing(c, ring.coordinates);
+  return cg_algorithms.locateCoordinateInRing(c, ring.coordinates);
 }
 
 int _locateCoordinateInPolygon(Coordinate c, Polygon poly) {
   if (poly.isEmptyGeometry) return loc.EXTERIOR;
-  
+
   var shellLocation = _locateInPolygonRing(c, poly.exteriorRing);
   if (shellLocation == loc.EXTERIOR) return loc.EXTERIOR;
   if (shellLocation == loc.BOUNDARY) return loc.BOUNDARY;
-  
+
   //The coordinate lies on the interior of the shell.
   //Does it lie on the boundary or interior of one of the holes?
   for (var hole in poly.interiorRings) {
