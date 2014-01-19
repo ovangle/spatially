@@ -3,7 +3,7 @@ part of geomgraph.test_intersector;
 class MockEdge implements geomgraph.Edge {
   int edgeIdx;
   Linestring lstr;
-  MockGraph get graph => new MockGraph(this);
+  MockGraph get _graph => new MockGraph(this);
 
   List<Coordinate> get coordinates => new List.from(lstr.coordinates, growable: false);
 

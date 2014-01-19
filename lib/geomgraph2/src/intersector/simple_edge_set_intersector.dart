@@ -7,7 +7,7 @@ part of spatially.geomgraph.intersector;
  */
 Set<IntersectionInfo> _simpleEdgeSetIntersector(
       List<Edge> edges,
-    { bool testAll: false }) {
+    { bool testAll: true }) {
   int nOverlaps = 0;
   Set<IntersectionInfo> infos = new Set();
   for (var e1 in edges) {

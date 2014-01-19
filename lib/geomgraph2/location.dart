@@ -58,6 +58,19 @@ class Location {
     }
   }
 
+  /**
+   * Copies a location. If [:asNodal:] is `true`, the left and right depths of the old location
+   * are ignored and not copied onto the new location.
+   */
+  factory Location.fromLocation(Location location, {asNodal: true}) {
+    Location newLocation = new Location(location.relativeTo, on: location.on);
+    if (!asNodal) {
+      newLocation.leftDepth = location.leftDepth;
+      newLocation.rightDepth = location.rightDepth;
+    }
+    return newLocation;
+  }
+
   bool get isPlanar => leftDepth.isPresent;
 
   /**
@@ -119,10 +132,10 @@ class Location {
   int get hashCode => hash4(relativeTo, on, leftDepth, rightDepth);
 
   String toString() {
-    var str = "Location(on: $on";
+    var str = "Location(on: ${loc.toLocationSymbol(on)}";
     if (leftDepth.isPresent) {
-      str += ", left: ${left.value} (${leftDepth.value}"
-             ", right: ${right.value} ($rightDepth.value}";
+      str += ", left: ${loc.toLocationSymbol(left.value)} (depth: ${leftDepth.value})"
+             ", right: ${loc.toLocationSymbol(right.value)} (depth: ${rightDepth.value}";
     }
     str += ")";
     return str;

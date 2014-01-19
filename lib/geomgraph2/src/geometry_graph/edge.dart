@@ -126,15 +126,23 @@ class EdgeLabel extends GeometryLabelBase<List<Coordinate>> {
             Tuple<Location,Location> locationDatas) :
     super(locationDatas);
 
-  bool operator ==(Object other) {
-    if (other is EdgeLabel) {
-      if (other.coordinates.length != coordinates.length)
-        return false;
-      return zip(coordinates, other.coordinates)
-          .every((elem) => elem.$1 == elem.$2);
-    }
-    return false;
+  /**
+   * Creates a new [EdgeLabel] from the location datas on the given label
+   * but with the coordinates given by [:coords:].
+   */
+  factory EdgeLabel.fromLabel(List<Coordinate> coords, EdgeLabel label) {
+    var locations = new Tuple(
+         new Location.fromLocation(label.locationDatas.$1, asNodal: false),
+         new Location.fromLocation(label.locationDatas.$2, asNodal: false));
+    return new EdgeLabel(coords, locations);
   }
 
-  int get hashCode => hashObjects(coordinates);
+  static const ListEquality<Coordinate> _listEq = const ListEquality<Coordinate>();
+
+  bool operator ==(Object other) =>
+      other is EdgeLabel && _listEq.equals(coordinates, other.coordinates);
+
+  int get hashCode => _listEq.hash(coordinates);
+
+  String toString() => "EdgeLabel($coordinates, $locationDatas)";
 }

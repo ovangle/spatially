@@ -153,19 +153,19 @@ Optional<IntersectionInfo> _getIntersectionInfo(Edge edge0, int segIndex0,
           && (segIndex0 - segIndex1).abs() == segs0.length - 1) {
         return new Optional.absent();
       }
-      isProper = intersection != lseg0.start
-              && intersection != lseg0.end
-              && intersection != lseg1.start
-              && intersection != lseg1.end;
+    }
+    isProper = intersection != lseg0.start
+            && intersection != lseg0.end
+            && intersection != lseg1.start
+            && intersection != lseg1.end;
 
-      //TODO: This could be improved with a faster metric.
-      edgeDistance0 = lseg0.start.distanceSqr(intersection);
-      edgeDistance1 = lseg1.start.distanceSqr(intersection);
-      if (isProper) {
-        //TODO: Need to figure out where setBoundaryNodes is called.
-        Iterable<Node> boundaryNodes = [edge0, edge1].expand((e) => e.graph.boundaryNodes);
-        isProperInterior = boundaryNodes.every((n) => n.coordinate != intersection);
-      }
+    //TODO: This could be improved with a faster metric.
+    edgeDistance0 = lseg0.start.distanceSqr(intersection);
+    edgeDistance1 = lseg1.start.distanceSqr(intersection);
+    if (isProper) {
+      assert(edge0.graph == edge1.graph);
+      //TODO: Need to figure out where setBoundaryNodes is called.
+      isProperInterior = (edge0.graph as GeometryGraph).boundaryNodes.every((n) => n.coordinate != intersection);
     }
   } else if (intersection is LineSegment) {
       //lineToLineDistance will always return 0

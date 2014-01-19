@@ -72,5 +72,17 @@ main() {
       expect(location.leftDepth, new Optional.of(0));
       expect(location.rightDepth, new Optional.of(2));
     });
+
+    test("should be able to copy a location", () {
+      var location = new Location(relativeTo, on: loc.INTERIOR, left: loc.EXTERIOR, right: loc.INTERIOR);
+      var loc2 = new Location.fromLocation(location);
+      expect(loc2.on, loc.INTERIOR);
+      expect(loc2.left.isPresent, isFalse);
+      expect(loc2.right.isPresent, isFalse);
+
+      var loc3 = new Location.fromLocation(location, asNodal: false);
+      expect(loc3.on, loc.INTERIOR);
+      expect(loc3.left, new Optional.of(loc.EXTERIOR));
+    });
   });
 }
