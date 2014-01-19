@@ -1,22 +1,20 @@
 library base.line_segment;
 
 import 'dart:math' as math;
-import 'package:quiver/iterables.dart';
 import 'package:spatially/algorithm/cg_algorithms.dart' as cg_algorithms;
 import 'package:spatially/algorithm/line_intersector.dart' as li;
 
 import 'coordinate.dart';
 import 'envelope.dart';
+import 'tuple.dart';
 
 /**
  * Returns an iterable over all the [LineSegment]s obtained between
  * adjacent coordinate pairs in a list of coordinates.
  */
-Iterable<LineSegment> coordinateSegments(Iterable<Coordinate> coords) {
-  List<Coordinate> coordList = coords.toList();
-  return range(1, coords.length)
-        .map((i) => new LineSegment(coordList[i - 1], coordList[i]));
-}
+Iterable<LineSegment> coordinateSegments(Iterable<Coordinate> coords) =>
+    zipWith(coords, coords.skip(1), (c1, c2) => new LineSegment(c1, c2));
+
 /**
  * Represents the [LineSegment] between two [Coordinate]s
  */
