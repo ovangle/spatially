@@ -79,6 +79,8 @@ class LineSegment {
     }
   }
 
+  Coordinate get midpoint => new Coordinate((start.x + end.x) / 2, (start.y + end.y) / 2);
+
   /**
    * The index of the direction of the point [:q:] relative
    * to the vector defined by [:c1:] -> [:c2:]
