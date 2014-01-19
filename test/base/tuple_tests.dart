@@ -37,4 +37,20 @@ main() {
       expect(zip(iter2, iter1), [new Tuple(11,1), new Tuple(12,2), new Tuple(13,3)]);
     });
   });
+
+  test("zip with should apply the function to each of the pairs", () {
+    Iterable<int> iter1 = [1,2,3,4,5,6];
+    Iterable<int> iter2 = [4,5,6,7,8,9];
+    expect(zipWith(iter1, iter2, (e1, e2) => e1 * e2),
+           [4, 10, 18, 28, 40, 54]);
+  });
+  test("zipWith should stop after the end of the shortest iterable", () {
+    Iterable<int> iter1 = [1,2,3,4,5,6];
+    Iterable<int> iter2 = [11,12,13];
+
+    expect(zipWith(iter1, iter2, (e1, e2) => e1 + e2),
+           [12,14,16]);
+    expect(zipWith(iter2, iter1, (e1, e2) => e1 + e2),
+           [12,14,16]);
+  });
 }
