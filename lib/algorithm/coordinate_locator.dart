@@ -67,7 +67,7 @@ int _locateCoordinateInLinestring(Coordinate c, Linestring geom) {
       return loc.BOUNDARY;
     }
   }
-  if (cg_algorithms.isOnLine(c, coords)) {
+  if (cg_algorithms.isOnLine(c, geom.segments)) {
     return loc.INTERIOR;
   }
   return loc.EXTERIOR;
