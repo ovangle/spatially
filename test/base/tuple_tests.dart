@@ -5,6 +5,18 @@ import 'package:spatially/base/tuple.dart';
 
 main() {
   group("tuple: ", () {
+    test("should be able to project the item", () {
+      Tuple t1 = new Tuple(1, 2);
+      expect(t1.project(1), 1);
+      expect(t1.project(2), 2);
+    });
+
+    test("should be able to project the other item", () {
+      Tuple t1 = new Tuple(1, 2);
+      expect(t1.projectOther(1), 2);
+      expect(t1.projectOther(2), 1);
+    });
+
     test("zip should pair elements together", () {
       Iterable<int> iter1 = [1,2,3,4,5,6];
       Iterable<int> iter2 = ["hello", "world", "how", "are", "you", "today"];

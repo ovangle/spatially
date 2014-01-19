@@ -25,6 +25,10 @@ class Tuple<T1,T2> {
     }
   }
 
+  dynamic projectOther(int i) {
+    return project(3 - i);
+  }
+
   bool operator ==(Object other) =>
       other is Tuple<T1,T2> && $1 == other.$1 && $2 == other.$2;
 
