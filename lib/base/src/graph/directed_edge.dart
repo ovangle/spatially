@@ -37,4 +37,6 @@ class DirectedEdge<E> {
   }
 
   int get hashCode => label.hashCode;
+
+  String toString() => label.toString();
 }

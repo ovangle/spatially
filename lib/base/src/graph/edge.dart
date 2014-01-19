@@ -48,7 +48,7 @@ class GraphEdge<E> {
     _forwardEdge.ifPresent((edge) => edge._unlink());
     _forwardEdge = new Optional.absent();
     _backwardEdge.ifAbsent(() {
-      _graph._removeEdge(this);
+      _graph._removeIsolatedEdges();
       _unlink();
     });
     return true;
@@ -58,7 +58,7 @@ class GraphEdge<E> {
     _backwardEdge.ifPresent((edge) => edge._unlink());
     _backwardEdge = new Optional.absent();
     _forwardEdge.ifAbsent(() {
-      _graph._removeEdge(this);
+      _graph._removeIsolatedEdges();
       _unlink();
     });
     return true;

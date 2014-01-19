@@ -183,6 +183,9 @@ main() {
       expect(graph.removeForwardEdge(new MockLabel(4)), isTrue);
       expect(graph.removeForwardEdge(new MockLabel(4)), isFalse);
 
+      expect(graph.edges.every((e) => e.forwardEdge.isPresent || e.backwardEdge.isPresent), isTrue,
+             reason: "No orphaned edges");
+
       expect(edge.graph, isNull, reason: "unlinked from graph");
     });
 
@@ -196,6 +199,8 @@ main() {
       expect(graph.removeBackwardEdge(new MockLabel(4)), isFalse);
 
       expect(edge.graph, isNull, reason: "unlinked from graph");
+      expect(graph.edges.every((e) => e.forwardEdge.isPresent || e.backwardEdge.isPresent), isTrue,
+          reason: "No orphaned edges");
     });
 
     test("should be able to remove a single direction of an undirected edge", () {

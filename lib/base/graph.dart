@@ -187,8 +187,10 @@ abstract class Graph<N,E> {
     }
   }
 
-  bool _removeEdge(GraphEdge<E> edge) {
-    return _edges.remove(edge);
+  bool _removeIsolatedEdges() {
+    _edges.removeWhere((e) => !e.forwardEdge.isPresent
+                           && !e.backwardEdge.isPresent);
+    return true;
   }
 
   /**
