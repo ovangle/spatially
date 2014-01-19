@@ -1,13 +1,15 @@
 part of spatially.base.graph;
 
 class GraphEdge<E> {
-  final Graph<dynamic, E> graph;
+  Graph<dynamic, E> _graph;
+  Graph get graph => _graph;
+
   Optional<DirectedEdge<E>> _forwardEdge;
   Optional<DirectedEdge<E>> get forwardEdge => _forwardEdge;
   Optional<DirectedEdge<E>> _backwardEdge;
   Optional<DirectedEdge<E>> get backwardEdge => _backwardEdge;
 
-  GraphEdge(this.graph,
+  GraphEdge(this._graph,
        Optional<Label<E>> forwardLabel,
        Optional<Label<E>> backwardLabel,
        GraphNode startNode,
@@ -43,19 +45,27 @@ class GraphEdge<E> {
       backwardEdge.transform((e) => e.label);
 
   bool _removeForward() {
+    _forwardEdge.ifPresent((edge) => edge._unlink());
     _forwardEdge = new Optional.absent();
     _backwardEdge.ifAbsent(() {
-      graph._removeEdge(this);
+      _graph._removeEdge(this);
+      _unlink();
     });
     return true;
   }
 
   bool _removeBackward() {
+    _backwardEdge.ifPresent((edge) => edge._unlink());
     _backwardEdge = new Optional.absent();
     _forwardEdge.ifAbsent(() {
-      graph._removeEdge(this);
+      _graph._removeEdge(this);
+      _unlink();
     });
     return true;
+  }
+
+  void _unlink() {
+    _graph = null;
   }
 
   /**

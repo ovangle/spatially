@@ -1,17 +1,26 @@
 part of spatially.base.graph;
 
 class DirectedEdge<E> {
-  final GraphEdge<E> edge;
+  GraphEdge<E> _edge;
+  GraphEdge<E> get edge => _edge;
   final Label<E> label;
-  final GraphNode startNode;
-  final GraphNode endNode;
+  GraphNode _startNode;
+  GraphNode get startNode => _startNode;
+  GraphNode _endNode;
+  GraphNode get endNode => _endNode;
 
-  DirectedEdge(this.edge, this.label, this.startNode, this.endNode);
+  DirectedEdge(this._edge, this.label, this._startNode, this._endNode);
 
   bool get isForward =>
       new Optional.of(this) == edge.forwardEdge;
   bool get isBackward =>
       new Optional.of(this) == edge.backwardEdge;
+
+  void _unlink() {
+    _edge = null;
+    _startNode = null;
+    _endNode = null;
+  }
 
   /**
    * Returns the complement edge in the parent, if it

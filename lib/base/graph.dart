@@ -193,9 +193,17 @@ abstract class Graph<N,E> {
 
   /**
    * Removes the node with the given label (if one exists).
+   * Throws a [StateError] if attempting to remove a node when
+   * there are edges in the graph which terminate at the node.
    */
-  void removeNode(Label<E> nodeLabel) {
-    _nodes.removeWhere((n) => n.label == nodeLabel);
+  void removeNode(Label<N> nodeLabel) {
+    var node = nodeByLabel(nodeLabel);
+    node.ifPresent((node) {
+      if (node.terminatingEdges.isNotEmpty)
+        throw new StateError("Node has terminating edges");
+      _nodes.remove(node);
+      node._unlink();
+    });
   }
 
   /**
@@ -215,6 +223,17 @@ abstract class Graph<N,E> {
     Optional<DirectedEdge<E>> bwdEdge = backwardEdgeByLabel(backwardLabel);
     var removedBwd = bwdEdge.transform((e) => e.edge._removeBackward());
     return removedBwd.or(false);
+  }
+
+  bool removeEdge(GraphEdge<E> edge) {
+    bool removed = false;
+    edge.forwardLabel.ifPresent((lbl) {
+      removed = removeForwardEdge(lbl);
+    });
+    edge.backwardLabel.ifPresent((lbl) {
+      removed = removeBackwardEdge(lbl);
+    });
+    return removed;
   }
 }
 

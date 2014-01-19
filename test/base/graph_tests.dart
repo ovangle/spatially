@@ -38,7 +38,9 @@ main() {
       var node = graph.addNode(new MockLabel(1));
       expect(graph.nodes.map((n) => n.label), [new MockLabel(1)]);
       expect(node.label, new MockLabel(1));
+      expect(node.graph, graph);
     });
+
     test("should be able to fetch a node by its label", () {
       Graph graph = new MockGraph<int,int>();
       graph.addNode(new MockLabel(1));
@@ -46,12 +48,15 @@ main() {
              new Optional.of(new MockLabel(1)));
       expect(graph.nodeByLabel(new MockLabel(2)).isPresent, isFalse);
     });
+
     test("should be able to add a forward edge to a graph", () {
       Graph graph = new MockGraph<int,int>();
       var startNode = graph.addNode(new MockLabel(1));
       var endNode = graph.addNode(new MockLabel(2));
 
       GraphEdge e = graph.addForwardEdge(new MockLabel(4), startNode, endNode);
+
+      expect(e.graph, graph);
 
       expect(graph.forwardEdges.map((e) => e.label), [new MockLabel(4)]);
       expect(graph.backwardEdges, isEmpty);
@@ -61,12 +66,15 @@ main() {
       expect(e.forwardEdge.transform((e) => e.startNode.label), new Optional.of(new MockLabel(1)));
       expect(e.forwardEdge.transform((e) => e.endNode.label), new Optional.of(new MockLabel(2)));
     });
+
     test("should be able to add a backward directed edge to a graph", () {
       Graph graph = new MockGraph<int,int>();
       var startNode = graph.addNode(new MockLabel(1));
       var endNode = graph.addNode(new MockLabel(2));
 
       GraphEdge e = graph.addBackwardEdge(new MockLabel(4), startNode, endNode);
+
+      expect(e.graph, graph);
 
       expect(graph.backwardEdges.map((e) => e.label), [new MockLabel(4)]);
       expect(graph.forwardEdges, isEmpty);
@@ -105,14 +113,77 @@ main() {
       expect(identical(e, e2), isFalse);
     });
 
+    test("should be able to get the outgoing edges of a node", () {
+      Graph graph = new MockGraph<int,int>();
+      var node1 = graph.addNode(new MockLabel(1));
+      var node2 = graph.addNode(new MockLabel(3));
+      var node3 = graph.addNode(new MockLabel(4));
+
+
+      graph.addForwardEdge(new MockLabel(5), node2, node3);
+
+      expect(node1.outgoingEdges, isEmpty);
+      expect(node2.outgoingEdges.map((e) => e.label), [new MockLabel(5)]);
+      expect(node3.outgoingEdges, isEmpty);
+
+    });
+
+    test("should be able to get the incoming edges of a node", () {
+
+      Graph graph = new MockGraph<int,int>();
+      var node1 = graph.addNode(new MockLabel(1));
+      var node2 = graph.addNode(new MockLabel(3));
+      var node3 = graph.addNode(new MockLabel(4));
+
+
+      graph.addBackwardEdge(new MockLabel(5), node2, node3);
+
+      expect(node1.incomingEdges, isEmpty);
+      expect(node2.incomingEdges.map((e) => e.label), [new MockLabel(5)]);
+      expect(node3.incomingEdges, isEmpty);
+    });
+
+    test("should be able to get the terminating edges of a node", () {
+
+      Graph graph = new MockGraph<int,int>();
+      var node1 = graph.addNode(new MockLabel(1));
+      var node2 = graph.addNode(new MockLabel(3));
+      var node3 = graph.addNode(new MockLabel(4));
+
+      graph.addForwardEdge(new MockLabel(5), node2, node3);
+
+      expect(node1.terminatingEdges, isEmpty);
+      expect(node2.terminatingEdges, isNot(isEmpty));
+      expect(node3.terminatingEdges, isNot(isEmpty));
+    });
+
+    test("should be able to remove a node from the graph", () {
+      Graph graph = new MockGraph<int,int>();
+      var node1 = graph.addNode(new MockLabel(1));
+      var node2 = graph.addNode(new MockLabel(2));
+      var node3 = graph.addNode(new MockLabel(3));
+
+      graph.addForwardEdge(new MockLabel(5), node2, node3);
+      graph.removeNode(new MockLabel(1));
+      expect(graph.nodeByLabel(new MockLabel(1)).isPresent, false);
+
+      expect(node1.graph, isNull,
+             reason: "Removed nodes are unlinked from the graph");
+
+      expect(() => graph.removeNode(new MockLabel(3)), throws,
+             reason: "Node has outgoing edges");
+    });
+
     test("should be able to remove a forward directed edge", () {
       Graph graph = new MockGraph<int,int>();
       var startNode = graph.addNode(new MockLabel(1));
       var endNode = graph.addNode(new MockLabel(2));
 
-      graph.addForwardEdge(new MockLabel(4), startNode, endNode);
+      var edge = graph.addForwardEdge(new MockLabel(4), startNode, endNode);
       expect(graph.removeForwardEdge(new MockLabel(4)), isTrue);
       expect(graph.removeForwardEdge(new MockLabel(4)), isFalse);
+
+      expect(edge.graph, isNull, reason: "unlinked from graph");
     });
 
     test("should be able to remove a backward directed edge", () {
@@ -120,9 +191,11 @@ main() {
       var startNode = graph.addNode(new MockLabel(1));
       var endNode = graph.addNode(new MockLabel(2));
 
-      graph.addBackwardEdge(new MockLabel(4), startNode, endNode);
+      var edge = graph.addBackwardEdge(new MockLabel(4), startNode, endNode);
       expect(graph.removeBackwardEdge(new MockLabel(4)), isTrue);
       expect(graph.removeBackwardEdge(new MockLabel(4)), isFalse);
+
+      expect(edge.graph, isNull, reason: "unlinked from graph");
     });
 
     test("should be able to remove a single direction of an undirected edge", () {
@@ -130,9 +203,11 @@ main() {
       var startNode = graph.addNode(new MockLabel(1));
       var endNode = graph.addNode(new MockLabel(2));
 
-      graph.addUndirectedEdge(new MockLabel(4), new MockLabel(5), startNode, endNode);
+      var edge = graph.addUndirectedEdge(new MockLabel(4), new MockLabel(5), startNode, endNode);
       expect(graph.removeForwardEdge(new MockLabel(4)), isTrue);
       expect(graph.backwardEdges.map((e) => e.label), [new MockLabel(5)]);
+
+      expect(edge.graph, isNotNull, reason: "not yet unlinked from graph");
     });
   });
 }

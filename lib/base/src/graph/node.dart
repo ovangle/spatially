@@ -4,7 +4,7 @@ class GraphNode<N> {
   Graph<N, dynamic> graph;
   Label<N> label;
 
-  GraphNode(Graph<N,dynamic> graph, Label<N> this.label);
+  GraphNode(Graph<N,dynamic> this.graph, Label<N> this.label);
 
   Set<DirectedEdge> get incomingEdges {
     Set incomingEdges = new Set();
@@ -22,6 +22,10 @@ class GraphNode<N> {
 
   Set<GraphEdge> get terminatingEdges =>
       graph.edges.where((e) => e.terminatingNodes.contains(this)).toSet();
+
+  void _unlink() {
+    graph = null;
+  }
 
   bool operator ==(Object other) {
     if (other is GraphNode<N>) {
