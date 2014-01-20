@@ -169,10 +169,10 @@ Optional<IntersectionInfo> _getIntersectionInfo(Edge edge0, int segIndex0,
     }
   } else if (intersection is LineSegment) {
       //lineToLineDistance will always return 0
-      var edgeDistance0 = math.min(intersection.start.distance(lseg0.start),
-                                   intersection.end.distance(lseg0.start));
-      var edgeDistance1 = math.min(intersection.start.distanceSqr(lseg1.start),
-                                   intersection.end.distanceSqr(lseg0.start));
+      edgeDistance0 = math.min(intersection.start.distance(lseg0.start),
+                               intersection.end.distance(lseg0.start));
+      edgeDistance1 = math.min(intersection.start.distanceSqr(lseg1.start),
+                               intersection.end.distanceSqr(lseg0.start));
   } else {
       assert(false);
   }

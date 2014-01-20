@@ -9,4 +9,21 @@ class GeometryLabelBase<T> extends graph.Label<T> {
   final Tuple<Location,Location> locationDatas;
 
   GeometryLabelBase(Tuple<Location,Location> this.locationDatas);
+
+  /**
+   * Edges have one location undetermined during initialization.
+   * This retrieves it. If both locations are determined, or neither
+   * location is, throws a [StateError]
+   */
+  int get _knownLocationIdx {
+    if (locationDatas.$1.isKnown) {
+      if (locationDatas.$2.isKnown)
+        throw new StateError("No locations known");
+      return 1;
+    } else if (locationDatas.$2.isKnown) {
+      return 2;
+    } else {
+      throw new StateError("Both locations known");
+    }
+  }
 }

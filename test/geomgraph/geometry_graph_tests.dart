@@ -158,11 +158,11 @@ void main() {
         g.addPoint(p2, 2);
         g.nodeGraph();
 
-        expect(g.nodeByCoordinate(new Coordinate(0,0)).label.locationDatas,
+        expect(g.nodeByCoordinate(new Coordinate(0,0)).value.label.locationDatas,
                new Tuple(new Location(p1, on: loc.INTERIOR),
                          new Location(p2, on: loc.EXTERIOR)));
 
-        expect(g.nodeByCoordinate(new Coordinate(1,1)).label.locationDatas,
+        expect(g.nodeByCoordinate(new Coordinate(1,1)).value.label.locationDatas,
                new Tuple(new Location(p1, on: loc.EXTERIOR),
                          new Location(p2, on: loc.INTERIOR)));
         expect(g.edges, isEmpty);
@@ -179,38 +179,38 @@ void main() {
 
         //The nodes that should have been there originally
         var c1 = new Coordinate(0,0);
-        expect(g.nodeByCoordinate(c1).label.locationDatas,
+        expect(g.nodeByCoordinate(c1).value.label.locationDatas,
                new Tuple(new Location(lstr1, on: loc.BOUNDARY),
                          new Location(lstr2, on: loc.EXTERIOR)),
                reason: "Existing ($c1)");
 
         var c2 = new Coordinate(0,1);
-        expect(g.nodeByCoordinate(c2).label.locationDatas,
+        expect(g.nodeByCoordinate(c2).value.label.locationDatas,
                new Tuple(new Location(lstr1, on: loc.BOUNDARY),
                          new Location(lstr2, on: loc.EXTERIOR)),
                reason: "Existing ($c2)");
 
         var c3 = new Coordinate(0.5,1);
-        expect(g.nodeByCoordinate(c3).label.locationDatas,
+        expect(g.nodeByCoordinate(c3).value.label.locationDatas,
                new Tuple(new Location(lstr1, on: loc.EXTERIOR),
                          new Location(lstr2, on: loc.BOUNDARY)),
                reason: "Existing ($c3)");
 
         var c4 = new Coordinate(1,0.5);
-        expect(g.nodeByCoordinate(c4).label.locationDatas,
+        expect(g.nodeByCoordinate(c4).value.label.locationDatas,
                new Tuple(new Location(lstr1, on: loc.INTERIOR),
                          new Location(lstr2, on: loc.BOUNDARY)),
                 reason: "Existing ($c4)");
 
         //The nodes which should have been added during noding
         var c5 = new Coordinate(0.5, 0.5);
-        expect(g.nodeByCoordinate(c5).label.locationDatas,
+        expect(g.nodeByCoordinate(c5).value.label.locationDatas,
                new Tuple(new Location(lstr1, on: loc.INTERIOR),
                          new Location(lstr2, on: loc.EXTERIOR)),
               reason: "Added ($c5)");
 
         var c6 = new Coordinate(0.75, 0.75);
-        expect(g.nodeByCoordinate(c6).label.locationDatas,
+        expect(g.nodeByCoordinate(c6).value.label.locationDatas,
                new Tuple(new Location(lstr1, on: loc.INTERIOR),
                          new Location(lstr2, on: loc.INTERIOR)),
               reason: "Added ($c6)");
@@ -224,15 +224,6 @@ void main() {
                    [ new Tuple(new Location(lstr1, on: loc.INTERIOR), new Location(lstr2, on: loc.NONE)),
                      new Tuple(new Location(lstr1, on: loc.NONE),     new Location(lstr2, on: loc.INTERIOR))
                    ])));
-
-        for (var node in g.nodes) {
-          print("node: $node");
-          for (var edge in node.outgoingEdges) {
-            print("edge: $edge");
-          }
-        }
-
-
       });
 
       test("should be able to node a graph of two polygons", () {
@@ -271,8 +262,65 @@ void main() {
                      new Tuple(new Location(poly1, on: loc.NONE),
                                new Location(poly2, on: loc.BOUNDARY, left: loc.EXTERIOR, right: loc.INTERIOR))
                    ])));
+      });
+    });
 
+    group("lookup", () {
+      test("should be able to lookup a node by coordiate", () {
+        var geom1 = geomFactory.createPoint(new Coordinate(0,0));
+        var geom2 = geomFactory.createPoint(new Coordinate(1,1));
+        var geomGraph = new GeometryGraph(geom1, geom2);
+        geomGraph.addPoint(geom1, 1);
+        geomGraph.addPoint(geom2, 2);
+        var node = geomGraph.nodeByCoordinate(new Coordinate(0,0));
+        expect(node.isPresent, isTrue);
+        expect(node.value.coordinate, new Coordinate(0,0));
+        expect(geomGraph.nodeByCoordinate(new Coordinate(0,0.5)).isPresent, isFalse);
+      });
 
+      test("should be able to lookup a forward edge by coordinates", () {
+        var geom1 = geomFactory.fromWkt("Linestring(0 0, 1 1)");
+        var geom2 = geomFactory.fromWkt("Linestring(0 0, 1 0)");
+        var geomGraph = new GeometryGraph(geom1, geom2);
+        geomGraph.addLinestring(geom1, 1);
+        geomGraph.addLinestring(geom2, 2);
+        var edge = geomGraph.forwardEdgeByCoordinates([new Coordinate(0, 0), new Coordinate(1,1)]);
+        expect(edge.isPresent, true);
+        expect(edge.value.label.coordinates, [new Coordinate(0,0), new Coordinate(1,1)]);
+
+        expect(geomGraph.forwardEdgeByCoordinates([new Coordinate(0,0), new Coordinate(-1,0)]).isPresent,
+               isFalse);
+      });
+
+      test("should be able to lookup a backward edge by coordinates", () {
+        var geom1 = geomFactory.fromWkt("Linestring(0 0, 1 1)");
+        var geom2 = geomFactory.fromWkt("Linestring(0 0, 1 0)");
+        var geomGraph = new GeometryGraph(geom1, geom2);
+        geomGraph.addLinestring(geom1, 1);
+        geomGraph.addLinestring(geom2, 2);
+        var edge = geomGraph.backwardEdgeByCoordinates([new Coordinate(1, 1), new Coordinate(0,0)]);
+        expect(edge.isPresent, true);
+        expect(edge.value.label.coordinates, [new Coordinate(1,1), new Coordinate(0,0)]);
+
+        expect(geomGraph.backwardEdgeByCoordinates([new Coordinate(0,0), new Coordinate(-1,0)]).isPresent,
+               isFalse);
+      });
+    });
+    group("edge labelling", () {
+      //No need to test points.
+      test("should label the edges of a graph containing linestrings correctly", () {
+        var lstr1 = geomFactory.fromWkt("Linestring(0 0, 1 0, 1 1, 0 1)");
+        var lstr2 = geomFactory.fromWkt("Linestring(-1 0, 0.5 0, 1 1, 2 1)");
+
+        var geomGraph = new GeometryGraph(lstr1, lstr2);
+        geomGraph.addLinestring(lstr1, 1);
+        geomGraph.addLinestring(lstr2, 2);
+        geomGraph.nodeGraph();
+        geomGraph.labelEdges(1);
+        geomGraph.labelEdges(2);
+
+        var edge = geomGraph.forwardEdgeByCoordinates([new Coordinate(0.0, 0.0), new Coordinate(0.5, 0.5)])
+                            .value.edge;
       });
     });
 

@@ -76,6 +76,7 @@ main() {
     test("should be able to copy a location", () {
       var location = new Location(relativeTo, on: loc.INTERIOR, left: loc.EXTERIOR, right: loc.INTERIOR);
       var loc2 = new Location.fromLocation(location);
+
       expect(loc2.on, loc.INTERIOR);
       expect(loc2.left.isPresent, isFalse);
       expect(loc2.right.isPresent, isFalse);

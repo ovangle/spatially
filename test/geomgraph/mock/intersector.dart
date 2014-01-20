@@ -3,11 +3,13 @@ part of geomgraph.test_intersector;
 class MockEdge implements geomgraph.Edge {
   int edgeIdx;
   Linestring lstr;
-  MockGraph get _graph => new MockGraph(this);
+  MockGraph graph;
 
   List<Coordinate> get coordinates => new List.from(lstr.coordinates, growable: false);
 
-  MockEdge(int this.edgeIdx, this.lstr);
+  MockEdge(int this.edgeIdx, this.lstr) {
+    graph = new MockGraph(this);
+  }
 
   toString() => "Edge($edgeIdx)";
 
@@ -34,6 +36,9 @@ class MockGraph implements geomgraph.GeometryGraph {
   void noSuchMethod(Invocation invocation) {
     throwNoSuchMethod(this, invocation);
   }
+
+  bool operator ==(Object other) =>
+      other is MockGraph;
 }
 
 class MockNode implements geomgraph.Node {

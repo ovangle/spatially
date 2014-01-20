@@ -16,9 +16,15 @@ class Edge extends graph.GraphEdge<List<Coordinate>> {
        Node endNode) :
          super(graph, forwardLabel, backwardLabel, startNode, endNode);
 
-  List<List<Coordinate>> splitCoordinates(Iterable<IntersectionInfo> intersectionInfos) {
+  Optional<Location> forwardLocationAt(int locationIdx) =>
+      forwardLabel.transform((lbl) => lbl.locationDatas.project(locationIdx));
+  Optional<Location> backwardLocationAt(int locationIdx) =>
+      backwardLabel.transform((lbl) => lbl.locationDatas.project(locationIdx));
+
+  Iterable<List<Coordinate>> splitCoordinates(Iterable<IntersectionInfo> intersectionInfos) {
     var coords = this.coordinates;
-    var splitStart = 0, nextStartCoord;
+    var splitStart = 0;
+    var nextStartCoord = null;
 
     /*
      * The coordinates in the split at [:splitStart:], up
@@ -105,7 +111,7 @@ class Edge extends graph.GraphEdge<List<Coordinate>> {
         sortedInfos
         .expand((info) => [_coordsBeforeIntersection(info), _coordsAtIntersection(info)])
         .where((coords) => coords.isNotEmpty)
-        .toList();
+        .toList(growable: false);
 
     if (nextStartCoord == null) {
       //There was never a reason to split the edge
@@ -114,9 +120,11 @@ class Edge extends graph.GraphEdge<List<Coordinate>> {
     //Add the coords after the last intersection
     var remainingCoords = [nextStartCoord];
     remainingCoords.addAll(coordinates.skip(splitStart));
-    splitCoords.add(remainingCoords);
-    return splitCoords;
+    return [splitCoords, [remainingCoords]].expand((i) => i);
+
   }
+
+  String toString() => "Edge(fwd: ${forwardEdge}, bwd; ${backwardEdge})";
 }
 
 class EdgeLabel extends GeometryLabelBase<List<Coordinate>> {
@@ -137,8 +145,11 @@ class EdgeLabel extends GeometryLabelBase<List<Coordinate>> {
     return new EdgeLabel(coords, locations);
   }
 
-  static const ListEquality<Coordinate> _listEq = const ListEquality<Coordinate>();
-
+  void mergeWith(EdgeLabel label) {
+    assert(this == label);
+    this.locationDatas.$1.mergeWith(label.locationDatas.$1);
+    this.locationDatas.$2.mergeWith(label.locationDatas.$2);
+  }
   bool operator ==(Object other) =>
       other is EdgeLabel && _listEq.equals(coordinates, other.coordinates);
 

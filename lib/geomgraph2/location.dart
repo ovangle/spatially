@@ -18,10 +18,6 @@ class Location {
 
   Geometry relativeTo;
 
-  /**
-   * The location of this graph component relative to the specified geometry.
-   *
-   */
   int on;
 
   /**
@@ -40,12 +36,8 @@ class Location {
   Optional<int> get right =>
       rightDepth.transform((depth) => depth > 0 ? loc.INTERIOR : loc.EXTERIOR);
 
-  Location(
-      this.relativeTo,
-      { this.on,
-        int left,
-        int right
-      }) :
+  Location(this.relativeTo, { int on, int left, int right }) :
+    this.on = on,
     leftDepth = _depthAtLocation(left),
     rightDepth = _depthAtLocation(right) {
     assert(on != null);
@@ -72,6 +64,11 @@ class Location {
   }
 
   bool get isPlanar => leftDepth.isPresent;
+
+  /**
+   * A location is known iff `on != loc.NONE`.
+   */
+  bool get isKnown => on != loc.NONE;
 
   /**
    * An location is dimensionally collapse if both the left depth
