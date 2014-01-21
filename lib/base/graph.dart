@@ -5,6 +5,7 @@ import 'package:quiver/core.dart';
 
 part 'src/graph/directed_edge.dart';
 part 'src/graph/edge.dart';
+part 'src/graph/error.dart';
 part 'src/graph/label.dart';
 part 'src/graph/node.dart';
 
@@ -94,11 +95,21 @@ abstract class Graph<N,E> {
    * [:edgeLabel:] *if* the label is unique amongst all the forward labels.
    *
    * The backward edge will be set to an absent value.
+   *
+   * Throws a [GraphError] if an edge already exists with the same label,
+   * but with different start and/or end nodes.
    */
   GraphEdge<E> addForwardEdge(Label<E> edgeLabel, GraphNode<N> startNode, GraphNode<N> endNode) {
     var existing = forwardEdgeByLabel(edgeLabel);
-    if (existing.isPresent)
+    if (existing.isPresent) {
+
+      _addCheckLabels(edgeLabel,
+          existing.value.startNode, startNode,
+          existing.value.endNode, endNode,
+          isForward: true);
+
       return existing.value.edge;
+    }
     addNode(startNode.label);
     addNode(endNode.label);
     var added = edgeFactory(this, new Optional.of(edgeLabel), new Optional.absent(), startNode, endNode);
@@ -114,14 +125,25 @@ abstract class Graph<N,E> {
    * otherwise returns the newly added edge.
    *
    * The forward directed edge will be set to an absent value.
+   *
+   * Throws a [GraphError] if the label exists in the graph, but with different
+   * start and/or end nodes.
+   *
+   * NOTE: start and end node arguments are reversed from those from addForwardEdge
+   * although this should be more intuitive.
    */
-  GraphEdge<E> addBackwardEdge(Label<E> edgeLabel, GraphNode<N> startNode, GraphNode<N> endNode) {
+  GraphEdge<E> addBackwardEdge(Label<E> edgeLabel, GraphNode<N> endNode, GraphNode<N> startNode) {
     var existing = backwardEdgeByLabel(edgeLabel);
-    if (existing.isPresent)
+    if (existing.isPresent) {
+      _addCheckLabels(edgeLabel,
+          existing.value.startNode, startNode,
+          existing.value.endNode, endNode,
+          isForward: false);
       return existing.value.edge;
+    }
     addNode(startNode.label);
     addNode(endNode.label);
-    var added = edgeFactory(this, new Optional.absent(), new Optional.of(edgeLabel), startNode, endNode);
+    var added = edgeFactory(this, new Optional.absent(), new Optional.of(edgeLabel), endNode, startNode);
     _edges.add(added);
     return added;
   }
@@ -133,15 +155,31 @@ abstract class Graph<N,E> {
    * If the labels are not unique, then the edge with the existing label
    * is returned.
    *
-   * Raises an [ArgumentError] if either of the labels are `null`.
+   * Throws a [GraphError] if either the forward or backward label
+   * exist in the graph but with different start/or end nodes
+   *
+   * NOTE: `startNode` is the start node of what will become the forward edge.
+   * Thus the `startNode` becomes the `endNode` of the backward edge (and vice versa)
    */
   GraphEdge<E> addUndirectedEdge(Label<E> forwardLabel, Label<E> backwardLabel, GraphNode<N> startNode, GraphNode<N> endNode) {
     var fwdExists = forwardEdgeByLabel(forwardLabel);
-    if (fwdExists.isPresent)
+    if (fwdExists.isPresent) {
+      _addCheckLabels(forwardLabel,
+                      fwdExists.value.startNode, startNode,
+                      fwdExists.value.endNode, endNode,
+                      isForward: true);
+      //TODO: Add the forward edge if the existing edge is not undirected?
       return fwdExists.value.edge;
+    }
     var bwdExists = backwardEdgeByLabel(backwardLabel);
-    if (bwdExists.isPresent)
+    if (bwdExists.isPresent) {
+      _addCheckLabels(backwardLabel,
+                      bwdExists.value.startNode, endNode,
+                      bwdExists.value.endNode, startNode, //backward label reversed
+                      isForward: false);
+
       return bwdExists.value.edge;
+    }
     addNode(startNode.label);
     addNode(endNode.label);
     var edge = edgeFactory(this,
@@ -151,40 +189,6 @@ abstract class Graph<N,E> {
                            endNode);
     _edges.add(edge);
     return edge;
-  }
-
-  /**
-   * Replaces an edge by a sequence of edges.
-   * The edge to replace must exist
-   * The replacements must be the same type of edge as the original edge
-   * (eg. a forward edge can only be replaced by forward edges)
-   */
-  void replaceEdge(GraphEdge<E> edge, Iterable<GraphEdge<E>> replacements) {
-    if (!_edges.contains(edge))
-      throw new StateError("Can't replace an edge which doesn't exist");
-    if (edge.isForward) {
-      for (var replacement in replacements) {
-        assert(replacement.isForward);
-        DirectedEdge<E> fwdEdge = replacement.forwardEdge.value;
-        addForwardEdge(fwdEdge.label, fwdEdge.startNode, fwdEdge.endNode);
-      }
-    } else if (edge.isBackward) {
-      for (var replacement in replacements) {
-        assert(replacement.isBackward);
-        DirectedEdge<E> bwdEdge = replacement.backwardEdge.value;
-        addBackwardEdge(bwdEdge.label, bwdEdge.startNode, bwdEdge.endNode);
-      }
-    } else {
-      assert(edge.isUndirected);
-      for (var replacement in replacements) {
-        assert(replacement.isUndirected);
-        addUndirectedEdge(
-            replacement.forwardLabel.value,
-            replacement.backwardLabel.value,
-            replacement.terminatingNodes.first,
-            replacement.terminatingNodes.last);
-      }
-    }
   }
 
   bool _removeIsolatedEdges() {

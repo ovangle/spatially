@@ -34,7 +34,7 @@ class GraphEdge<E> {
       terminatingNodes.add(bwd.startNode);
       terminatingNodes.add(bwd.endNode);
     });
-    assert(terminatingNodes.length == 2);
+    assert(terminatingNodes.length <= 2);
     return terminatingNodes;
   }
 
