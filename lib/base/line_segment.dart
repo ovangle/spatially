@@ -127,6 +127,13 @@ class LineSegment {
   Coordinate coordinateIntersection(Coordinate c) =>
       li.coordinateIntersection(this, c);
 
+
+  /**
+   * Returns the magnitude of the line segment
+   * (the 2D Euclidean distance between the start and end points)
+   */
+  double get magnitude => start.distance(end);
+
   /**
    * The angle that this [LineSegment] makes with the
    * positive x-axis, as a [double] in the range (-PI,PI]
