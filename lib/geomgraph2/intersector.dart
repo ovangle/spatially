@@ -82,13 +82,14 @@ class IntersectionInfo {
    * segIndex0 with segIndex1 and
    * edgeDistance0 with edgeDistance1
    */
-  IntersectionInfo get symmetric =>
-      new IntersectionInfo(
+  IntersectionInfo get symmetric {
+    return new IntersectionInfo(
           this.edge1, this.segIndex1, this.edgeDistance1,
           this.edge0, this.segIndex0, this.edgeDistance0,
-          this.intersection,
+          intersection,
           this.isProper,
           this.isProperInterior);
+  }
 
 
   /**
@@ -136,12 +137,28 @@ Optional<IntersectionInfo> _getIntersectionInfo(Edge edge0, int segIndex0,
   LineSegment lseg0 = segs0.elementAt(segIndex0);
   LineSegment lseg1 = segs1.elementAt(segIndex1);
 
-  final intersection = li.segmentIntersection(lseg0, lseg1);
+  var intersection = li.segmentIntersection(lseg0, lseg1);
   if (intersection == null) return new Optional.absent();
 
   var isProper = false;
   var isProperInterior = false;
   var edgeDistance0, edgeDistance1;
+
+  //TypeError
+  assert(intersection is Coordinate || intersection is LineSegment);
+
+  if (intersection is LineSegment) {
+    if (intersection.magnitude > 0) {
+      //lineToLineDistance will always return 0
+      edgeDistance0 = math.min(intersection.start.distance(lseg0.start),
+                               intersection.end.distance(lseg0.start));
+      edgeDistance1 = math.min(intersection.start.distanceSqr(lseg1.start),
+                               intersection.end.distanceSqr(lseg1.start));
+
+    } else {
+      intersection = intersection.start;
+    }
+  }
 
   if (intersection is Coordinate) {
     //Check if the intersection is just an adjacency of two segments
@@ -168,13 +185,7 @@ Optional<IntersectionInfo> _getIntersectionInfo(Edge edge0, int segIndex0,
       isProperInterior = (edge0.graph as GeometryGraph).boundaryNodes.every((n) => n.coordinate != intersection);
     }
   } else if (intersection is LineSegment) {
-      //lineToLineDistance will always return 0
-      edgeDistance0 = math.min(intersection.start.distance(lseg0.start),
-                               intersection.end.distance(lseg0.start));
-      edgeDistance1 = math.min(intersection.start.distanceSqr(lseg1.start),
-                               intersection.end.distanceSqr(lseg0.start));
-  } else {
-      assert(false);
+
   }
   //There must be an intersection
   IntersectionInfo isectInfo =

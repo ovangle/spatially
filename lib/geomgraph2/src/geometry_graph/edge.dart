@@ -21,46 +21,97 @@ class Edge extends graph.GraphEdge<List<Coordinate>> {
   Optional<Location> backwardLocationAt(int locationIdx) =>
       backwardLabel.transform((lbl) => lbl.locationDatas.project(locationIdx));
 
+  /**
+   * Retrieves the intersection from an [IntersectionInfo].
+   *
+   * If the intersection is a line segment, reorients it (if necessary) so
+   * that the start of the segment is closer to the start of the segment
+   * of intersection.
+   *
+   * It assumes that the info applies to this edge and that the edge is positioned
+   * at info.edge0
+   */
+  dynamic /* Coordinate | LineSegment */ _getIntersection(IntersectionInfo info) {
+    var intersection = info.intersection;
+    assert(identical(info.edge0, this));
+    if (intersection is LineSegment) {
+      var segStart = this.coordinates[info.segIndex0];
+      if (segStart.distanceSqr(intersection.start) > segStart.distanceSqr(intersection.end))
+        intersection = intersection.reversed;
+    }
+    return intersection;
+  }
+
+  Iterable<IntersectionInfo> _sortInfos(Iterable<IntersectionInfo> intersectionInfos) {
+    var sortedInfos = intersectionInfos
+      .where((info) => identical(info.edge0, this) || identical(info.edge1, this))
+      .map((info) => info.edge0 == this ? info : info.symmetric)
+      .toList(growable: false)
+      //Sort the infos by their distance along the edgea
+      ..sort((info1, info2) {
+        var cmpSegs = info1.segIndex0.compareTo(info2.segIndex0);
+        if (cmpSegs != 0) return cmpSegs;
+        return info1.edgeDistance0.compareTo(info2.edgeDistance0);
+      });
+
+    var lastCoord;
+    List<IntersectionInfo> uniqInfos = [];
+
+    for (var info in sortedInfos) {
+      var isect = _getIntersection(info);
+      if (isect is Coordinate) {
+        if (isect == lastCoord)
+          continue;
+        lastCoord = isect;
+        uniqInfos.add(info);
+      } else if (isect is LineSegment) {
+         if (isect.start == lastCoord) {
+          //Keep the line segments, remove the coordinates.
+          uniqInfos.removeLast();
+        }
+        uniqInfos.add(info);
+        lastCoord = isect.end;
+      }
+    }
+    return uniqInfos;
+  }
+
   Iterable<List<Coordinate>> splitCoordinates(Iterable<IntersectionInfo> intersectionInfos) {
-    var coords = this.coordinates;
+    List<Coordinate> coords = this.coordinates;
+
     var splitStart = 0;
     var nextStartCoord = null;
-
+    var lastIntersection;
     /*
      * The coordinates in the split at [:splitStart:], up
      * to the end of the intersection.
      */
     List<Coordinate> _coordsBeforeIntersection(IntersectionInfo info) {
       List<Coordinate> coordsBefore = [];
-
       if (nextStartCoord != null) {
-        //Some of the last segment was left over after the split.
         coordsBefore.add(nextStartCoord);
       }
       coordsBefore.addAll(coords.sublist(splitStart, info.segIndex0 + 1));
+
+      var isect = _getIntersection(info);
       //Advance the pointer to the next split start
-      if (info.intersection is Coordinate) {
-        if (info.intersection != coordsBefore.last) {
+      if (isect is Coordinate) {
+        if (isect != coordsBefore.last) {
           //Split in the middle of the segment
-          coordsBefore.add(info.intersection);
+          coordsBefore.add(isect);
         }
-        nextStartCoord = info.intersection;
-      } else if (info.intersection is LineSegment) {
+        nextStartCoord = isect;
+      } else if (isect is LineSegment) {
         var segStart = coords[info.segIndex0];
-        if (info.intersection.start != segStart
-            && info.intersection.end != segStart) {
+        if (isect.start != segStart) {
           //The intersection starts midway down the
           //current segment. There is still a coordinate
           //to add to the segment
           //Figure out the closest end of the segment
-          var distToStart = info.intersection.start.distanceSqr(segStart);
-          var distToEnd = info.intersection.end.distanceSqr(segStart);
-          if (distToStart <= distToEnd) {
-            coordsBefore.add(info.intersection.start);
-          } else {
-            //Add the segment in reverse.
-            coordsBefore.add(info.intersection.end);
-          }
+          coordsBefore.add(isect.start);
+        } else if (coordsBefore.length <= 1) {
+          //The segment appears at the start of the edge
+          return [];
         }
       } else {
         //TypeError
@@ -75,85 +126,35 @@ class Edge extends graph.GraphEdge<List<Coordinate>> {
      * which intersects
      */
     List<Coordinate> _coordsAtIntersection(IntersectionInfo info) {
-      if (info.intersection is LineSegment) {
+      var isect = _getIntersection(info);
+      if (isect is LineSegment) {
         var segStart = coordinates[info.segIndex0];
-        var distToStart = segStart.distanceSqr(info.intersection.start);
-        var distToEnd = segStart.distanceSqr(info.intersection.end);
-
-        if (distToStart < distToEnd) {
-          nextStartCoord = info.intersection.end;
-          return [info.intersection.start, info.intersection.end];
-        } else if (distToStart > distToEnd) {
-          nextStartCoord = info.intersection.start;
-          return [info.intersection.end, info.intersection.start];
-        } else {
-          nextStartCoord = segStart;
-        }
+        nextStartCoord = isect.end;
+        return [isect.start, isect.end];
       }
-
-      //Coordinate or segment with 0 length
       return [];
     }
 
-    var sortedInfos =
-        intersectionInfos
-        .where((info) => identical(info.edge0, this) || identical(info.edge1, this))
-        .map((info) => info.edge0 == this ? info : info.symmetric)
-        .toList(growable: false)
-        //Sort the infos by their distance along the edgea
-        ..sort((info1, info2) {
-          var cmpSegs = info1.segIndex0.compareTo(info2.segIndex0);
-          if (cmpSegs != 0) return cmpSegs;
-          return info1.edgeDistance0.compareTo(info2.edgeDistance0);
-        });
+    if (intersectionInfos.isEmpty)
+      return [coords];
+
+    var sortedInfos = _sortInfos(intersectionInfos);
 
     var splitCoords =
         sortedInfos
-        .expand((info) => [_coordsBeforeIntersection(info), _coordsAtIntersection(info)])
+        .expand((info) {
+          var coordsBefore = _coordsBeforeIntersection(info);
+          var coordsAfter = _coordsAtIntersection(info);
+          return [coordsBefore, coordsAfter];
+        })
         .where((coords) => coords.isNotEmpty)
         .toList(growable: false);
 
-    if (nextStartCoord == null) {
-      //There was never a reason to split the edge
-      return [coords];
-    }
     //Add the coords after the last intersection
     var remainingCoords = [nextStartCoord];
     remainingCoords.addAll(coordinates.skip(splitStart));
     return [splitCoords, [remainingCoords]].expand((i) => i);
-
   }
 
-  String toString() => "Edge(fwd: ${forwardEdge}, bwd; ${backwardEdge})";
-}
-
-class EdgeLabel extends GeometryLabelBase<List<Coordinate>> {
-  List<Coordinate> coordinates;
-
-  EdgeLabel(List<Coordinate> this.coordinates,
-            Tuple<Location,Location> locationDatas) :
-    super(locationDatas);
-
-  /**
-   * Creates a new [EdgeLabel] from the location datas on the given label
-   * but with the coordinates given by [:coords:].
-   */
-  factory EdgeLabel.fromLabel(List<Coordinate> coords, EdgeLabel label) {
-    var locations = new Tuple(
-         new Location.fromLocation(label.locationDatas.$1, asNodal: false),
-         new Location.fromLocation(label.locationDatas.$2, asNodal: false));
-    return new EdgeLabel(coords, locations);
-  }
-
-  void mergeWith(EdgeLabel label) {
-    assert(this == label);
-    this.locationDatas.$1.mergeWith(label.locationDatas.$1);
-    this.locationDatas.$2.mergeWith(label.locationDatas.$2);
-  }
-  bool operator ==(Object other) =>
-      other is EdgeLabel && _listEq.equals(coordinates, other.coordinates);
-
-  int get hashCode => _listEq.hash(coordinates);
-
-  String toString() => "EdgeLabel($coordinates, $locationDatas)";
+  String toString() => "Edge($coordinates)";
 }

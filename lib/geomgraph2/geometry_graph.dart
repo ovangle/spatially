@@ -2,6 +2,7 @@ library spatially.geomgraph.geometry_graph;
 
 import 'package:collection/equality.dart';
 import 'package:quiver/core.dart';
+
 import 'package:spatially/algorithm/cg_algorithms.dart' as cg_algorithms;
 import 'package:spatially/base/array.dart';
 import 'package:spatially/base/coordinate.dart' show removeRepeatedCoordinates;
@@ -171,6 +172,7 @@ class GeometryGraph extends graph.Graph<Coordinate, List<Coordinate>> {
 
   void nodeEdge(Edge edge, Iterable<IntersectionInfo> intersectionInfos) {
     Iterable<List<Coordinate>> splitCoordinates = edge.splitCoordinates(intersectionInfos);
+
     if (splitCoordinates.length == 1) {
       //No intersections. Don't need to split the edge.
       return;
