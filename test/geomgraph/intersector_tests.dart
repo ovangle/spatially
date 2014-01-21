@@ -4,11 +4,10 @@ import 'dart:math' as math;
 import 'package:collection/wrappers.dart';
 import 'package:unittest/unittest.dart';
 import 'package:spatially/base/coordinate.dart';
-import 'package:spatially/base/line_segment.dart';
 import 'package:spatially/base/tuple.dart';
 import 'package:spatially/geom/base.dart';
-import 'package:spatially/geomgraph2/geometry_graph.dart' as geomgraph;
-import 'package:spatially/geomgraph2/intersector.dart';
+import 'package:spatially/geomgraph/geometry_graph.dart' as geomgraph;
+import 'package:spatially/geomgraph/intersector.dart';
 
 part 'mock/intersector.dart';
 

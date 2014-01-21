@@ -6,7 +6,7 @@ library spatially.geomgraph.geometry_graph.general_test;
 
 import 'package:unittest/unittest.dart';
 import 'package:spatially/spatially.dart';
-import 'package:spatially/geomgraph2/geometry_graph.dart';
+import 'package:spatially/geomgraph/geometry_graph.dart';
 
 main() {
   lookupTests();

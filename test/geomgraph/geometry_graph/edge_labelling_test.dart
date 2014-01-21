@@ -3,7 +3,7 @@ library spatially.geomgraph.geometry_graph.edge_labelling_test;
 import 'package:unittest/unittest.dart';
 import 'package:spatially/spatially.dart';
 import 'package:spatially/base/tuple.dart';
-import 'package:spatially/geomgraph2/geometry_graph.dart';
+import 'package:spatially/geomgraph/geometry_graph.dart';
 
 void main() {
   group("edge labelling", () {

@@ -4,8 +4,8 @@ import 'package:unittest/unittest.dart';
 import 'package:spatially/spatially.dart';
 import 'package:spatially/base/tuple.dart';
 import 'package:spatially/geom/location.dart' as loc;
-import 'package:spatially/geomgraph2/location.dart';
-import 'package:spatially/geomgraph2/geometry_graph.dart';
+import 'package:spatially/geomgraph/location.dart';
+import 'package:spatially/geomgraph/geometry_graph.dart';
 
 main() {
 
