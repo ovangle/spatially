@@ -2,6 +2,7 @@ library spatially.base.all_tests;
 
 import 'package:unittest/unittest.dart';
 
+import 'iterables/all_tests.dart' as iterables;
 import 'base_tests.dart' as base;
 import 'coordinate_test.dart' as coordinate;
 import 'graph_tests.dart' as graph;
@@ -15,5 +16,6 @@ void main() {
     graph.main();
     line_segment.main();
     tuple.main();
+    iterables.main();
   });
 }
