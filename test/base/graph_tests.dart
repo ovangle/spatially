@@ -65,6 +65,10 @@ main() {
       expect(e.backwardEdge.isPresent, isFalse);
       expect(e.forwardEdge.transform((e) => e.startNode.label), new Optional.of(new MockLabel(1)));
       expect(e.forwardEdge.transform((e) => e.endNode.label), new Optional.of(new MockLabel(2)));
+
+      var otherNode = graph.addNode(new MockLabel(3));
+      expect(() => graph.addForwardEdge(new MockLabel(4), startNode, otherNode),
+             throws, reason: "edge exists with different nodes");
     });
 
     test("should be able to add a backward directed edge to a graph", () {
@@ -90,6 +94,10 @@ main() {
 
       GraphEdge e2 = graph.addForwardEdge(new MockLabel(4), startNode, endNode);
       expect(identical(e, e2), isFalse);
+
+      var otherNode = graph.addNode(new MockLabel(3));
+      expect(() => graph.addBackwardEdge(new MockLabel(4), startNode, otherNode),
+             throws, reason: "edge exists with different nodes");
     });
 
     test("should be able to add an undirected edge to a graph", () {
@@ -109,8 +117,27 @@ main() {
 
       GraphEdge e1 = graph.addForwardEdge(new MockLabel(4), startNode, endNode);
       expect(identical(e, e1), isTrue);
-      GraphEdge e2 = graph.addBackwardEdge(new MockLabel(4), startNode, endNode);
-      expect(identical(e, e2), isFalse);
+
+      expect(() => graph.addBackwardEdge(new MockLabel(5), endNode, startNode),
+             throws, reason: "label exists but nodes reversed"
+                             " (addBackwardEdge reverses the arguments)");
+
+      var otherNode = graph.addNode(new MockLabel(3));
+      expect(() => graph.addForwardEdge(new MockLabel(4), startNode, otherNode),
+             throws, reason: "edge exists with different nodes");
+    });
+
+    test("should be able to add a looped edge to a graph", () {
+      Graph graph = new MockGraph<int,int>();
+      var node1 = graph.addNode(new MockLabel(1));
+      var edge = graph.addForwardEdge(new MockLabel(4), node1, node1);
+
+      expect(edge.forwardLabel, new Optional.of(new MockLabel(4)));
+
+      expect(edge.forwardEdge.transform((e) => e.startNode),
+             new Optional.of(node1));
+      expect(edge.forwardEdge.transform((e) => e.endNode),
+             new Optional.of(node1));
     });
 
     test("should be able to get the outgoing edges of a node", () {
@@ -155,6 +182,20 @@ main() {
       expect(node1.terminatingEdges, isEmpty);
       expect(node2.terminatingEdges, isNot(isEmpty));
       expect(node3.terminatingEdges, isNot(isEmpty));
+    });
+
+    test("should be able to get the terminating nodes of an edge", () {
+      Graph graph = new MockGraph<int,int>();
+      var node1 = graph.addNode(new MockLabel(1));
+      var node2 = graph.addNode(new MockLabel(2));
+
+      var edge = graph.addForwardEdge(new MockLabel(4), node1, node2);
+      expect(edge.terminatingNodes,
+             unorderedEquals([node1, node2]));
+
+      var loopEdge = graph.addForwardEdge(new MockLabel(5), node1, node1);
+      expect(loopEdge.terminatingNodes, [node1],
+             reason: "looped edge");
     });
 
     test("should be able to remove a node from the graph", () {
