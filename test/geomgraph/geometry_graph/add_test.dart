@@ -8,9 +8,8 @@ import 'package:spatially/geomgraph/location.dart';
 import 'package:spatially/geomgraph/geometry_graph.dart';
 
 main() {
-
-  GeometryFactory geomFactory = new GeometryFactory();
   group("add geometries", () {
+    GeometryFactory geomFactory = new GeometryFactory();
     test("should be able to add an empty point to a geometry graph", () {
 
       var p1 = geomFactory.createEmptyPoint();
@@ -129,7 +128,7 @@ main() {
 
     test("should be able to add a geometrylist", () {
       var geom1 = geomFactory.fromWkt(
-          """ GEOMETRYCOLLECTION (POLYGON ((0 40, 40 40, 40 0, 0 0, 0 40)), 
+          """ GEOMETRYCOLLECTION (POLYGON ((0 40, 40 40, 40 0, 0 0, 0 40)),
                                   LINESTRING (80 0, 80 80, 120 40))
           """);
       var geom2 = geomFactory.createEmptyPoint();

@@ -10,6 +10,7 @@ import 'package:spatially/base/tuple.dart' show Tuple, zip;
 import 'package:spatially/base/coordinate.dart' show Coordinate;
 import 'package:spatially/base/line_segment.dart'
         show LineSegment, coordinateSegments;
+import 'package:spatially/base/iterables.dart' show slice;
 import 'package:spatially/base/graph.dart' as graph;
 
 import 'package:spatially/algorithm/coordinate_locator.dart'
@@ -35,8 +36,6 @@ const EdgeSetIntersector _edgeSetIntersector =
     __DEBUG__
         ? SIMPLE_EDGE_SET_INTERSECTOR
         : MONOTONE_CHAIN_SWEEP_LINE_INTERSECTOR;
-
-
 
 const ListEquality<Coordinate> _listEq = const ListEquality<Coordinate>();
 
@@ -67,6 +66,7 @@ class GeometryGraph extends graph.Graph<Coordinate, List<Coordinate>> {
     addGeometry(geometries.$2, 2);
     //Node the graph
     nodeGraph();
+    labelEdges();
     _initialised = true;
   }
 
@@ -91,72 +91,16 @@ class GeometryGraph extends graph.Graph<Coordinate, List<Coordinate>> {
    */
   bool get isInitialised => _initialised;
 
-  /**
-   * The graph should be noded, complete the labelling of edges.
-   */
-  void labelEdges(int geometryIdx) {
-    int onLocation(Edge edge) {
-      assert(edge.isUndirected);
-      //On updates apply equally to fwd and backward labels.
-      var fwdEdge = edge.forwardEdge.value;
-      var fwdLabel = edge.forwardLabel.value;
-
-      var nodeLocations = edge.terminatingNodes
-              .map((n) => n.label.locationDatas.project(geometryIdx));
-
-
-
-      //If either the forward start node or the forward end node is on
-      // the exterior or the geometry, then then edge must be on the
-      // exterior of the geometry.
-      if (nodeLocations.any((l) => l.on == loc.EXTERIOR)) {
-        return loc.EXTERIOR;
-      }
-
-      //If either of the terminating nodes is on the interior of the
-      //other geometry, then the edge must be on the interior.
-      if (nodeLocations.any((l) => l.on == loc.INTERIOR)) {
-        return loc.INTERIOR;
-      }
-
-      //If the other geometry is a linear geometry and the edge is interior
-      //it would have been set when merging labels during noding.
-      var otherGeom = geometries.projectOther(geometryIdx);
-      if (otherGeom is Point || otherGeom is Linestring
-          || otherGeom is MultiPoint || otherGeom is MultiLinestring) {
-        return loc.EXTERIOR;
-      }
-
-      var reprCoord =
-          coordinateSegments(edge.coordinates).first.midpoint;
-      return locateCoordinateIn(reprCoord, otherGeom);
+  //Labels the edges for both the geometries.
+  void labelEdges() {
+    for (var geometryIdx in [1,2]) {
+      edges.where((e) {
+        //Geometr
+        var relLocation = e.forwardLocationAt(geometryIdx).value;
+        return !relLocation.isKnown;
+      })
+      .forEach((e) => e._finalizeLabel(geometryIdx));
     }
-
-    Tuple<int,int> planarLocations(Edge e) {
-      assert(e.isUndirected);
-      var fwdLabel = e.forwardLabel.value;
-
-    }
-    edges
-        .where((e) {
-          //Edges which are undetermined with relation to the geometry
-          //at geometryIdx
-          assert(e.isUndirected);
-          var relLocation = e.forwardLocationAt(geometryIdx);
-          return !relLocation.value.isKnown;
-        })
-        .forEach((e) {
-          var fwdLabel = e.forwardLabel.value;
-          var bwdLabel = e.backwardLabel.value;
-
-          var fwdLocation = e.forwardLocationAt(geometryIdx).value;
-          var bwdLocation = e.forwardLocationAt(geometryIdx).value;
-
-          int on = onLocation(e);
-          fwdLocation.on = on;
-          bwdLocation.on = on;
-
-        });
   }
 
   /**
@@ -194,18 +138,32 @@ class GeometryGraph extends graph.Graph<Coordinate, List<Coordinate>> {
       assert(coords.length >= 2);
       var startNode = _addIntersectionNode(coords.first);
       var endNode = _addIntersectionNode(coords.last);
+      bool added = false;
       var existingFwd = forwardEdgeByLabel(new EdgeLabel.fromLabel(coords, fwdLabel));
       existingFwd.ifPresent((fwdEdge) {
         var bwdEdge = fwdEdge.complement.value;
         fwdEdge.label.mergeWith(fwdLabel);
         bwdEdge.label.mergeWith(bwdLabel);
+        added = true;
       });
-      existingFwd.ifAbsent(() {
+      if (!added) {
+        //See if there exists an existing edge with the same
+        //the reversed coordinates.
+        var existingBwd = backwardEdgeByCoordinates(coords);
+        existingBwd.ifPresent((bwdEdge) {
+          var fwdEdge = bwdEdge.complement.value;
+          fwdEdge.label.mergeWith(bwdLabel);
+          bwdEdge.label.mergeWith(fwdLabel);
+          added = true;
+        });
+      }
+      if (!added) {
+        var revCoords = coords.reversed.toList(growable: false);
         addUndirectedEdge(
             new EdgeLabel.fromLabel(coords, fwdLabel),
-            new EdgeLabel.fromLabel(coords, bwdLabel),
+            new EdgeLabel.fromLabel(revCoords, bwdLabel),
             startNode, endNode);
-      });
+      }
     }
     //Remove the current edge from the graph
     removeEdge(edge);
@@ -235,9 +193,13 @@ class GeometryGraph extends graph.Graph<Coordinate, List<Coordinate>> {
       return new Location(geometries.project(locIdx), on: locs[0], left: locs[1], right: locs[2]);
     }
     var locDatas = new Tuple(_location(1), _location(2));
+    var fwdLabel = new EdgeLabel(coords, locDatas);
+    var bwdLabel = new EdgeLabel(
+        coords.reversed.toList(growable: false),
+        locDatas.transform((l1) => l1.flipped, (l2) => l2.flipped));
     return addUndirectedEdge(
-        new EdgeLabel(coords, locDatas),
-        new EdgeLabel(new List.from(coords.reversed, growable: false), locDatas),
+        fwdLabel,
+        bwdLabel,
         startNode,
         endNode);
   }

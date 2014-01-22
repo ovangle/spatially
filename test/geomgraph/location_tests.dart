@@ -85,5 +85,10 @@ main() {
       expect(loc3.on, loc.INTERIOR);
       expect(loc3.left, new Optional.of(loc.EXTERIOR));
     });
+
+    test("should be able to flip a location", () {
+      var location = new Location(relativeTo, on: loc.BOUNDARY, left: loc.EXTERIOR, right: loc.INTERIOR);
+      expect(location.flipped, new Location(relativeTo, on: loc.BOUNDARY, left: loc.INTERIOR, right: loc.EXTERIOR));
+    });
   });
 }

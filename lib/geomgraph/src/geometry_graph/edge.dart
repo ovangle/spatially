@@ -21,6 +21,47 @@ class Edge extends graph.GraphEdge<List<Coordinate>> {
   Optional<Location> backwardLocationAt(int locationIdx) =>
       backwardLabel.transform((lbl) => lbl.locationDatas.project(locationIdx));
 
+  void _finalizeLabel(int geometryIdx) {
+    assert(isUndirected);
+    var fwdLocation = forwardLocationAt(geometryIdx).value;
+    var bwdLocation = backwardLocationAt(geometryIdx).value;
+
+    int on = _computeOnLocation(geometryIdx);
+    fwdLocation.on = on;
+    bwdLocation.on = on;
+  }
+
+  int _computeOnLocation(int geometryIdx) {
+    var fwdEdge = forwardEdge.value;
+    var fwdLabel = forwardLabel.value;
+
+    //If the geometry is a linear geometry, the location would have
+    //been set during noding. We must be on the exterior.
+    var g = (this.graph as GeometryGraph).geometries.project(geometryIdx);
+    if (g is Point || g is Linestring
+        || g is MultiPoint || g is MultiLinestring)
+      return loc.EXTERIOR;
+
+    var nodeLocations =
+      terminatingNodes
+          .map((n) => n.label.locationDatas.project(geometryIdx));
+
+    //If either the start or end node is on the exterior of the other geometry
+    //then we must be an exterior edge.
+    if (nodeLocations.any((l) => l.on == loc.EXTERIOR))
+      return loc.EXTERIOR;
+
+    //If either the start or end node is on the exterior of the other geometry
+    //then we must be an interior edge
+    if (nodeLocations.any((l) => l.on == loc.EXTERIOR))
+      return loc.EXTERIOR;
+
+    //Both of the end locations are on the boundary.
+    var reprCoord =
+        coordinateSegments(coordinates).first.midpoint;
+    return locateCoordinateIn(reprCoord, g);
+  }
+
   /**
    * Retrieves the intersection from an [IntersectionInfo].
    *
@@ -54,22 +95,32 @@ class Edge extends graph.GraphEdge<List<Coordinate>> {
         return info1.edgeDistance0.compareTo(info2.edgeDistance0);
       });
 
+    var firstCoord;
     var lastCoord;
     List<IntersectionInfo> uniqInfos = [];
 
     for (var info in sortedInfos) {
       var isect = _getIntersection(info);
       if (isect is Coordinate) {
-        if (isect == lastCoord)
+        if (isect == lastCoord || isect == firstCoord)
           continue;
         lastCoord = isect;
+        firstCoord = isect;
         uniqInfos.add(info);
       } else if (isect is LineSegment) {
          if (isect.start == lastCoord) {
           //Keep the line segments, remove the coordinates.
           uniqInfos.removeLast();
         }
+        if (info.segIndex0 == coordinates.length - 2
+             && isect.end == coordinates[0]) {
+          //If the segment ends at the end of the last segment
+          //there also must be a coordinate to remove at the
+          //start
+          uniqInfos.removeAt(0);
+        }
         uniqInfos.add(info);
+        firstCoord = isect.start;
         lastCoord = isect.end;
       }
     }
@@ -79,6 +130,7 @@ class Edge extends graph.GraphEdge<List<Coordinate>> {
   Iterable<List<Coordinate>> splitCoordinates(Iterable<IntersectionInfo> intersectionInfos) {
     List<Coordinate> coords = this.coordinates;
 
+    int prevSplitStart;
     var splitStart = 0;
     var nextStartCoord = null;
     var lastIntersection;
@@ -91,7 +143,8 @@ class Edge extends graph.GraphEdge<List<Coordinate>> {
       if (nextStartCoord != null) {
         coordsBefore.add(nextStartCoord);
       }
-      coordsBefore.addAll(coords.sublist(splitStart, info.segIndex0 + 1));
+      coordsBefore.addAll(slice(coords, splitStart, info.segIndex0 + 1));
+      splitStart = info.segIndex0 + 1;
 
       var isect = _getIntersection(info);
       //Advance the pointer to the next split start
@@ -128,8 +181,11 @@ class Edge extends graph.GraphEdge<List<Coordinate>> {
     List<Coordinate> _coordsAtIntersection(IntersectionInfo info) {
       var isect = _getIntersection(info);
       if (isect is LineSegment) {
-        var segStart = coordinates[info.segIndex0];
+        var segStart = coords[info.segIndex0];
         nextStartCoord = isect.end;
+        if (coords[splitStart] == isect.end) {
+          splitStart++;
+        }
         return [isect.start, isect.end];
       }
       return [];
@@ -148,12 +204,20 @@ class Edge extends graph.GraphEdge<List<Coordinate>> {
           return [coordsBefore, coordsAfter];
         })
         .where((coords) => coords.isNotEmpty)
-        .toList(growable: false);
+        .toList();
 
     //Add the coords after the last intersection
-    var remainingCoords = [nextStartCoord];
-    remainingCoords.addAll(coordinates.skip(splitStart));
-    return [splitCoords, [remainingCoords]].expand((i) => i);
+    var remainingCoords = coords.skip(splitStart);
+    if (remainingCoords.isEmpty) {
+      return splitCoords;
+    }
+    var lastSplit = [];
+    if (nextStartCoord != remainingCoords.first) {
+      lastSplit.add(nextStartCoord);
+    }
+    lastSplit.addAll(remainingCoords);
+    splitCoords.add(lastSplit);
+    return splitCoords;
   }
 
   String toString() => "Edge($coordinates)";

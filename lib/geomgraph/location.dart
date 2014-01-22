@@ -78,6 +78,18 @@ class Location {
   bool get isDimensionallyCollapsed => leftDepth == rightDepth;
 
   /**
+   * Returns an location with the left and right locations reversed
+   */
+  Location get flipped {
+    //The only reason edges should have left and right depths
+    //is because they exist on the boundary of a polygon.
+    var flipped = new Location(relativeTo, on: loc.BOUNDARY);
+    flipped.leftDepth = rightDepth.transform((x) => x);
+    flipped.rightDepth = leftDepth.transform((x) => x);
+    return flipped;
+  }
+
+  /**
    * Resets the depths so that the lower one is on the
    * exterior of the polygon.
    *
