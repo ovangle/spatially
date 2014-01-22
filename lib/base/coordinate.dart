@@ -170,7 +170,7 @@ class Coordinate implements Comparable<Coordinate> {
   /**
    * A string representation of the [Coordinate] in the form (x, y, z)
    */
-  String toString() => "($x, $y, $z)";
+  String toString() => "($x, $y)";
 
   math.Point<num> toPoint() => new math.Point<num>(x, y);
 
