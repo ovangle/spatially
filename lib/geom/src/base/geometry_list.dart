@@ -21,8 +21,12 @@ class GeometryList<T extends Geometry> extends Geometry with ListMixin<T> {
     return new Array<Coordinate>.from(coords);
   }
 
+  /**
+   * A [GeometryList] is empty if all of it's component
+   * geomtries are empty.
+   */
   bool get isEmptyGeometry =>
-      _geometries.any((g) => g.isEmptyGeometry);
+      _geometries.every((g) => g.isEmptyGeometry);
 
   int get dimension =>
       _geometries.fold(
