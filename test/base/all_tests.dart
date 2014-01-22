@@ -7,6 +7,7 @@ import 'base_tests.dart' as base;
 import 'coordinate_test.dart' as coordinate;
 import 'graph_tests.dart' as graph;
 import 'line_segment_test.dart' as line_segment;
+import 'linkedlist_test.dart' as linkedlist;
 import 'tuple_tests.dart' as tuple;
 
 void main() {
@@ -15,6 +16,7 @@ void main() {
     coordinate.main();
     graph.main();
     line_segment.main();
+    linkedlist.main();
     tuple.main();
     iterables.main();
   });
