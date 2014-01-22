@@ -207,7 +207,9 @@ class Edge extends graph.GraphEdge<List<Coordinate>> {
         .toList();
 
     //Add the coords after the last intersection
-    var remainingCoords = coords.skip(splitStart);
+    var remainingCoords = coords
+        .skip(splitStart)
+        .where((c) => !splitCoords.last.contains(c));
     if (remainingCoords.isEmpty) {
       return splitCoords;
     }

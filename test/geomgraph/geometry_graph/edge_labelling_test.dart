@@ -163,10 +163,6 @@ void main() {
       geomGraph.nodeGraph();
       geomGraph.labelEdges();
 
-      for(var edge in geomGraph.edges) {
-        print(edge);
-      }
-
       var testEdge = geomGraph
           .forwardEdgeByCoordinates([new Coordinate(1,0), new Coordinate(1,1)]);
 

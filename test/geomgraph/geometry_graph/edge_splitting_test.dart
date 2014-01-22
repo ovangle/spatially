@@ -11,6 +11,30 @@ main() {
   group("edge splitting", () {
     GeometryFactory geomFactory = new GeometryFactory();
 
+    test("should be able to edge split two linestrings", () {
+      var lstr1 = geomFactory.fromWkt("LINESTRING(0 0, 1 1, 1 0, 0 1)");
+      var lstr2 = geomFactory.fromWkt("Linestring(0.5 1, 1 0.5)");
+
+      GeometryGraph g = new GeometryGraph(lstr1, lstr2);
+      g.addLinestring(lstr1, 1);
+      g.addLinestring(lstr2, 2);
+
+      for (var edge in g.edges) {
+        print(edge);
+      }
+
+      Iterable<IntersectionInfo> infos = SIMPLE_EDGE_SET_INTERSECTOR(new List.from(g.edges));
+
+      var testEdge1 =
+          g.forwardEdgeByCoordinates([new Coordinate(0.5, 1), new Coordinate(1.0, 0.5)])
+           .value.edge;
+      expect(testEdge1.splitCoordinates(infos),
+            [ [ new Coordinate(0.5, 1), new Coordinate(0.75, 0.75) ],
+              [ new Coordinate(0.75, 0.75), new Coordinate(1, 0.5)]
+            ]);
+
+    });
+
     test("segment intersection at first segment of linestring", () {
       var lstr1 = geomFactory.fromWkt("Linestring(0 0, 1 0, 1 1, 0 1)");
       var lstr2 = geomFactory.fromWkt("Linestring(-1 0, 0.5 0, 1 1, 2 1)");
