@@ -17,6 +17,39 @@ main() {
       expect(t1.projectOther(2), 1);
     });
 
+    test("should be able to map over the tuple", () {
+      var t = new Tuple(1,2);
+      expect(t.map((i) => i + 1), new Tuple(2,3));
+    });
+
+    test("should be able to test both elements of a tuple satisfy a predicate", () {
+      var t1 = new Tuple(2,4);
+      expect(t1.both((i) => i % 2 == 0), true,
+             reason: "both elements are even");
+
+      var t2 = new Tuple(2,3);
+      expect(t2.both((i) => i % 2 == 0), false,
+             reason: "one element is even");
+
+      var t3 = new Tuple(1,3);
+      expect(t3.both((i) => i % 2 == 0), false,
+             reason: "neither element is even");
+    });
+
+    test("should be able to test either of the elements of a tuple satisfy a predicate", () {
+      var t1 = new Tuple(2,4);
+      expect(t1.either((i) => i % 2 == 0), true,
+             reason: "both elements are even");
+
+      var t2 = new Tuple(2,3);
+      expect(t2.either((i) => i % 2 == 0), true,
+             reason: "one element is even");
+
+      var t3 = new Tuple(1,3);
+      expect(t3.either((i) => i % 2 == 0), false,
+             reason: "neither element is even");
+    });
+
     test("zip should pair elements together", () {
       Iterable<int> iter1 = [1,2,3,4,5,6];
       Iterable<int> iter2 = ["hello", "world", "how", "are", "you", "today"];

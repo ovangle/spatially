@@ -14,6 +14,22 @@ class Tuple<T1,T2> {
   Tuple transform(dynamic f1(T1 item), dynamic f2(T2 item)) =>
       new Tuple(f1($1), f2($2));
 
+  /**
+   * Maps the function `f` across both items of the tuple.
+   * The function should accept values from both `T1` and `T2`.
+   */
+  dynamic map(dynamic f(var item)) => transform(f,f);
+
+  /**
+   * [:test:] returns `true` for either item in the tuple.
+   */
+  bool either(bool test(var /*T1|T2*/ item)) => test($1) || test($2);
+
+  /**
+   * [:test:] returns `true` for both of the projections of the tuple.
+   */
+  bool both(bool test(var /*T1|T2*/ item)) => test($1) && test($2);
+
   dynamic project(int i) {
     switch(i) {
       case 1:
