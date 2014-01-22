@@ -34,8 +34,15 @@ abstract class Graph<N,E> {
 
   Iterable<DirectedEdge<E>> get forwardEdges =>
       wherePresent(_edges.map((e) => e.forwardEdge));
+
+  Iterable<Label<E>> get forwardLabels =>
+      wherePresent(_edges.map((e) => e.forwardLabel));
+
   Iterable<DirectedEdge<E>> get backwardEdges =>
       wherePresent(_edges.map((e) => e.backwardEdge));
+
+  Iterable<Label<E>> get backwardLabels =>
+      wherePresent(_edges.map((e) => e.forwardLabel));
 
   /**
    * Tests whether the graph contains the node with the given label
