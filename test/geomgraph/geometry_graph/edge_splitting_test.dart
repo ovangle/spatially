@@ -19,10 +19,6 @@ main() {
       g.addLinestring(lstr1, 1);
       g.addLinestring(lstr2, 2);
 
-      for (var edge in g.edges) {
-        print(edge);
-      }
-
       Iterable<IntersectionInfo> infos = SIMPLE_EDGE_SET_INTERSECTOR(new List.from(g.edges));
 
       var testEdge1 =
@@ -32,7 +28,6 @@ main() {
             [ [ new Coordinate(0.5, 1), new Coordinate(0.75, 0.75) ],
               [ new Coordinate(0.75, 0.75), new Coordinate(1, 0.5)]
             ]);
-
     });
 
     test("segment intersection at first segment of linestring", () {
