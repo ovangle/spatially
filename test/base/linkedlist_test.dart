@@ -71,7 +71,7 @@ main() {
     l.insertAfter(node, 3);
     expect(l, [0,1,2,3,4,5]);
 
-    node.insertAfter(9);
+    node.append(9);
     expect(l, [0,1,2,9,3,4,5], reason: "insert from node");
     expect(l.length, 7);
   });
@@ -82,7 +82,7 @@ main() {
     l.insertBefore(node, 2);
     expect(l, [0,1,2,3,4,5]);
 
-    node.insertBefore(9);
+    node.prepend(9);
     expect(l, [0,1,2,9,3,4,5], reason: "insert from node");
     expect(l.length, 7);
   });
