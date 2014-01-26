@@ -147,7 +147,7 @@ bool isOnLine(Coordinate c, Iterable<LineSegment> segments) =>
  * The list of points is assumed to have the first and last points equal.
  * The method is only guaranteed for a ring which doesn't self intersect
  */
-bool isCounterClockwise(Array<Coordinate> ring) {
+bool isCounterClockwise(List<Coordinate> ring) {
   int numPoints = ring.length - 1;
   if (numPoints < 3) {
     throw new ArgumentError("Ring has too few coordinates");

@@ -1,10 +1,10 @@
 part of base.coordinate;
 
-// Utility methods for dealing with Array<Coordinate>s   
+// Utility methods for dealing with Array<Coordinate>s
 /**
  * Tests whether the [CoordinateArray] forms a ring,
  * by checking its [:length:] and closure.
- * 
+ *
  * Self-intersection is not checked
  */
 bool isRing(Iterable<Coordinate> coords) =>
@@ -13,11 +13,11 @@ bool isRing(Iterable<Coordinate> coords) =>
 /**
  * The minimum [Coordinate] in the [CoordinateArray], using
  * the default lexicographic ordering on [Coordinate]s
- * 
+ *
  * If the [CoordinateArray] is empty, returns
  *  `(double.INFINITY, double.INFINITY)`
  */
-Coordinate minCoordinate(Array<Coordinate> coords) => 
+Coordinate minCoordinate(Iterable<Coordinate> coords) =>
     coords.fold(
       new Coordinate(double.INFINITY, double.INFINITY),
       (min, coord) => min < coord ? min : coord);
@@ -25,21 +25,21 @@ Coordinate minCoordinate(Array<Coordinate> coords) =>
 /**
  * The maximum [Coordinate] in the [CoordinateArray], using
  * the default lexicographic ordering on [Coordinate]s
- * 
+ *
  * If the [CoordinateArray] is empty, returns
  *  `(double.NEGATIVE_INFINITY, double.NEGATIVE_INFINITY)`
  */
-Coordinate maxCoordinate(Array<Coordinate> coords) =>
+Coordinate maxCoordinate(Iterable<Coordinate> coords) =>
   coords.fold(
       new Coordinate(double.NEGATIVE_INFINITY, double.NEGATIVE_INFINITY),
       (max, coord) => max > coord ? max : coord);
 
-  
+
 /**
  * Tests whether the [CoordinateArray] has two consecutive [Coordinate]s
  * which compare equal
  */
-bool hasRepeatedCoordinates(Array<Coordinate> coords) => 
+bool hasRepeatedCoordinates(List<Coordinate> coords) =>
     range(1,coords.length).any((i) => coords[i] == coords[i-1]);
 
 /**
@@ -48,30 +48,23 @@ bool hasRepeatedCoordinates(Array<Coordinate> coords) =>
  * Since the [:length:] of the returned array will likely be different
  * to [:length:], the removal is not performed in place.
  */
-Array<Coordinate> removeRepeatedCoordinates(Array<Coordinate> coords) {
-  return new Array<Coordinate>.from(
+List<Coordinate> removeRepeatedCoordinates(List<Coordinate> coords) =>
+    new List<Coordinate>.from(
       range(0, coords.length)
           .where((i) => i == 0 || coords[i] != coords[i - 1])
-          .map((i) => coords[i])
-  );
-}
-  
-/**
- * Collapses a [CoordinateArray], removing all of it's null elements
- */
-Array<Coordinate> removeNullCoordinates(Array<Coordinate> coords) =>
-    new Array<Coordinate>.from(coords.where((c) => c != null));
+          .map((i) => coords[i]),
+      growable: false);
 
 /**
- * Shifts the positions of coordinates until [:coord:] is the 
+ * Shifts the positions of coordinates until [:coord:] is the
  * first element of `this`.
  * The scroll is performed in-place on the array.
  */
-void scrollCoordinates(Array<Coordinate> coords, Coordinate c) {
+void scrollCoordinates(List<Coordinate> coords, Coordinate c) {
   int i = coords.indexOf(c);
   final coordsBefore = coords.getRange(0, i);
   final coordsAfter = coords.getRange(i, coords.length);
-  
+
   coords.setRange(0, coordsAfter.length, coordsAfter);
   coords.setRange(coordsAfter.length, coords.length, coordsBefore);
 }
@@ -80,12 +73,12 @@ void scrollCoordinates(Array<Coordinate> coords, Coordinate c) {
 * Returns an integer representing the direction in which
 * the [Coordinate]s in the array increase according to their
 * natural ordering.
-* 
+*
 * If a positive integer is returned, the start of the array
 * is "smaller" than the end of the array.
 * A palindromic array is defined to travel in a positive direction
 */
-int directionOfIncrease(Array<Coordinate> coords) {
+int directionOfIncrease(List<Coordinate> coords) {
   for (int i=0;i<coords.length / 2; i++) {
     var j = coords[coords.length - 1 - i];
     // skip equal on both ends
@@ -136,7 +129,7 @@ Comparator<Array<Coordinate>> get bidirectionalComparator {
     return true;
   }
   int compare(Array<Coordinate> coordArray1, Array<Coordinate> coordArray2) {
-    
+
     var cmp = forwardComparator(coordArray1, coordArray2);
     if (cmp != 0 && isEqualReversed(coordArray1, coordArray2)) {
       return 0;
