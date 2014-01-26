@@ -75,7 +75,7 @@ class Linestring extends Geometry {
    * The length of the [LineString]
    */
   double get topologicalLength =>
-      cg_algorithms.linestringLength(_coords);
+      cg_algorithms.lineLength(_coords);
 
   Envelope _computeEnvelope() =>
       _coords.fold(

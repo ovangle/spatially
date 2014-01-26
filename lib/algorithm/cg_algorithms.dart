@@ -327,3 +327,12 @@ double signedAreaOfRing(List<Coordinate> ring) {
   }
   return sum / 2.0;
 }
+
+/**
+ * Returns the length of a list of coordinates, where each
+ * coordinate is connected to the subsequent coordinate by a
+ * line segment.
+ */
+double lineLength(List<Coordinate> coords) =>
+    coordinateSegments(coords)
+    .fold(0.0, (len, lseg) => len + lseg.magnitude);
