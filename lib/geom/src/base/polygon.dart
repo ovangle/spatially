@@ -2,51 +2,51 @@ part of geom.base;
 
 class Polygon extends Geometry {
   Ring _shell;
-  Array<Ring> _holes;
-  
-  Polygon._(Ring this._shell, Array<Ring> this._holes, GeometryFactory factory)
+  List<Ring> _holes;
+
+  Polygon._(Ring this._shell, List<Ring> this._holes, GeometryFactory factory)
       : super._(factory);
-  
+
   int get dimension => 2;
   int get boundaryDimension => 1;
-  
+
   bool get isEmptyGeometry => _shell.isEmptyGeometry;
-  
+
   Coordinate get coordinate => _shell.coordinate;
-  
+
   Ring get exteriorRing => _shell;
-  Array<Ring> get interiorRings => _holes;
-  
+  List<Ring> get interiorRings => _holes;
+
   /**
    * All the rings of the polygon, interior and exterior
    */
-  Array<Ring> get _rings {
-    Array<Ring> rings = new Array<Ring>(_holes.length + 1);
+  List<Ring> get _rings {
+    List<Ring> rings = new List<Ring>(_holes.length + 1);
     rings[0] = _shell;
     rings.setAll(1, _holes);
     return rings;
   }
-  
-  Array<Coordinate> get coordinates {
-    if (isEmptyGeometry) return new Array(0);
+
+  List<Coordinate> get coordinates {
+    if (isEmptyGeometry) return new List(0);
     List<Coordinate> coords = new List<Coordinate>();
     _rings.forEach((r) => coords.addAll(r.coordinates));
-    return new Array.from(coords);
+    return coords;
   }
-  
+
   /**
    * The topological area of the polygon
    */
   double get topologicalArea {
     throw 'NotImplemented';
   }
-  
+
   /**
    * The topological length of the polygon
    */
   double get topologicalLength =>
       _rings.fold(0.0, (l, r) => l + r.length);
-  
+
   Geometry get boundary {
     if (isEmptyGeometry) {
       return factory.createEmptyMultiLinestring();
@@ -58,39 +58,39 @@ class Polygon extends Geometry {
       return factory.createMultiLinestring(_rings);
     }
   }
-  
+
   Envelope _computeEnvelope() {
     return _shell._computeEnvelope();
   }
-  
+
   bool equalsExact(Geometry geom, [double tolerance=0.0]) {
     if (geom is Polygon) {
       if (!_shell.equalsExact(geom._shell, tolerance)) {
         return false;
       }
-      if (_holes.length != geom._holes.length) 
+      if (_holes.length != geom._holes.length)
         return false;
       return range(_holes.length)
           .every((i) => _holes[i].equalsExact(geom._holes[i], tolerance));
     }
     return false;
   }
-  
+
   Geometry get copy {
     Polygon poly = factory.createEmptyPolygon();
     poly._shell = _shell.copy;
-    poly._holes = new Array.from(_holes.map((h) => h.copy));
+    poly._holes = new List.from(_holes.map((h) => h.copy));
     return poly;
   }
-  
+
   void normalize() {
     void normalizeRing(Ring r, bool clockwise) {
       if (r.isEmptyGeometry)
         return;
-    
+
       final ringCoords = r._coords;
       //Drop the endpoint
-      final uniqCoords = new Array.from(ringCoords.getRange(0, ringCoords.length - 1));
+      final uniqCoords = new List.from(ringCoords.getRange(0, ringCoords.length - 1));
       final minCoord = minCoordinate(ringCoords);
       //The minimum coordinate should be the first element of the normalized ring
       scrollCoordinates(ringCoords, minCoord);
@@ -98,7 +98,7 @@ class Polygon extends Geometry {
       ringCoords.setRange(0, ringCoords.length - 1, uniqCoords);
       //Close the ring
       ringCoords[ringCoords.length - 1] = ringCoords[0];
-      
+
       if (cg_algorithms.isCounterClockwise(ringCoords)) {
         ringCoords.reverse();
       }
@@ -109,11 +109,11 @@ class Polygon extends Geometry {
     }
     _holes.sort();
   }
-  
-  int _compareToSameType(Polygon poly, Comparator<CoordinateSequence> comparator) {
+
+  int _compareToSameType(Polygon poly, Comparator<List<Coordinate>> comparator) {
     var cmpShells = _shell._compareToSameType(poly._shell, comparator);
     if (cmpShells != 0) return cmpShells;
-    
+
     int numHoles1 = _holes.length;
     int numHoles2 = poly._holes.length;
     int i = 0;

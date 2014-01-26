@@ -1,11 +1,10 @@
 library geom.intersection_matrix;
 
 import 'package:quiver/iterables.dart';
-import 'package:spatially/base/array.dart';
 
-import 'dimension.dart' show DimensionRangeError, 
-                             isDimensionNonEmpty, 
-                             dimensionValueFromSymbol, 
+import 'dimension.dart' show DimensionRangeError,
+                             isDimensionNonEmpty,
+                             dimensionValueFromSymbol,
                              dimensionSymbolFromValue;
 import 'dimension.dart' as dim;
 import 'location.dart' as loc;
@@ -13,41 +12,41 @@ import 'location.dart' as loc;
 /**
  * Models a *Dimensionally Extended Nine-Intersection Model (DE-91M)* matrix.
  * DE-91M matrices model the topographical relationship between two [Geometry]s
- * 
+ *
  * The class can also represent matrix patterns (eg. `"[T*T******]"`)
  * which are used for matching instances of DE-91M matrices.
- * 
+ *
  * Methods are provided to:
  * -- set and query the matrix
  * -- convert to and from the standard string representation
  * -- query the matrix to see if it matches a pattern string
- * 
+ *
  * For a full description of DE-91M matrices, see *OpenGIS Simple Features specification for SQL*
  * [0] Part 1: Common architecture.
- * 
+ *
  * [0](http://www.opengis.org/techno/specs.html)
  */
 class IntersectionMatrix {
-  
-  Array<Array<int>> _matrix;
-  
+
+  List<List<int>> _matrix;
+
   void _init() {
-    _matrix = new Array(3);
+    _matrix = new List(3);
     for (var i in range(3)) {
-      _matrix[i] = new Array(3);
+      _matrix[i] = new List(3);
       _matrix[i].fillRange(0, 3, dim.EMPTY);
     }
   }
-  
-  
-  
+
+
+
   /**
    * A new [IntersectionMatrix] with every entry set to [:Dimension.FALSE:]
    */
   IntersectionMatrix() {
     _init();
   }
-  
+
   IntersectionMatrix.copy(IntersectionMatrix other) {
     _init();
     this[loc.INTERIOR][loc.INTERIOR] = other[loc.INTERIOR][loc.INTERIOR];
@@ -60,7 +59,7 @@ class IntersectionMatrix {
     this[loc.EXTERIOR][loc.BOUNDARY] = other[loc.EXTERIOR][loc.BOUNDARY];
     this[loc.EXTERIOR][loc.EXTERIOR] = other[loc.EXTERIOR][loc.EXTERIOR];
   }
-  
+
   /**
    * Create an [IntersectionMatrix] from the string of nine dimensional symbols
    * in row major order.
@@ -80,24 +79,24 @@ class IntersectionMatrix {
       this[(i / 3).floor()][i % 3] = dimValue;
     }
   }
-  
+
   /**
    * Returns an array containing copies of each row
    * in the matrix.
    */
-  Array<Array<int>> get rows {
-    Array<Array<int>> rows = new Array<Array<int>>(3);
+  List<List<int>> get rows {
+    List<List<int>> rows = new List<List<int>>(3);
     for (var i in range(3)) {
-      rows[i] = new Array.from(this[i]);
+      rows[i] = new List.from(this[i]);
     }
     return rows;
   }
-  void set rows (Array<Array<int>> rowValues) {
+  void set rows (List<List<int>> rowValues) {
     if (rowValues.length != 3) {
       throw new RangeError.range(3, 3, 3);
     }
     if (rowValues.any((r) => r.length != 3)) {
-      throw new RangeError.range(3, 3, 3); 
+      throw new RangeError.range(3, 3, 3);
     }
     for (var i in range(3)) {
       for (var j in range(3)) {
@@ -105,24 +104,24 @@ class IntersectionMatrix {
       }
     }
   }
-  
-  Array<Array<int>> get columns {
-    Array<Array<int>> cols = new Array<Array<int>>(3);
+
+  List<List<int>> get columns {
+    List<List<int>> cols = new List<List<int>>(3);
     for (var i in range(3)) {
-      cols[i] = new Array<int>(3);
+      cols[i] = new List<int>(3);
       for (var j in range(3)) {
         cols[i][j] = this[j][i];
       }
     }
     return cols;
   }
-  
-  void set columns(Array<Array<int>> columnValues) {
+
+  void set columns(List<List<int>> columnValues) {
     if (columnValues.length != 3) {
       throw new RangeError.range(3, 3, 3);
     }
     if (columnValues.any((r) => r.length != 3)) {
-      throw new RangeError.range(3, 3, 3); 
+      throw new RangeError.range(3, 3, 3);
     }
     for (var i in range(3)) {
       for (var j in range(3)) {
@@ -130,7 +129,7 @@ class IntersectionMatrix {
       }
     }
   }
-  
+
   /**
    * Add an intersection matrix to this.
    * Intersection is defined by taking the maximum dimension value
@@ -144,7 +143,7 @@ class IntersectionMatrix {
       }
     }
   }
-  
+
   /**
    * Set the entry at (i, j) to [:value:], if the current value
    * at that index is less than [:value:].
@@ -154,15 +153,15 @@ class IntersectionMatrix {
       this[i][j] = value;
     }
   }
-  
+
   IntersectionMatrix get transposed {
     var transposed = new IntersectionMatrix();
     transposed.rows = columns;
     return transposed;
   }
 
-  Array<int> operator [](int i) => _matrix[i];
-  
+  List<int> operator [](int i) => _matrix[i];
+
   bool operator ==(Object other) {
     if (other is IntersectionMatrix) {
       for (var i in range(3)) {
@@ -174,7 +173,7 @@ class IntersectionMatrix {
     }
     return false;
   }
-  
+
   int get hashCode {
     int hash = 7;
     for (var i in range(3)) {
@@ -184,31 +183,31 @@ class IntersectionMatrix {
     }
     return hash;
   }
-  
+
   /**
    * Tests if this matrix matches the pattern
    * for disjoint geometries (`FF*FF****`)
    */
   bool get isDisjoint => this[loc.INTERIOR][loc.INTERIOR] == dim.EMPTY
-                      && this[loc.INTERIOR][loc.BOUNDARY] == dim.EMPTY 
+                      && this[loc.INTERIOR][loc.BOUNDARY] == dim.EMPTY
                       && this[loc.BOUNDARY][loc.INTERIOR] == dim.EMPTY
                       && this[loc.BOUNDARY][loc.BOUNDARY] == dim.EMPTY;
-  
+
   /**
-   * `true` if [:isDisjoint:] is `false`, 
+   * `true` if [:isDisjoint:] is `false`,
    * ie. the [Geometry]s related by this [IntersectionMatrix] intersect.
    */
   bool get isIntersects => !isDisjoint;
-  
+
   /**
-   * Tests whether the first geometry related by `this` is within the 
+   * Tests whether the first geometry related by `this` is within the
    * second geometry.
    * (ie. the matrix matches `T*F**F***`)
    */
   bool get isWithin => isDimensionNonEmpty(this[loc.INTERIOR][loc.INTERIOR])
                     && this[loc.INTERIOR][loc.EXTERIOR] == dim.EMPTY
                     && this[loc.BOUNDARY][loc.EXTERIOR] == dim.EMPTY;
-  
+
   /**
    * Tests whether the first geometry related by `this` is within the
    * second geometry.
@@ -217,10 +216,10 @@ class IntersectionMatrix {
   bool get isContains => isDimensionNonEmpty(this[loc.INTERIOR][loc.INTERIOR])
                       && this[loc.EXTERIOR][loc.INTERIOR] == dim.EMPTY
                       && this[loc.EXTERIOR][loc.BOUNDARY] == dim.EMPTY;
-  
-  
+
+
   /**
-   * Tests whether the first geometry related by `this` covers the 
+   * Tests whether the first geometry related by `this` covers the
    * second geometry.
    * ie. the matrix matches one of:
    * -- `T*****FF*`
@@ -229,9 +228,9 @@ class IntersectionMatrix {
    * -- `****T*FF*`
    */
   bool get isCovers => isIntersects
-                    && this[loc.EXTERIOR][loc.INTERIOR] == dim.EMPTY 
+                    && this[loc.EXTERIOR][loc.INTERIOR] == dim.EMPTY
                     && this[loc.EXTERIOR][loc.BOUNDARY] == dim.EMPTY;
-  
+
   /**
    * Tests whether the first geometry related by `this` is covered by
    * the second geometry
@@ -244,15 +243,15 @@ class IntersectionMatrix {
   bool get isCoveredBy => isIntersects
                        && this[loc.INTERIOR][loc.EXTERIOR] == dim.EMPTY
                        && this[loc.BOUNDARY][loc.EXTERIOR] == dim.EMPTY;
-  
+
   /**
    * Tests whether the argument dimensions are equal and if the
    * first geometry related by `this` is topologically equal to the second
    * geometry,
    * ie. `this` matches the pattern `T*F**FFF*`
-   * 
-   * Note: As per JTS, this differs from the specification (`TFFFTFFFT`), 
-   * since that would specify that two identical POINTs are not equal, 
+   *
+   * Note: As per JTS, this differs from the specification (`TFFFTFFFT`),
+   * since that would specify that two identical POINTs are not equal,
    * which is undesirable behaviour.
    * The pattern here will compute equality in this situation.
    */
@@ -269,7 +268,7 @@ class IntersectionMatrix {
       return false;
     }
   }
-  
+
   /**
    * Tests whether the first geometry related by `this` overlaps
    * the second geometry. The `overlaps` predicate is only valid for
@@ -293,16 +292,16 @@ class IntersectionMatrix {
     }
     return false;
   }
-  
+
   /**
    * `true` if this [IntersectionMatrix] matches
    * `"FT******"`, `"F**T*****"` or `"F***T****"`.
-   * 
+   *
    * [:dimensionOfGeometryA:] is the dimension of the first [Geometry]
    * related
-   * [:dimensionOfGeometryB:] is the dimension of the second [Geometry] 
+   * [:dimensionOfGeometryB:] is the dimension of the second [Geometry]
    * related by `this`.
-   * 
+   *
    * Returns `true` if the [Geometries] related by `this`.
    * Unless both geometries have dimension [:DIM_POINT:], in which
    * case returns `false`.
@@ -323,10 +322,10 @@ class IntersectionMatrix {
       return false;
     }
   }
-  
+
   /**
    * Tests whether this [Geometry] crosses the specified geometry.
-   * 
+   *
    * The `crosses` predicate has the following equivalent definitions.
    * -- The geometries have some but not all interior points in common
    * -- The DE-91M Intersection Matrix for the two geometries is:
@@ -337,7 +336,7 @@ class IntersectionMatrix {
    * For any other combination of dimensions this predicate returns `false`.
    * As in JTS, this predicate has been extended to cover L/P, A/P and A/L situations
    * in addition to the situations defined by SFS, so the relation is symmetric.
-   * 
+   *
    * [:dimensionOfGeometryA:] is the dimension of the first [Geometry] related by `this`.
    * [:dimensionOfGeometryB:] is the dimension of the second [Geometry] related by `this`.
    */
@@ -361,9 +360,9 @@ class IntersectionMatrix {
     }
     return false;
   }
-  
+
   /**
-   * Matches the `this` against an arbitrary dimensionPattern 
+   * Matches the `this` against an arbitrary dimensionPattern
    * (a 9 character [String] consisting of values from `[T,F,*,0,1,2])
    */
   bool matches(String dimensionPattern) {
@@ -402,7 +401,7 @@ class IntersectionMatrix {
     }
     return true;
   }
-  
+
   String toString() {
     StringBuffer sBuf = new StringBuffer();
     for (var i in range(3)) {

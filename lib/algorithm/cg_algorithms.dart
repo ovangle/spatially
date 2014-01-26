@@ -6,8 +6,6 @@ library algorithm.cg_algorithms;
 import 'dart:math' as math;
 import 'package:quiver/iterables.dart';
 import 'package:longdouble/longdouble.dart';
-
-import 'package:spatially/base/array.dart';
 import 'package:spatially/base/coordinate.dart';
 import 'package:spatially/base/line_segment.dart';
 import 'package:spatially/geom/location.dart' as location;
@@ -244,17 +242,10 @@ double perpendicularDistanceToLine(Coordinate c, LineSegment lseg) {
  * The minimum distance from a point to a sequence of lines
  * line segments
  */
-double pointToLineDistance(Coordinate c, Array<Coordinate> line) {
-  if (line.isEmpty) {
-    throw new ArgumentError("line cannot be empty");
-  }
-  var minDist = c.distance(line[0]);
-  for (var i in range(1, line.length)) {
-    double dist = distanceToLine(c, new LineSegment(line[i - 1], line[i]));
-    minDist = (dist < minDist) ? dist : minDist;
-  }
-  return minDist;
-}
+double pointToLineDistance(Coordinate c, Iterable<Coordinate> line) =>
+  coordinateSegments(line)
+      .fold(double.INFINITY,
+            (mindist, lseg) => math.min(mindist, distanceToLine(c, lseg)));
 
 /**
  * Calculates the distance between the line segment A->B
@@ -321,7 +312,7 @@ double lineToLineDistance(LineSegment lseg1,
  * Based on the [shoelace formula]
  * (http://en.wikipedia.org/wiki/Shoelace_formula)
  */
-double signedAreaOfRing(Array<Coordinate> ring) {
+double signedAreaOfRing(List<Coordinate> ring) {
   if (ring.length == 0) return 0.0;
   if (ring.length <= 3) {
     throw new ArgumentError("Ring must have >= 4 vertices");
@@ -335,17 +326,4 @@ double signedAreaOfRing(Array<Coordinate> ring) {
     sum += x * (y2 - y1);
   }
   return sum / 2.0;
-}
-
-/**
- * Returns the length of a linestring specified
- * by a sequence of points
- */
-double linestringLength(Array<Coordinate> line) {
-  if (line.length <= 1) {
-    return 0.0;
-  } else {
-    return range(1, line.length)
-        .fold(0.0, (t, i) => t + line[i-1].distance(line[i]));
-  }
 }

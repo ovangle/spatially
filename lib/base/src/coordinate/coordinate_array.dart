@@ -94,8 +94,8 @@ int directionOfIncrease(List<Coordinate> coords) {
 /**
  * A [Comparator] which compares two coordinate arrays coordinate-wise
  */
-Comparator<Array<Coordinate>> get forwardComparator {
-  int compare(Array<Coordinate> coordArray1, Array<Coordinate> coordArray2) {
+Comparator<List<Coordinate>> get forwardComparator {
+  int compare(List<Coordinate> coordArray1, List<Coordinate> coordArray2) {
     int l1 = coordArray1.length;
     int l2 = coordArray2.length;
     int i=0;
@@ -116,8 +116,8 @@ Comparator<Array<Coordinate>> get forwardComparator {
  * Otherwise return the result of ordering the arrays in the forward
  * direction
  */
-Comparator<Array<Coordinate>> get bidirectionalComparator {
-  bool isEqualReversed(Array<Coordinate> coords1, Array<Coordinate> coords2) {
+Comparator<List<Coordinate>> get bidirectionalComparator {
+  bool isEqualReversed(List<Coordinate> coords1, List<Coordinate> coords2) {
     if (coords1.length != coords2.length) return false;
     var l = coords1.length;
     for (var i in range(l)) {
@@ -128,7 +128,7 @@ Comparator<Array<Coordinate>> get bidirectionalComparator {
     }
     return true;
   }
-  int compare(Array<Coordinate> coordArray1, Array<Coordinate> coordArray2) {
+  int compare(List<Coordinate> coordArray1, List<Coordinate> coordArray2) {
 
     var cmp = forwardComparator(coordArray1, coordArray2);
     if (cmp != 0 && isEqualReversed(coordArray1, coordArray2)) {

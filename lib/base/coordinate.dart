@@ -3,7 +3,6 @@ library base.coordinate;
 import 'dart:math' as math;
 
 import 'package:quiver/iterables.dart';
-import 'array.dart';
 
 part 'src/coordinate/coordinate_array.dart';
 

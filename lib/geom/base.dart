@@ -6,21 +6,19 @@ import 'dart:collection';
 import 'package:quiver/iterables.dart';
 import 'package:spatially/base/coordinate.dart';
 import 'package:spatially/base/line_segment.dart';
-import 'package:spatially/base/array.dart';
 import 'package:spatially/algorithm/lb_rule.dart'
           as lb_rule;
 import 'package:spatially/algorithm/cg_algorithms.dart'
           as cg_algorithms;
 import 'package:spatially/algorithm/centroid.dart'
           as cent;
-import 'package:spatially/algorithm/interior_point.dart'  
+import 'package:spatially/algorithm/interior_point.dart'
           as interior;
 import 'package:spatially/operation/boundary.dart' as bnd;
 import 'package:spatially/convert/wkt.dart' as wkt;
 
 
 import '../base/envelope.dart';
-import 'coordinate_sequence.dart';
 import 'precision_model.dart';
 import 'intersection_matrix.dart';
 
@@ -37,7 +35,7 @@ part 'src/base/multilinestring.dart';
 part 'src/base/multipolygon.dart';
 
 abstract class Geometry implements Comparable<Geometry>{
-  /** 
+  /**
    * The supported subclasses of [Geometry]
    * in the order they are sorted when comparing
    * [Geometry]s
@@ -50,7 +48,7 @@ abstract class Geometry implements Comparable<Geometry>{
    * -- [MultiPolygon]
    * -- [GeometryList] (highest)
    */
-  static const List<Type> types = 
+  static const List<Type> types =
       const [ Point,
               MultiPoint,
               Linestring,
@@ -58,81 +56,81 @@ abstract class Geometry implements Comparable<Geometry>{
               MultiLinestring,
               Polygon,
               MultiPolygon];
-  
+
   /**
    * The bounding box of `this`.
    */
   Envelope _envelope;
-  
+
   /**
    * The [GeometryFactory] which was used to create this [Geometry]
    */
   final GeometryFactory factory;
-  
+
   /**
    * A [Map] containing ancilliary data which can be used to store
    * data associated with the [Geometry].
-   * 
+   *
    * The semantics of this data is defined by the application using the [Geometry]
    */
   final Map<String,dynamic> userData;
-  
+
   /**
    * Create a new geometry from the given [GeometryFactory]
    */
   Geometry._(GeometryFactory this.factory)
       : userData = new Map<String,dynamic>(),
         _envelope = null;
-  
+
   /**
    * The ID of the spatial reference system used by the [Geometry]
    */
   int get srid => factory.srid;
-  
+
   /**
    * The [PrecisionModel] used by the [Geometry]
    */
-  PrecisionModel get precisionModel => 
+  PrecisionModel get precisionModel =>
       factory.precisionModel;
-  
+
   /**
    * The topological [:dimension:] of the [Geometry]. The [:dimension:] value will
    * always be in `0 (Point), 1 (Curve) or 2 (Planar)`.
    */
   int get dimension;
-  
+
   /**
    * Return a sample [Coordinate] which forms a vertex of the [Geometry].
    * Usually the first coordinate in the coordinate array.
    */
   Coordinate get coordinate;
-  
+
   /**
-   * A [Array] containing all vertices of the [Geometry].
+   * A [List] containing all vertices of the [Geometry].
    * If the [Geometry] is composite, all vertices of component geometries wiin the array, in the order the component appears in the [Geometry].
-   * 
-   * Modifying the array will not modify the [Geometry] itself. 
+   *
+   * Modifying the array will not modify the [Geometry] itself.
    * Use the [:setOrdinate:] method to modify the geometry.
    * After doing so [:geometryChanged:] *must* be called.
    */
-  Array<Coordinate> get coordinates;
-  
+  List<Coordinate> get coordinates;
+
   /**
    * Test whether the [Geometry] is simple or not.
    * A [Geometry] is simple if it is not self-tangent, self-intersecting.
-   * 
+   *
    * Simplicity is defined as follows:
    * -- A valid [Polygon] or [LinearRing] is simple, since it's rings may not self-intersect.
    *    A polygon may be simple but not valid, since [:isSimple:] will only
    *    test for self-intersection.
    * -- A [Linear] geometry is simple iff it intersects only at it's [:boundary:] points.
    * -- Zero-dimensional and empty geometries are always simple.
-   * 
+   *
    */
   bool get isSimple {
     throw 'Unimplemented';
   }
-  
+
   /**
    * Tests whether the [Geometry] is valid or not.
    * Validity is defined on a class by class basis, check the documentation
@@ -141,17 +139,17 @@ abstract class Geometry implements Comparable<Geometry>{
   bool get isValid {
     throw 'Unimplemented';
   }
-  
+
   /**
    * Check whether the [Geometry] is the empty geometry or not.
    */
   bool get isEmptyGeometry;
-  
+
   /**
    * Check whether the [Geometry] is the not the empty geometry
    */
   bool get isNotEmptyGeometry => !isEmptyGeometry;
-  
+
   /**
    * The minimum distance between `this` and the [Geometry] [:g:].
    * Returns `0` if either geometry is empty.
@@ -159,7 +157,7 @@ abstract class Geometry implements Comparable<Geometry>{
   double distanceTo(Geometry g) {
     throw 'Unimplemented';
   }
-  
+
   /**
    * Check whether the distance between `this` and the [Geometry] [:g:]
    * is less than a specified value
@@ -167,30 +165,30 @@ abstract class Geometry implements Comparable<Geometry>{
   bool withinDistanceOf(Geometry g, double dist) {
     throw 'Unimplemented';
   }
-  
+
   /**
    * Tests whether the geometry is degenerate.
-   * 
+   *
    * If the geometry has dimension `0`, it is considered degenerate
    * if it is the empty geometry.
-   * 
+   *
    * If the geometry has dimension `1`, it is considered degenerate
    * if has a [:topologicalLength:] of `0.0`.
-   * 
+   *
    * If the geometry has dimension `2`, it is considered degenerate
    * if it has a topological area of `0.0`.
    */
   bool get isDegenerate {
     if (dimension == dim.AREA) return topologicalArea == 0.0;
-    if (dimension == dim.LINE) return topologicalLength == 0.0; 
+    if (dimension == dim.LINE) return topologicalLength == 0.0;
     return isEmptyGeometry;
   }
-  
+
   /**
    * the [:topologicalArea:] of this [Geometry]. Any non-planar geometry will return `0.0`.
    */
   double get topologicalArea => 0.0;
-  
+
   /**
    * the [:topologicalLength:] of this [Geometry].
    * For a linear geometry, this is the length of the geometry.
@@ -198,16 +196,16 @@ abstract class Geometry implements Comparable<Geometry>{
    * All other geometries will return `0.0`.
    */
   double get topologicalLength => 0.0;
-  
+
   /**
-   * Get the [:centroid:] of `this`. 
+   * Get the [:centroid:] of `this`.
    * If `this` is a composite geometry, the centroid is the centroid
    * of the subset of the components of the highest dimension (lower dimensions
    * contribute zero weight to the centroid).
    * The centroid of the void geometry is the empty Point.
    *
    * Throws a [StateError] if the geometry is empty or degenerate.
-   * Note: This behaviour differs from JTS. 
+   * Note: This behaviour differs from JTS.
    */
   Point get centroid {
     if (isEmptyGeometry) {
@@ -219,12 +217,12 @@ abstract class Geometry implements Comparable<Geometry>{
       centroid = cent.centroidPoint(this);
     } else if (dimension == dim.LINE) {
       centroid = cent.centroidLine(this);
-    } else if (dimension == dim.AREA) { 
+    } else if (dimension == dim.AREA) {
       centroid = cent.centroidArea(this);
     }
     return factory.createPoint(centroid);
   }
-  
+
   /**
    * Returns an [:interiorPoint:] of `this`.
    * The point is guaranteed to lie in the interior if possible, otherwise
@@ -251,31 +249,31 @@ abstract class Geometry implements Comparable<Geometry>{
     }
     return factory.createPoint(interiorCoord);
   }
-  
+
   /**
    * Returns the [:boundary:] of the [Geometry], or an empty geometry
    * of the appropriate dimension if `this` is empty. The boundary
    * of a geometry is always a collection of geometries of dimension
    * one lower than the dimension of `this`.
-   * 
+   *
    * The boundary of a [Point] imetryCollection].
    */
   Geometry get boundary;
-  
+
   /**
-   * The dimension of the boundary of this geometry. 
+   * The dimension of the boundary of this geometry.
    * An empty geometry will return `DIM_EMPTY`.
    */
   int get boundaryDimension;
-  
+
   /**
-   * Converts this [Geometry] to a normal form. 
+   * Converts this [Geometry] to a normal form.
    * Normal form is a unique representation for
    * geometries.
    * The normalization is performed in-place
    */
   void normalize();
-  
+
   /**
    * Returns a [:normalized:] copy of `this`
    */
@@ -283,12 +281,12 @@ abstract class Geometry implements Comparable<Geometry>{
     return copy
         ..normalize();
   }
-  
+
   /**
    * A copy of `this`.
    */
   Geometry get copy;
-  
+
   /**
    * The bounding box of the [Geometry]
    */
@@ -299,12 +297,12 @@ abstract class Geometry implements Comparable<Geometry>{
     }
     return _envelope;
   }
-  
+
   /**
    * Get the bounding box of `this`.
    */
   Envelope _computeEnvelope();
-  
+
   /**
    * Notify the geometry that it should clear all cached values, since
    * it has been modified externally.
@@ -312,7 +310,7 @@ abstract class Geometry implements Comparable<Geometry>{
   void geometryChanged() {
     this._envelope = null;
   }
-  
+
   //RELATIONS
   /**
    * Tests whether the envelopes of `this` and [:g:] intersect.
@@ -320,10 +318,10 @@ abstract class Geometry implements Comparable<Geometry>{
    */
   bool _envelopeIntersects(Geometry g) =>
       envelope.intersectsEnvelope(g.envelope);
-  
+
   /**
    * Tests whether `this` intersects [:g:]
-   * 
+   *
    * Two [Geometry]s satisfy the [:intersects:] predicate if they satisfy
    * the following equivalent definitions:
    * -- The two geometries have at least one point in common.
@@ -336,22 +334,22 @@ abstract class Geometry implements Comparable<Geometry>{
    */
   bool intersects(Geometry g) => !_envelopeIntersects(g)
                               && _relate("intersects", g).isIntersects;
-  
-  
+
+
   /**
    * Tests whether `this` is disjoint from [:g:]
-   * 
-   * Two [Geometry]s satisfy the [:disjoint:] predicate if they satisfy the 
+   *
+   * Two [Geometry]s satisfy the [:disjoint:] predicate if they satisfy the
    * following equivalent definitions:
    * -- The two geometries do not share a common point.
    * -- The DE-9IM intersection matrix for the two geometries matches `FF*FF****`.
    * -- Not `this intersects g`
    */
   bool disjoint(Geometry g) => !intersects(g);
-  
+
   /**
    * Tests whether `this` touches [:g:]
-   * 
+   *
    * Two [Geometry]s satisfy the [:touches:] predicate if they satisfy the
    * following equivalent definitions:
    * -- The geometries have at least one point in common, but their
@@ -365,10 +363,10 @@ abstract class Geometry implements Comparable<Geometry>{
    */
   bool touches(Geometry g) =>
       _envelopeIntersects(g) && _relate("touches", g).isTouches(dimension, g.dimension);
-  
+
   /**
    * Tests whether `this` crosses [:g:]
-   * 
+   *
    * Two [Geometry]s satisfy the [:crosses:] predicate if they satisfy the
    * following equivalent definitions:
    * -- The geometries have some but not all interior points in common
@@ -376,16 +374,16 @@ abstract class Geometry implements Comparable<Geometry>{
    *  -- `T*T******` (for P/L, P/A and L/A situations)
    *  -- `T*****T**` (for L/P, A/P and A/L situations)
    *  -- `0********` (for L/L situations)
-   *  
+   *
    *  [:spatially:] follows JTS by extending the SFS definition to L/P, A/P and A/L
    *  situations in order to make the relation symmetric.
    */
   bool crosses(Geometry g) =>
       _envelopeIntersects(g) && _relate("crosses", g).isCrosses(dimension, g.dimension);
-      
+
   /**
    * Test whether `this` is within [:g:]
-   * 
+   *
    * Two [Geometry]s satisfy the [:within:] predicate if they satisfy the
    * following equivalient definitions:
    * -- Every point of the first geometry is a point of the other geometry,
@@ -393,17 +391,17 @@ abstract class Geometry implements Comparable<Geometry>{
    * -- The DE-9IM intersection matrix for the two geometries matches
    *    the pattern `T*F**F***`
    * -- the second geometry contains the first
-   * 
+   *
    * An implication of the definition is that "The boundary of a Geometry is not
    * within a geometry" (so a line contained by the boundary of a polygon is not
    * inside the polygon). See [:coveredBy:] for a predicate with similar behaviour
    * which avoids this subtlety
    */
   bool within(Geometry g) => g.contains(this);
-  
+
   /**
    * Tests whether `this` contains [:g:]
-   * 
+   *
    * Two [Geometry]s satisfy the [:contains:] predicate if they satisfy the
    * following equivalent definitions:
    * -- Every point on the second geometry is a point on the first and the
@@ -411,7 +409,7 @@ abstract class Geometry implements Comparable<Geometry>{
    * -- The DE-9IM intersection matrix for the two geometries matches
    *    the pattern `T*****FF*`
    * -- the second geometry is within the first
-   * 
+   *
    *  An implication of the definition is that "The boundary of a Geometry is not
    * within a geometry" (so a line contained by the boundary of a polygon is not
    * inside the polygon). See [:covers:] for a predicate with similar behaviour
@@ -419,10 +417,10 @@ abstract class Geometry implements Comparable<Geometry>{
    */
   bool contains(Geometry g) => _envelopeIntersects(g)
                             && _relate("contains", g).isContains;
-  
+
   /**
    * Tests whether `this` overlaps g
-   * 
+   *
    * Two geometries satisfy the [:overlaps:] predicate if they satisfy the
    * following equivalent definitions:
    * -- The geometries have at least one point not shared by the other
@@ -436,11 +434,11 @@ abstract class Geometry implements Comparable<Geometry>{
    */
   bool overlaps(Geometry g) => _envelopeIntersects(g)
                             && _relate("overlaps", g).isOverlaps(dimension, g.dimension);
-  
+
   /**
    * Tests whether `this` covers g
-   * 
-   * Two geometries satisfy the [:covers:] predicate if they satisfy the 
+   *
+   * Two geometries satisfy the [:covers:] predicate if they satisfy the
    * following equivalent definitions:
    * -- Every point of the second geometry is a point of the first
    * -- The DE-9IM intersection matrix for the two geometries matches
@@ -450,17 +448,17 @@ abstract class Geometry implements Comparable<Geometry>{
    *  -- `***T**FF*`
    *  -- `****T*FF*`
    * -- the second geometry is [:coveredBy:] the first
-   * 
+   *
    * This predicate is similar to [:contains:] but does not distinguish
    * between points in the boundary and interior of geometries. For most situations
    * [:covers:] should be used in preference to [:contains:]
    */
   bool covers(Geometry g) => _envelopeIntersects(g)
                           && _relate("covers", g).isCovers;
-  
+
   /**
    * Tests whether `this` is covered by [:g:]
-   * 
+   *
    * Two geometries satisfy the [:coveredBy:] predicate if they satisfy
    * the following equivalent definitions:
    * -- Every point on the first geometry is a point on the second
@@ -471,27 +469,27 @@ abstract class Geometry implements Comparable<Geometry>{
    *  -- `**FT*F***`
    *  -- `**F*TF***`
    * -- The second geometry [:cover:]s the first
-   * 
+   *
    * If either geoometry is empty, the value of this predicate is [:false:]
    */
   bool coveredBy(Geometry g) => g.covers(this);
-  
+
   /**
    * Tests whether `this` is topologically equal to [:g:]
-   * 
+   *
    * Two geometries satisfy the [:equals:] predicate if the satisfy
    * the following equivalent definitions:
-   * -- The two geometries have at least one point in common and no point of 
+   * -- The two geometries have at least one point in common and no point of
    *    either geometry lies in the exterior of the other geometry
    * -- The DE-9IM intersection matrix for the two geometries matches
    *    the pattern `T*F**FFF*`
-   * 
+   *
    * For structural equality, see [:equalsExact:]
    */
   bool equals(Geometry g) => _envelopeIntersects(g)
                           && _relate("equals", g).isEquals(dimension, g.dimension);
-  
-  
+
+
   /**
    * Return the DE-9IM between `this` and the geometry [:g:]
    * describing the intersections of the boundaries and exteriors
@@ -502,9 +500,9 @@ abstract class Geometry implements Comparable<Geometry>{
     _checkNotGeometryList(methodName, g);
     throw 'Unimplemneted';
   }
-  
+
   /**
-   * Tests whether the geometry [:g:] matches against an 
+   * Tests whether the geometry [:g:] matches against an
    * arbitrary [:relationPattern:]. The pattern is a 9 character string,
    * with symbols from
    * -- '0' (dimension 0)
@@ -513,96 +511,96 @@ abstract class Geometry implements Comparable<Geometry>{
    * -- 'T' (dimension matches 0, 1 or 2)
    * -- 'F' (matches empty geometry)
    * -- '*' (mathches any dimension)
-   * 
+   *
    * For more information, see the OpenGIS simple Features Specification
    */
   bool relateMatches(Geometry g, String relatePattern) {
     return _relate("relateMatches", g).matches(relatePattern);
   }
-  
+
   /**
    * Computes a [Geometry] representing the point-set which is common
    * to both `this` and [:geom:].
-   * 
+   *
    * The intersection of two geometries of different dimension produces
    * a geometry with dimension less than or equal to the minimum dimension
    * of the two geometries.
-   * 
+   *
    * The result may be a heterogeneous [GeometryList]
-   * Intersection of [GeometryList]s is supported only for homogenous 
+   * Intersection of [GeometryList]s is supported only for homogenous
    * collections.
    * If the result is empty, the result is an empty geometry with dimension
    * equal to the minimum of the two dimensions.
    */
-  Geometry intersection(Geometry geom) { 
+  Geometry intersection(Geometry geom) {
     //TODO: Geometry.intersection
     throw 'Geometry.intersection NotImplemented';
   }
-  
+
   /**
    * Computes a [Geometry] which is equal to the point-set which is contained
    * in both `this` and [:geom:].
-   * 
+   *
    * The [:union:] of two geometries of different dimension produces a geometry
    * of dimension equal to the maximum dimension of the input geometries.
    * The result may be a heterogeneous [GeometryList]
-   * 
+   *
    * Non-empty [GeometryList]s (homogeneous or otherwise) are ot supported
    */
   Geometry union(Geometry geom) {
     //TODO: Geometry.union
     throw 'NotImplemented';
   }
-  
+
   /**
    * Computes a [Geometry] representing the closure of the point-set of points
    * in `this` which are not in [:geom:]
-   * 
+   *
    * Non-empty [GeometryList]s (homogeneous or otherwise) are not supported
    */
   Geometry difference(Geometry geom) {
     //TODO: Geometry.difference
     throw 'NotImplemented';
   }
-  
+
   /**
    * Computes a [Geometry] representing the closure of the point-set formed by
    * the union of `this.difference(geom)` and `geom.difference(this)`.
-   * 
+   *
    * Non-empty [GeometryList]s (homogeneous or otherwise) are not supported.
    */
   Geometry symmetricDifference(Geometry geom) {
     //TODO: Geometry.symmetricDifference
     throw 'NotImplemented';
   }
-  
+
   /**
    * Tests if two geometris are exactly equal.
-   * 
+   *
    * Two geometries are exactly equal if
    * -- They have the same structure
    * -- Each of their vertices is less than a distance
    *    [:tolerance:] away from the corresponding vertex in
    *    the other geometry
-   *    
+   *
    * This method does *not* check the [:factory:], [:SRID:]
    * and [:userData:] fields for equality.
-   * 
-   * To properly test for structural equality between two 
+   *
+   * To properly test for structural equality between two
    * geometries, it is usually necessary to [:normalize:] them
-   * first. 
+   * first.
    */
   bool equalsExact(Geometry g, [double tolerance = 0.0]);
-  
+
   /**
    * normalize `this` and [:g:] before comparing them
    * for (structural) equality
    */
   bool equalsNormalized(Geometry g) => normalized.equalsExact(g.normalized);
-  
+
   /**
    * Compare this geometry to the other geometry for order
-   * 
+   *
    * If classes are different, they are compared using the following
    * order:
    * -- [Point] (lowest)
@@ -616,10 +614,10 @@ abstract class Geometry implements Comparable<Geometry>{
    * Otherwise, their [:vertices:] are compared for equality.
    * If [:comparator:] is provided, the [:vertices:] of the geometries
    * will be compared using the [:comparator:], and the result will be returned
-   * 
+   *
    */
-  int compareTo(Geometry g, [Comparator<CoordinateSequence> comparator]) {
-    final cmpTypes = 
+  int compareTo(Geometry g, [Comparator<List<Coordinate>> comparator]) {
+    final cmpTypes =
         Comparable.compare(types.indexOf(runtimeType),
                            types.indexOf(g.runtimeType));
     if (cmpTypes != 0) return cmpTypes;
@@ -629,24 +627,24 @@ abstract class Geometry implements Comparable<Geometry>{
       return 1;
     }
     if (comparator == null) {
-      comparator = Comparable.compare;
+      comparator = forwardComparator;
     }
     return _compareToSameType(g, comparator);
   }
-  
-  int _compareToSameType(Geometry g, Comparator<CoordinateSequence> comparator);
-  
+
+  int _compareToSameType(Geometry g, Comparator<List<Coordinate>> comparator);
+
   /**
    * Tests whether this geometry is structurally and
    * numerically equal to a given object.
-   * 
+   *
    * The result is computed using [:equalsExact:]. For topographical
    * equality, use the [:equals:] method
    */
   bool operator ==(Object o) => o is Geometry && equalsExact(o);
-  
+
   int get hashCode => coordinates.fold(31, (h, v) => h * 31 + v.hashCode);
-  
+
   String toString() {
     var codec = new wkt.WktCodec(factory);
     return codec.encode(this);

@@ -4,8 +4,8 @@ class Point extends Geometry {
   /**
    * The [Coordinate] wrapped by this [Point]
    */
-  CoordinateSequence _coords;
-  Point._(CoordinateSequence this._coords, GeometryFactory factory)
+  List<Coordinate> _coords;
+  Point._(List<Coordinate> this._coords, GeometryFactory factory)
       : super._(factory);
 
   Coordinate get coordinate =>
@@ -26,7 +26,7 @@ class Point extends Geometry {
   Geometry get boundary =>
       factory.createEmptyGeometryList();
 
-  Array<Coordinate> get coordinates => _coords.toArray();
+  List<Coordinate> get coordinates => _coords.toList();
 
   Envelope _computeEnvelope() {
     Envelope env = new Envelope.empty();
@@ -53,7 +53,7 @@ class Point extends Geometry {
     // a point is always normalized
   }
 
-  int _compareToSameType(Point other, Comparator<CoordinateSequence> comparator) {
+  int _compareToSameType(Point other, Comparator<List<Coordinate>> comparator) {
     return comparator(_coords, other._coords);
   }
 

@@ -13,12 +13,12 @@ class GeometryList<T extends Geometry> extends Geometry with ListMixin<T> {
     return _geometries[0].coordinate;
   }
 
-  Array<Coordinate> get coordinates {
+  List<Coordinate> get coordinates {
     List<Coordinate> coords = new List<Coordinate>();
     for (var geom in _geometries) {
       coords.addAll(geom.coordinates);
     }
-    return new Array<Coordinate>.from(coords);
+    return new List<Coordinate>.from(coords);
   }
 
   /**
@@ -74,7 +74,7 @@ class GeometryList<T extends Geometry> extends Geometry with ListMixin<T> {
   }
 
   int _compareToSameType(GeometryList<T> geomList,
-                         Comparator<CoordinateSequence> comparator) {
+                         Comparator<List<Coordinate>> comparator) {
     int l1 = length;
     int l2 = geomList.length;
     int i = 0;

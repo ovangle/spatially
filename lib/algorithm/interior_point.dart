@@ -2,7 +2,6 @@ library algorithms.interior_point;
 
 import 'package:quiver/iterables.dart';
 
-import 'package:spatially/base/array.dart';
 import 'package:spatially/base/coordinate.dart';
 import 'package:spatially/base/envelope.dart';
 import 'package:spatially/geom/base.dart';
@@ -67,7 +66,7 @@ Coordinate interiorPointLine(Geometry geom) {
       interiorPoint = c;
     }
   }
-  void addCoordsAt(Iterable<num> indexes, Array<Coordinate> coords) =>
+  void addCoordsAt(Iterable<num> indexes, List<Coordinate> coords) =>
       indexes.forEach((i) => addCoordinate(coords[i]));
 
   void addEndpoints(Geometry geom) {

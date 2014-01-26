@@ -4,7 +4,6 @@ import 'package:collection/equality.dart';
 import 'package:quiver/core.dart';
 
 import 'package:spatially/algorithm/cg_algorithms.dart' as cg_algorithms;
-import 'package:spatially/base/array.dart';
 import 'package:spatially/base/coordinate.dart' show removeRepeatedCoordinates;
 import 'package:spatially/base/tuple.dart' show Tuple, zip;
 import 'package:spatially/base/coordinate.dart' show Coordinate;
@@ -266,7 +265,7 @@ class GeometryGraph extends graph.Graph<Coordinate, List<Coordinate>> {
     void addRingEdge(Ring r, bool isHole) {
       if (r.isEmptyGeometry)
         return;
-      Array<Coordinate> coords = removeRepeatedCoordinates(r.coordinates);
+      List<Coordinate> coords = removeRepeatedCoordinates(r.coordinates);
       if (coords.length < 4)
         throw new GeometryError(
             "Too few unique coordinates for polygon ring: $r");

@@ -8,20 +8,13 @@ class GeometryFactory {
       ? _precisionModel
       : new PrecisionModel(PrecisionModel.PREC_FLOATING);
 
-  final CoordinateSequenceFactory _coordinateSequenceFactory;
-  CoordinateSequenceFactory get coordinateSequenceFactory =>
-      _coordinateSequenceFactory != null
-      ? _coordinateSequenceFactory
-      : DefaultCoordinateSequence.factory;
-
   final int srid;
 
   /**
    * Create a new [GeometryFactory] with the given
-   * [PrecisionModel], [CoordinateSequenceFactory] and spatial reference system identifier.
+   * [PrecisionModel], [List<Coordinate>Factory] and spatial reference system identifier.
    */
    GeometryFactory([PrecisionModel this._precisionModel,
-                    CoordinateSequenceFactory this._coordinateSequenceFactory,
                     int this.srid = 0]);
 
   /**
@@ -77,19 +70,19 @@ class GeometryFactory {
 
 
   Point createEmptyPoint() {
-    CoordinateSequence _coords = coordinateSequenceFactory(0);
+    List<Coordinate> _coords = new List(0);
     return new Point._(_coords, this);
   }
 
   Point createPoint(Coordinate coordinate) {
     precisionModel.makePreciseCoordinate(coordinate);
-    CoordinateSequence _coords = coordinateSequenceFactory(1);
+    List<Coordinate> _coords = new List(1);
     _coords[0] = coordinate;
     return new Point._(_coords, this);
   }
 
   Linestring createEmptyLinestring([lb_rule.VertexInBoundaryRule boundaryRule]) {
-    CoordinateSequence _coords = coordinateSequenceFactory(0);
+    List<Coordinate> _coords = new List(0);
     return new Linestring._(_coords, this);
   }
 
@@ -99,14 +92,14 @@ class GeometryFactory {
           "Invalid number of coordinates in linestring (1). "
           "Expected 0 or >= 2");
     }
-    CoordinateSequence _coords = coordinateSequenceFactory(coords.length);
+    List<Coordinate> _coords = new List(coords.length);
     _coords.setAll(0, coords);
     _coords.forEach(precisionModel.makePreciseCoordinate);
     return new Linestring._(_coords, this);
   }
 
   Ring createEmptyRing() {
-    CoordinateSequence coords = coordinateSequenceFactory(0);
+    List<Coordinate> coords = new List(0);
     return new Ring._(coords, this);
   }
   Ring createRing(Iterable<Coordinate> coords) {
@@ -119,14 +112,14 @@ class GeometryFactory {
       throw new ArgumentError(
           "Coordinates must form a closed ring");
     }
-    CoordinateSequence coordSeq = coordinateSequenceFactory(coords.length);
+    List<Coordinate> coordSeq = new List(coords.length);
     coordSeq.setAll(0, coords);
     coords.forEach(precisionModel.makePreciseCoordinate);
     return new Ring._(coordSeq, this);
   }
 
   Polygon createEmptyPolygon() {
-    return new Polygon._(createEmptyRing(), new Array(0), this);
+    return new Polygon._(createEmptyRing(), new List(0), this);
   }
 
   Polygon createPolygon(Ring shell, [Iterable<Ring> holes = const[]]) {
@@ -136,7 +129,7 @@ class GeometryFactory {
     if (shell.isEmptyGeometry && holes.any((h) => h.isNotEmptyGeometry)) {
       throw new ArgumentError("Shell is empty but contains non-empty hole");
     }
-    return new Polygon._(shell, new Array.from(holes), this);
+    return new Polygon._(shell, new List.from(holes), this);
   }
 
   GeometryList createEmptyGeometryList() {
