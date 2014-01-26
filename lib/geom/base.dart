@@ -34,7 +34,45 @@ part 'src/base/multipoint.dart';
 part 'src/base/multilinestring.dart';
 part 'src/base/multipolygon.dart';
 
+
+
 abstract class Geometry implements Comparable<Geometry>{
+  /**
+   * Dynamically dispatches the implementation to the geometry type.
+   * * If [geom] is a [Point], then applyPoint is called on [geom].
+   * * If [geom] is a [Linestring], then applyLinestring is called on [geom]
+   * * If [geom] is a [Polygon], then applyPolygon is called on [geom].
+   * * If [geom] is a [GeometryList] (or a subtype of [GeometryList]), then
+   *   the dispatch is called on all component geometries on [geom] and the
+   *   results are collected in a [List].
+   */
+  static dynamic dispatchToType(
+      Geometry geom,
+      { dynamic applyPoint(Point p),
+        dynamic applyLinestring(Linestring lstr),
+        dynamic applyPolygon(Polygon poly)
+      }) {
+    if (geom is Point) {
+      return applyPoint(geom);
+    } else if (geom is Linestring) {
+      return applyLinestring(geom);
+    } else if (geom is Polygon) {
+      return applyPolygon(geom);
+    } else if (geom is GeometryList) {
+      List li = new List();
+      for (Geometry g in geom) {
+        li.add(dispatchToType(g,
+                applyPoint: applyPoint,
+                applyLinestring: applyLinestring,
+                applyPolygon: applyPolygon));
+      }
+      return li;
+    } else {
+      throw new ArgumentError("Not a recognised geometry type: ${geom.runtimeType}");
+    }
+  }
+
+
   /**
    * The supported subclasses of [Geometry]
    * in the order they are sorted when comparing
@@ -657,6 +695,8 @@ void _checkNotGeometryList(String methodName, Geometry g) {
         "Geometry.$methodName does not support GeometryList arguments");
   }
 }
+
+
 
 class GeometryError extends Error {
   GeometryError(String message) : super();
