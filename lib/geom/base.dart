@@ -53,6 +53,8 @@ part 'src/base/multipolygon.dart';
 
 
 abstract class Geometry implements Comparable<Geometry>{
+
+
   /**
    * Dynamically dispatches the implementation to the geometry type.
    * * If [geom] is a [Point], then applyPoint is called on [geom].
@@ -66,23 +68,59 @@ abstract class Geometry implements Comparable<Geometry>{
       Geometry geom,
       { dynamic applyPoint(Point p),
         dynamic applyLinestring(Linestring lstr),
-        dynamic applyPolygon(Polygon poly)
+        dynamic applyPolygon(Polygon poly),
+        dynamic applyMultiPoint(MultiPoint mpoint),
+        dynamic applyMultiLinestring(MultiLinestring mlstr),
+        dynamic applyMultiPolygon(MultiPolygon mpoly),
+        dynamic applyGeometryList(GeometryList geomList)
       }) {
+    if (applyGeometryList == null) {
+      _applyGeometryList(GeometryList geomList) {
+        List li = new List();
+        for (var geom in geomList) {
+          li.add(dispatchToType(geom, applyPoint: applyPoint,
+                                      applyLinestring: applyLinestring,
+                                      applyPolygon: applyPolygon,
+                                      applyMultiPoint: applyMultiPoint,
+                                      applyMultiLinestring: applyMultiLinestring,
+                                      applyMultiPolygon: applyMultiPolygon));
+        }
+        return li;
+      }
+      applyGeometryList = _applyGeometryList;
+    }
     if (geom is Point) {
+      if (applyPoint == null) {
+        throw new ArgumentError("applyPoint cannot be null");
+      }
       return applyPoint(geom);
     } else if (geom is Linestring) {
+      if (applyLinestring == null) {
+        throw new ArgumentError("applyLinestring cannot be null");
+      }
       return applyLinestring(geom);
     } else if (geom is Polygon) {
-      return applyPolygon(geom);
-    } else if (geom is GeometryList) {
-      List li = new List();
-      for (Geometry g in geom) {
-        li.add(dispatchToType(g,
-                applyPoint: applyPoint,
-                applyLinestring: applyLinestring,
-                applyPolygon: applyPolygon));
+      if (applyPolygon == null) {
+        throw new ArgumentError("applyPolygon cannot be null");
       }
-      return li;
+      return applyPolygon(geom);
+    } else if (geom is MultiPoint) {
+      if (applyMultiPoint == null) {
+        return applyGeometryList(geom);
+      }
+      return applyMultiPoint(geom);
+    } else if (geom is MultiLinestring) {
+      if (applyMultiLinestring == null) {
+        return applyGeometryList(geom);
+      }
+      return applyMultiLinestring(geom);
+    } else if (geom is MultiPolygon) {
+      if (applyMultiPolygon == null) {
+        return applyGeometryList(geom);
+      }
+      return applyMultiPolygon(geom);
+    } else if (geom is GeometryList) {
+      return applyGeometryList(geom);
     } else {
       throw new ArgumentError("Not a recognised geometry type: ${geom.runtimeType}");
     }
