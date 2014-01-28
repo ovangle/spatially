@@ -18,8 +18,7 @@ class GraphNode<N extends GraphNodeLabel> {
       new UnmodifiableSetView(_outgoingEdges.union(_incomingEdges));
 
   /**
-   * Returns the edge which runs between `this` and [:node:], or `null` if
-   * no such edge exists in the graph
+   * Returns all edges which run between `this` and [node]
    */
   GraphEdge connection(GraphNode node) {
     var commonEdges = terminatingEdges.intersection(node.terminatingEdges);

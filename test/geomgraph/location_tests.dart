@@ -2,7 +2,7 @@ library spatially.geomgraph.location_tests;
 
 import 'package:unittest/unittest.dart';
 import 'package:quiver/core.dart';
-import 'package:spatially/geomgraph2/location.dart';
+import 'package:spatially/geomgraph/location.dart';
 import 'package:spatially/geom/base.dart';
 import 'package:spatially/geom/location.dart' as loc;
 

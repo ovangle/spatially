@@ -6,8 +6,8 @@ import 'package:unittest/unittest.dart';
 import 'package:spatially/base/coordinate.dart';
 import 'package:spatially/base/tuple.dart';
 import 'package:spatially/geom/base.dart';
-import 'package:spatially/geomgraph2/geometry_graph.dart' as geomgraph;
-import 'package:spatially/geomgraph2/intersector.dart';
+import 'package:spatially/geomgraph/geometry_graph.dart' as geomgraph;
+import 'package:spatially/geomgraph/intersector.dart';
 
 void main() {
   testSimpleIntersector();

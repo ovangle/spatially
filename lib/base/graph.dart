@@ -4,10 +4,10 @@ import 'package:quiver/collection.dart';
 import 'package:collection/collection.dart';
 import 'package:collection/equality.dart';
 
-part 'src/graph2/edge.dart';
-part 'src/graph2/error.dart';
-part 'src/graph2/label.dart';
-part 'src/graph2/node.dart';
+part 'src/graph/edge.dart';
+part 'src/graph/error.dart';
+part 'src/graph/label.dart';
+part 'src/graph/node.dart';
 
 const UnorderedIterableEquality _setEq = const UnorderedIterableEquality();
 

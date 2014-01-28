@@ -1,11 +1,16 @@
 library spatially.geomgraph.geometry_graph.add_test;
 
+import 'package:collection/equality.dart';
+
 import 'package:unittest/unittest.dart';
 import 'package:spatially/spatially.dart';
 import 'package:spatially/base/tuple.dart';
 import 'package:spatially/geom/location.dart' as loc;
-import 'package:spatially/geomgraph2/location.dart';
-import 'package:spatially/geomgraph2/geometry_graph.dart';
+import 'package:spatially/geomgraph/location.dart';
+import 'package:spatially/geomgraph/geometry_graph.dart';
+
+UnorderedIterableEquality<List> iterEq =
+    new UnorderedIterableEquality<List>(new ListEquality());
 
 main() {
   group("add geometries", () {
@@ -96,7 +101,7 @@ main() {
       var poly2 = geomFactory.fromWkt("Polygon( (1 1, 2 2, 2 4, 1 1),(2 2, 2 4, 6 6, 2 2) )");
 
       GeometryGraph g1 = new GeometryGraph(poly1, poly2);
-      g1.addPolygon(poly1);
+        g1.addPolygon(poly1);
       expect(g1.nodes.map((n) => n.coordinate), [new Coordinate(0.0, 0.0)]);
       var nodeLabel = g1.nodes.first;
       expect(nodeLabel.locations,
@@ -117,12 +122,16 @@ main() {
 
       g1.addPolygon(poly2);
       expect(g1.nodes.map((n) => n.coordinate),
-          [new Coordinate(0.0, 0.0), new Coordinate(1.0, 1.0), new Coordinate(2.0, 2.0)]);
-      expect(g1.edges.map((e) => e.coordinates),
-                 [ [ new Coordinate(0, 0), new Coordinate(1, 1), new Coordinate(1, 0), new Coordinate(0, 0)],
-                   [ new Coordinate(1, 1), new Coordinate(2, 2), new Coordinate(2, 4), new Coordinate(1, 1)],
-                   [ new Coordinate(2, 2), new Coordinate(2, 4), new Coordinate(6, 6), new Coordinate(2, 2)]
-                 ]);
+          unorderedEquals([new Coordinate(0.0, 0.0), new Coordinate(1.0, 1.0), new Coordinate(2.0, 2.0)]));
+
+      expect(
+          g1.edges.map((e) => e.coordinates),
+          unorderedEquals(
+          [ [ new Coordinate(0, 0), new Coordinate(1, 1), new Coordinate(1, 0), new Coordinate(0, 0)],
+            [ new Coordinate(1, 1), new Coordinate(2, 2), new Coordinate(2, 4), new Coordinate(1, 1)],
+            [ new Coordinate(2, 2), new Coordinate(2, 4), new Coordinate(6, 6), new Coordinate(2, 2)]
+          ]));
+
     });
 
     test("should be able to add a geometrylist", () {
@@ -132,15 +141,16 @@ main() {
           """);
       var geom2 = geomFactory.createEmptyPoint();
       var g = new GeometryGraph(geom1, geom2);
-      g.addGeometryList(geom1, 1);
+      g.addGeometryList(geom1);
       expect(g.nodes.map((n) => n.coordinate),
              unorderedEquals([ new Coordinate(0, 40),
                                new Coordinate(80, 0),
                                new Coordinate(120, 40) ]));
       expect(g.edges.map((e) => e.coordinates),
+          unorderedEquals(
             [ [ new Coordinate(0, 40), new Coordinate(40, 40), new Coordinate(40, 0), new Coordinate(0, 0), new Coordinate(0,40)],
               [ new Coordinate(80, 0), new Coordinate(80, 80), new Coordinate(120, 40)
-            ] ]);
+            ] ]));
     });
   });
 }

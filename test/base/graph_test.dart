@@ -2,7 +2,7 @@ library spatially.base.graph.graph_test;
 
 import 'package:unittest/unittest.dart';
 
-import 'package:spatially/base/graph2.dart';
+import 'package:spatially/base/graph.dart';
 
 
 class MockNodeLabel implements GraphNodeLabel<MockNodeLabel> {
@@ -143,7 +143,6 @@ void main() {
       expect(e23.startNode, n2);
       expect(e23.endNode, n3);
     });
-
   });
 
 
