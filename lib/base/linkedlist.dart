@@ -225,6 +225,7 @@ class LinkedList<T> extends IterableBase<T> {
   T _unlink(ListNode<T> node) {
     _modificationCount++;
     node._prev._next = node._next;
+    node._next._prev = node._prev;
     node._unlink();
     _length--;
     return node.value;
