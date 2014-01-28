@@ -39,6 +39,26 @@ extends GraphLabel<GraphEdgeLabel> {
    */
   GraphEdgeLabel<E> merge(GraphEdgeLabel<E> label);
 
+  /**
+   * Used to order the graph edges around the terminating node.
+   * [node] will always be one of the terminating node of the edge
+   * labelled by `this` and [other] will always be an edge which
+   * also terminates at the node.
+   *
+   * If the [Graph] is not created with [:starAtNode:] set to `true`, then the
+   * method is ignored.
+   *
+   * The method should return
+   * `1` if `this` should appear after [other] in the [List] of terminating
+   * edges at the node.
+   * `0` if the order of the edges when fetched from [node] doesn't matter.
+   * `-1` if `other` should appear before `this` in the [List] of the terminating
+   * edges at the node.
+   */
+  int compareOrientation(GraphNodeLabel node, GraphEdgeLabel other) {
+    throw new UnimplementedError("EdgeLabel.compareOrientation");
+  }
+
 }
 
 abstract class GraphNodeLabel<N extends GraphNodeLabel>

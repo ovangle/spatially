@@ -16,6 +16,7 @@
 
 library spatially.base.graph;
 
+import 'dart:collection';
 import 'package:quiver/collection.dart';
 import 'package:collection/collection.dart';
 import 'package:collection/equality.dart';
@@ -31,8 +32,17 @@ class Graph<N extends GraphNodeLabel, E extends GraphEdgeLabel> {
   final BiMap<GraphNodeLabel<N>,GraphNode<N>> _labelledNodes;
   final BiMap<GraphEdgeLabel<E>, GraphEdge<E>> _labelledEdges;
 
+  /**
+   * `true` if the edges have a natural ordering around a node.
+   */
+  final bool starAtNode;
 
-  Graph() :
+  /**
+   * Create a new [Graph].
+   * If [:starAtNode:] is `true`, then the edge will be ordered by the result
+   * of [GraphEdgeLabel].compareAtNode. Default is `false`.
+   */
+  Graph({this.starAtNode: false}) :
     _labelledNodes = new BiMap(),
     _labelledEdges = new BiMap();
 

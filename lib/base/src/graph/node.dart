@@ -23,9 +23,10 @@ class GraphNode<N extends GraphNodeLabel> {
   Set<GraphEdge> _outgoingEdges;
   Set<GraphEdge> _incomingEdges;
 
-  GraphNode(Graph<N,dynamic> this.graph, GraphNodeLabel<N> this.label) :
-    _outgoingEdges = new Set(),
-    _incomingEdges = new Set();
+  GraphNode(Graph<N,dynamic> this.graph, GraphNodeLabel<N> this.label) {
+    _outgoingEdges = (graph.starAtNode ? new SplayTreeSet(_compareEdges) : new Set());
+    _incomingEdges = (graph.starAtNode ? new SplayTreeSet(_compareEdges) : new Set());
+  }
 
   UnmodifiableSetView<GraphEdge> get outgoingEdges => new UnmodifiableSetView(_outgoingEdges);
   UnmodifiableSetView<GraphEdge> get incomingEdges => new UnmodifiableSetView(_incomingEdges);
@@ -37,7 +38,15 @@ class GraphNode<N extends GraphNodeLabel> {
    * Returns all edges which run between `this` and [node]
    */
   GraphEdge connection(GraphNode node) {
-    var commonEdges = terminatingEdges.intersection(node.terminatingEdges);
+    var commonEdges;
+    if (node == this) {
+      //If we're looking for loops, don't take the intersection, because
+      //that will return all edges at this node.
+      commonEdges = terminatingEdges
+          .where((e) => e.startNode == this && e.endNode == this);
+    } else {
+      commonEdges = terminatingEdges.intersection(node.terminatingEdges);
+    }
     if (commonEdges.isEmpty)
       return null;
     return commonEdges.single;
@@ -49,5 +58,8 @@ class GraphNode<N extends GraphNodeLabel> {
   int get hashCode => label.hashCode;
 
   String toString() => "node: $label";
+
+  int _compareEdges(GraphEdge edge1, GraphEdge edge2) =>
+      edge1.label.compareOrientation(this.label, edge2.label);
 
 }

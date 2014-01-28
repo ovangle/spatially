@@ -70,10 +70,15 @@ extends GraphEdge<E> {
    * since a label is guaranteed to be unique for any edge with specified
    * terminating nodes
    */
-  bool operator ==(Object other) =>
-      other is UndirectedEdge
-      && (other.startNode == startNode || other.startNode == endNode)
-      && (other.endNode == startNode || other.endNode == endNode);
+  bool operator ==(Object other) {
+    if (other is UndirectedEdge) {
+      if (other.startNode == startNode)
+        return other.endNode == endNode;
+      if (other.endNode == startNode)
+        return other.startNode == endNode;
+    }
+    return false;
+  }
 
   int get hashCode {
     int hash = 0;
