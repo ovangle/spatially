@@ -1,3 +1,19 @@
+//This file is part of Spatially.
+//
+//    Spatially is free software: you can redistribute it and/or modify
+//    it under the terms of the GNU Lesser General Public License as published by
+//    the Free Software Foundation, either version 3 of the License, or
+//    (at your option) any later version.
+//
+//    Spatially is distributed in the hope that it will be useful,
+//    but WITHOUT ANY WARRANTY; without even the implied warranty of
+//    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//    GNU Lesser General Public License for more details.
+//
+//    You should have received a copy of the GNU Lesser General Public License
+//    along with Spatially.  If not, see <http://www.gnu.org/licenses/>.
+
+
 library algorithm.line_intersector;
 
 import 'package:spatially/base/coordinate.dart';
@@ -24,14 +40,14 @@ Coordinate coordinateIntersection(LineSegment lseg, Coordinate c) {
  * Check if the intersection of [:lseg1:] and [:lseg2:] is proper.
  * An intersection is proper if it lies entirely within
  * the interior of both the argument [LineSegment]s.
- * 
+ *
  * [:intersectionResult:] is an optional argument with the result
  * of intersecting the arguments unsing [segmentIntersection].
- * Providing it will prevent recalculating the intersection, to 
+ * Providing it will prevent recalculating the intersection, to
  * improve efficiency
  */
-bool isProperIntersection(LineSegment lseg1, 
-                          LineSegment lseg2, 
+bool isProperIntersection(LineSegment lseg1,
+                          LineSegment lseg2,
                           [dynamic /* Coordinate | LineSegment */intersectionResult = 0 ]) {
   if (intersectionResult == 0) {
     //We can't use null as the default argument
@@ -52,7 +68,7 @@ bool isProperIntersection(LineSegment lseg1,
 }
 
 /**
- * Returns the result of intersecting two segments. 
+ * Returns the result of intersecting two segments.
  * The result will be:
  * A [Coordinate], if the segments intersect at a single point.
  * A [LineSegment], if the segments intersect along a non-degenerate
@@ -64,20 +80,20 @@ dynamic /* Point | LineSegment */ segmentIntersection(LineSegment lseg1, LineSeg
   if (!lseg1.envelope.intersectsEnvelope(lseg2.envelope)) {
     return null;
   }
-  
-  //Compare the orientations of both endpoints of the 
+
+  //Compare the orientations of both endpoints of the
   //segments to the other segment.
   //If both the endpoints lie on the same side of the other
   //segment, then the lines don't intersect.
-  
+
   final lseg1ToStart = cg_algorithms.orientationIndex(lseg1, lseg2.start);
   final lseg1ToEnd   = cg_algorithms.orientationIndex(lseg1, lseg2.end);
-  
+
   if (lseg1ToStart > 0 && lseg1ToEnd > 0
       || lseg1ToStart < 0 && lseg1ToEnd < 0) {
     return null;
   }
-  
+
   final lseg2ToStart = cg_algorithms.orientationIndex(lseg2, lseg1.start);
   final lseg2ToEnd   = cg_algorithms.orientationIndex(lseg2, lseg1.end);
 
@@ -85,29 +101,29 @@ dynamic /* Point | LineSegment */ segmentIntersection(LineSegment lseg1, LineSeg
       || lseg2ToStart < 0 && lseg2ToEnd < 0) {
     return null;
   }
-  
-  if (lseg1ToStart == 0 
+
+  if (lseg1ToStart == 0
       && lseg1ToEnd == 0
       && lseg2ToStart == 0
       && lseg2ToEnd == 0) {
     return _collinearIntersection(lseg1, lseg2);
   }
-  
+
   //The segments aren't intersecting,
   //so the result must be a point intersection
   Coordinate intersectionCoord = null;
-  
+
   //Check explicitly for equal endpoints
   if (lseg1.start == lseg2.start
       || lseg1.start == lseg2.end) {
     intersectionCoord = lseg1.start;
   }
-  
+
   if (lseg1.end == lseg2.start
       || lseg1.end == lseg2.end) {
     intersectionCoord = lseg1.end;
   }
-  
+
   if (lseg1ToStart == 0) {
     intersectionCoord = lseg2.start;
   } else if (lseg1ToEnd == 0) {
@@ -117,10 +133,10 @@ dynamic /* Point | LineSegment */ segmentIntersection(LineSegment lseg1, LineSeg
   } else if (lseg2ToEnd == 0) {
     intersectionCoord = lseg1.end;
   }
-  
-  
+
+
   if (intersectionCoord == null) {
-    intersectionCoord = _computeIntersectionNormalized(lseg1, lseg2); 
+    intersectionCoord = _computeIntersectionNormalized(lseg1, lseg2);
   }
   return intersectionCoord;
 }
@@ -131,9 +147,9 @@ dynamic /*Coordinate | LineSegment */ _collinearIntersection(LineSegment lseg1, 
    */
   bool inEnvelopeOf(Coordinate a, LineSegment b) =>
       b.envelope.intersectsCoordinate(a);
-  
+
   Set<Coordinate> coords = new Set<Coordinate>();
-  
+
   if (inEnvelopeOf(lseg1.start, lseg2)) {
     coords.add(lseg1.start);
   }
@@ -146,13 +162,13 @@ dynamic /*Coordinate | LineSegment */ _collinearIntersection(LineSegment lseg1, 
   if (inEnvelopeOf(lseg2.end, lseg1)) {
     coords.add(lseg2.end);
   }
-  
+
   switch (coords.length) {
-    case 0: 
+    case 0:
       return null;
-    case 1: 
+    case 1:
       return coords.single;
-    case 2: 
+    case 2:
       List<Coordinate> sorted = new List.from(coords)
                   ..sort();
       return new LineSegment(sorted.first, sorted.last);
@@ -162,11 +178,11 @@ dynamic /*Coordinate | LineSegment */ _collinearIntersection(LineSegment lseg1, 
             "\tlseg2: $lseg2\n");
       assert(false);
   }
-  
+
 }
 
 /**
- * Computes the intersection of the line segments, 
+ * Computes the intersection of the line segments,
  * normalizing by translating the segments so that the
  * intersection of their envelopes lies at the origin
  * to improve precision.
@@ -185,32 +201,32 @@ Coordinate _computeIntersectionNormalized(LineSegment lseg1, LineSegment lseg2) 
  * at a single point which is not contained with any
  * point in the intersection.
  */
-Coordinate _computeIntersection(LineSegment lseg1, 
+Coordinate _computeIntersection(LineSegment lseg1,
                                 LineSegment lseg2) {
   final w1 = lseg1.start.x * lseg1.end.y - lseg1.end.x * lseg1.start.y;
   final w2 = lseg2.start.x * lseg2.end.y - lseg2.end.x * lseg2.start.y;
   final w = lseg1.dx * lseg2.dy - lseg2.dx * lseg1.dy;
-  
+
   final x = (lseg1.dx * w2 - lseg2.dx * w1) / w;
   final y = (lseg1.dy * w2 - lseg2.dy * w1) / w;
-  
+
   return new Coordinate(x, y);
 }
 
 /**
- * Normalize the line segments so that the center of the 
+ * Normalize the line segments so that the center of the
  * intersection of their envelopes lies at the origin
- * 
+ *
  * Returns a map, with keys:
  *  -- "normal_coord" : The coordinate used to normalise the segments
  *  -- "lseg1" : The normalized lseg1
- *  -- "lseg2" : The normalized lseg2  
+ *  -- "lseg2" : The normalized lseg2
  */
 Map _normalizeSegments(LineSegment lseg1, LineSegment lseg2) {
   Envelope env1 = lseg1.envelope;
   Envelope env2 = lseg2.envelope;
   Envelope envIntersection = env1.intersection(env2);
-  
+
   Coordinate normalCoord = envIntersection.centre;
   return { "normal_coord" : normalCoord,
            "lseg1" : lseg1.translated(-normalCoord.x, -normalCoord.y),

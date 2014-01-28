@@ -14,20 +14,30 @@
 //    along with Spatially.  If not, see <http://www.gnu.org/licenses/>.
 
 
-part of spatially.geomgraph.geometry_graph;
+part of spatially.operation.overlay;
 
-class Node implements GraphNodeLabel<Node> {
-  final GeometryGraph graph;
-  final Coordinate coordinate;
-  final Tuple<Location,Location> locations;
+class _PointBuilder extends _OverlayBuilder {
+  _PointBuilder(
+      GeometryGraph graph,
+      int overlayType) : super._(graph, overlayType);
 
-  Node._(this.graph, this.coordinate, this.locations);
-
-  bool operator ==(Object other) =>
-      other is Node && other.coordinate == coordinate;
-
-  int get hashCode => coordinate.hashCode;
-
-  String toString() => "node: $coordinate";
-
+  Geometry build() {
+    List<Point> points = [];
+    for (var node in graph.nodes) {
+      NodeLabel label = node.label;
+      var ons = node.label.locationDatas
+          .map((location) => location.on);
+      if (_inOverlay(ons)) {
+        points.add(geomFactory.createPoint(label.coordinate));
+      }
+    }
+    switch (points.length) {
+      case 0:
+        return geomFactory.createEmptyPoint();
+      case 1:
+        return points.single;
+      default:
+        return geomFactory.createMultiPoint(points);
+    }
+  }
 }

@@ -1,3 +1,19 @@
+//This file is part of Spatially.
+//
+//    Spatially is free software: you can redistribute it and/or modify
+//    it under the terms of the GNU Lesser General Public License as published by
+//    the Free Software Foundation, either version 3 of the License, or
+//    (at your option) any later version.
+//
+//    Spatially is distributed in the hope that it will be useful,
+//    but WITHOUT ANY WARRANTY; without even the implied warranty of
+//    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//    GNU Lesser General Public License for more details.
+//
+//    You should have received a copy of the GNU Lesser General Public License
+//    along with Spatially.  If not, see <http://www.gnu.org/licenses/>.
+
+
 library geom.dimension;
 
 /**
@@ -9,7 +25,7 @@ const int POINT = 0;
  * Dimensional value of a curve (1)
  */
 const int LINE = 1;
-  
+
 /**
  * Dimensional value of a surface (2)
  */
@@ -20,13 +36,13 @@ const int AREA = 2;
  * Represented by `F` in a dimension pattern
  */
 const int EMPTY = -1;
-  
+
 /**
  * Dimensional value for non-empty geometries
  * Represented by `T` in a dimension pattern
  */
 const int NONEMPTY = -2;
-  
+
 /**
  * Dimensional value for any dimension
  * Represented by `*` in a dimension pattern
@@ -53,7 +69,7 @@ bool isDimensionNonEmpty(int dimensionValue) {
 }
 
 
-  
+
 /**
  * Get the symbolic representation of a dimensional value
  */
@@ -69,7 +85,7 @@ String dimensionSymbolFromValue(int dimensionalValue) {
       throw new ArgumentError("Unknown dimensional value: $dimensionalValue");
   }
 }
-  
+
 /**
  * Convert the unicode code point symbol to its integer value
  */
@@ -89,7 +105,7 @@ int dimensionValueFromSymbol(String dimensionalSymbol) {
 
 
 class DimensionRangeError extends RangeError {
-  DimensionRangeError.actual(int dim) 
+  DimensionRangeError.actual(int dim)
     : super("A geometry's dimension must be one of "
             " 0 (POINT), 1 (CURVE) or 2 (PLANAR).\n"
             "\tGot: $dim");

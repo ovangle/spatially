@@ -1,3 +1,19 @@
+//This file is part of Spatially.
+//
+//    Spatially is free software: you can redistribute it and/or modify
+//    it under the terms of the GNU Lesser General Public License as published by
+//    the Free Software Foundation, either version 3 of the License, or
+//    (at your option) any later version.
+//
+//    Spatially is distributed in the hope that it will be useful,
+//    but WITHOUT ANY WARRANTY; without even the implied warranty of
+//    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//    GNU Lesser General Public License for more details.
+//
+//    You should have received a copy of the GNU Lesser General Public License
+//    along with Spatially.  If not, see <http://www.gnu.org/licenses/>.
+
+
 part of operation.distance;
 
 Iterable<Polygon> extractPolygons(Geometry geom) {
@@ -19,7 +35,7 @@ Iterable<_Location> extractInteriorLocations(Geometry geom) {
             return extractInteriorLocations(g);
           }
           return [];
-        });   
+        });
   }
   return [];
 }
@@ -30,7 +46,7 @@ bool isAtomic(Geometry g) => g is Point
 
 Map computeContainmentDistance(Geometry g1, Geometry g2, double searchDistance) {
   var containmentDistance12 = containmentDistance(g1, g2, searchDistance);
-  if (containmentDistance12 != null 
+  if (containmentDistance12 != null
       && containmentDistance12["min_distance"] <= searchDistance) {
     return containmentDistance12;
   }
@@ -49,19 +65,19 @@ Map containmentDistance(Geometry g1, Geometry g2, double searchDistance) {
   Iterable<Polygon> polysIn2 = extractPolygons(g2);
   if (polysIn2.isEmpty) return null;
   Iterable<_Location> locationsIn1 = extractInteriorLocations(g1);
-  Map containmentLocation = 
+  Map containmentLocation =
       findContainedLocationInPolys(locationsIn1, polysIn2, searchDistance);
   if (containmentLocation["min_distance"] <= searchDistance) {
     return containmentLocation;
   }
 }
-Map findContainedLocationInPolys(List<_Location> locations, 
+Map findContainedLocationInPolys(List<_Location> locations,
                                  Iterable<Polygon> polys,
                                  double searchDistance) {
   for (var loc in locations) {
     var located = polys.map((p) => coordinateLocationInPoly(loc, p))
                        .firstWhere(
-                           (l) => l != null && l["min_distance"] <= searchDistance, 
+                           (l) => l != null && l["min_distance"] <= searchDistance,
                            orElse: () => null);
     if (located != null) {
       return located;

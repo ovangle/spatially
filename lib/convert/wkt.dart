@@ -1,3 +1,19 @@
+//This file is part of Spatially.
+//
+//    Spatially is free software: you can redistribute it and/or modify
+//    it under the terms of the GNU Lesser General Public License as published by
+//    the Free Software Foundation, either version 3 of the License, or
+//    (at your option) any later version.
+//
+//    Spatially is distributed in the hope that it will be useful,
+//    but WITHOUT ANY WARRANTY; without even the implied warranty of
+//    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//    GNU Lesser General Public License for more details.
+//
+//    You should have received a copy of the GNU Lesser General Public License
+//    along with Spatially.  If not, see <http://www.gnu.org/licenses/>.
+
+
 library convert.wkt;
 
 import 'dart:convert';
@@ -8,15 +24,15 @@ import 'package:spatially/geom/base.dart';
 import 'package:spatially/base/coordinate.dart';
 
 /**
- * A [Codec] for converting [Geometry] objects to their 
- * representations in the Well-Known Text format 
- * as described in section 7 of 
+ * A [Codec] for converting [Geometry] objects to their
+ * representations in the Well-Known Text format
+ * as described in section 7 of
  * the OGC Simple Features Standard Part 1 - Common Architecture.
- * 
+ *
  * Coordinates are encoded and parsed as either 2d or
  * 3d coordinates. The following case-insensitive tagged text types
  * are supported and correspond to the following geometries.
- * 
+ *
  * -- point           -> [Point]
  * -- linestring      -> [Linestring]
  * -- polygon         -> [Polygon]
@@ -24,10 +40,10 @@ import 'package:spatially/base/coordinate.dart';
  * -- multilinestring -> [MultiLinestring]
  * -- multipolygon    -> [MultiPolygon]
  * -- geometrycollection -> [GeometryList]
- * 
+ *
  * The other WKT tag types will cause a [WktParseError]
  * if encountered in the stream.
- * 
+ *
  * The [Codec] also supports the non-standard tag
  * -- linearring      -> [Ring]
  */
@@ -39,9 +55,9 @@ class WktCodec extends Codec<Geometry, String> {
 }
 
 class WktEncoder extends Converter<Geometry, String> {
-  
+
   String convert(Geometry geom) => encodeGeometry(new StringBuffer(), geom);
-  
+
   /**
    * A [Geometry] in WKT is encoded as
    */
@@ -93,7 +109,7 @@ class WktEncoder extends Converter<Geometry, String> {
     _encodeIterable(sbuf, geom.coordinates);
     return sbuf.toString();
   }
-  
+
   void _encodeIterable(StringBuffer sbuf, Iterable seq) {
     if (seq.isEmpty) {
       sbuf.write(_WktKeyword.EMPTY);
@@ -117,17 +133,17 @@ class WktEncoder extends Converter<Geometry, String> {
       for (var subSeq in seq.skip(1)) {
         sbuf.write(", ");
         _encodeIterable(sbuf, subSeq);
-      } 
+      }
     } else {
-      //We should only see lists of coordinates or 
+      //We should only see lists of coordinates or
       //nested lists of coordinatess
       assert(false);
     }
     sbuf.write(")");
   }
-  
+
   /**
-   * A [Coordinate] in WKT is expresssed 
+   * A [Coordinate] in WKT is expresssed
    * as a string
    *      COORD := DOUBLE DOUBLE [DOUBLE]
    * where NUM is a dart-style double value
@@ -141,13 +157,13 @@ class WktEncoder extends Converter<Geometry, String> {
   }
 }
 
-class WktDecoder extends Converter<String,Geometry> {  
+class WktDecoder extends Converter<String,Geometry> {
   GeometryFactory factory;
-  
+
   WktDecoder(GeometryFactory this.factory);
-  
+
   Geometry convert(String input) => _parseGeometry(new _TokenIterator(input));
-  
+
   Geometry _parseGeometry(_TokenIterator tokens) {
     if (tokens.moveNext()) {
       _Token currentToken = tokens.current;
@@ -179,7 +195,7 @@ class WktDecoder extends Converter<String,Geometry> {
       throw new WktParseError("Empty input");
     }
   }
-  
+
   Point _parsePoint(_TokenIterator tokens) {
     List<Coordinate> pointCoords = _parseCoordinateSequence(tokens);
     if (pointCoords.isEmpty)
@@ -189,24 +205,24 @@ class WktDecoder extends Converter<String,Geometry> {
     }
     return factory.createPoint(pointCoords.single);
   }
-  
+
   Linestring _parseLinestring(_TokenIterator tokens) =>
       factory.createLinestring(_parseCoordinateSequence(tokens));
   Ring _parseRing(_TokenIterator tokens) =>
       factory.createRing(_parseCoordinateSequence(tokens));
-  
+
   Polygon _parsePolygon(_TokenIterator tokens) {
-    var polyRings = _parseCoordinateSequenceList(tokens);  
-    if (polyRings.isEmpty) 
+    var polyRings = _parseCoordinateSequenceList(tokens);
+    if (polyRings.isEmpty)
       return factory.createEmptyPolygon();
     return factory.createPolygon(
-        factory.createRing(polyRings.first), 
-        polyRings.skip(1).map(factory.createRing)); 
+        factory.createRing(polyRings.first),
+        polyRings.skip(1).map(factory.createRing));
   }
-  
+
   MultiPoint _parseMultiPoint(_TokenIterator tokens) {
     var multipointCoords = _parseCoordinateSequenceList(tokens);
-    if (multipointCoords.isEmpty) 
+    if (multipointCoords.isEmpty)
       return factory.createEmptyMultiPoint();
     var points = new List<Point>();
     for (var i in range(multipointCoords.length)) {
@@ -217,12 +233,12 @@ class WktDecoder extends Converter<String,Geometry> {
     }
     return factory.createMultiPoint(points);
   }
-  
+
   MultiLinestring _parseMultiLinestring(_TokenIterator tokens) =>
       factory.createMultiLinestring(
           _parseCoordinateSequenceList(tokens)
           .map(factory.createLinestring));
-  
+
   MultiPolygon _parseMultiPolygon(_TokenIterator tokens) {
     var polys = new List<Polygon>();
     if (!tokens.moveNext()
@@ -231,14 +247,14 @@ class WktDecoder extends Converter<String,Geometry> {
       throw new WktParseError("Expected the start of a list of ring coordinates "
                               "at position ${tokens.current.endPos}");
     }
-    if (tokens.current.value == _WktKeyword.EMPTY) 
+    if (tokens.current.value == _WktKeyword.EMPTY)
       return factory.createEmptyMultiPolygon();
     while (true) {
       var polyCoords = _parseCoordinateSequenceList(tokens);
       if (polyCoords.isEmpty) {
         polys.add(factory.createEmptyPolygon());
       } else {
-        polys.add(factory.createPolygon(factory.createRing(polyCoords.first), 
+        polys.add(factory.createPolygon(factory.createRing(polyCoords.first),
                                         polyCoords.skip(1).map(factory.createRing)));
       }
       if (!tokens.moveNext()
@@ -252,7 +268,7 @@ class WktDecoder extends Converter<String,Geometry> {
       }
     }
   }
-  
+
   GeometryList _parseGeometryCollection(_TokenIterator tokens) {
     if (!tokens.moveNext()
          || (tokens.current.value != _WktDelimeter.L_PARENS
@@ -265,7 +281,7 @@ class WktDecoder extends Converter<String,Geometry> {
       return geomList;
     while (true) {
       geomList.add(_parseGeometry(tokens));
-      if (!tokens.moveNext() 
+      if (!tokens.moveNext()
           || (tokens.current.value != _WktDelimeter.R_PARENS
               && tokens.current.value != _WktDelimeter.COMMA)) {
         throw new WktParseError("Expected the end of a GeometryList or another Geometry "
@@ -276,9 +292,9 @@ class WktDecoder extends Converter<String,Geometry> {
       }
     }
   }
-  
+
   List<List<Coordinate>> _parseCoordinateSequenceList(_TokenIterator tokens) {
-    if (!tokens.moveNext() 
+    if (!tokens.moveNext()
         || (tokens.current.value != _WktDelimeter.L_PARENS
            && tokens.current.value != _WktKeyword.EMPTY)) {
       throw new WktParseError("Expected the start of a coordinate sequence list "
@@ -302,16 +318,16 @@ class WktDecoder extends Converter<String,Geometry> {
       }
     }
   }
-  
+
   List<Coordinate> _parseCoordinateSequence(_TokenIterator tokens) {
     if (!tokens.moveNext()
         || (tokens.current.value != _WktDelimeter.L_PARENS
             && tokens.current.value != _WktKeyword.EMPTY)) {
-      throw new WktParseError("Expected start of coordinate sequence" 
+      throw new WktParseError("Expected start of coordinate sequence"
                               "at ${tokens.current.endPos}");
     }
     var coords = new List<Coordinate>();
-    if (tokens.current.value == _WktKeyword.EMPTY) 
+    if (tokens.current.value == _WktKeyword.EMPTY)
       return coords;
     while (true) {
       coords.add(_parseCoordinate(tokens));
@@ -326,7 +342,7 @@ class WktDecoder extends Converter<String,Geometry> {
       }
     }
   }
-  
+
   Coordinate _parseCoordinate(_TokenIterator tokens) {
     double x = parseOrdinate(tokens);
     double y = parseOrdinate(tokens);
@@ -349,18 +365,18 @@ class WktDecoder extends Converter<String,Geometry> {
 class _TokenIterator extends Iterator<_Token> {
   static const List<int> WHITESPACE =
       const [0x08, 0x09, 0x0a, 0x0d, 0x20];
-  
+
   final String input;
   _Token currentToken;
   _TokenIterator(String this.input);
-  
+
   _Token get current {
     return currentToken;
   }
-  
+
   bool moveNext() {
     var strPos = currentToken != null ? currentToken.endPos : 0;
-    while (strPos < input.length 
+    while (strPos < input.length
         && WHITESPACE.contains(input.codeUnitAt(strPos++)));
     strPos--;
     if (strPos >= input.length) {
@@ -374,7 +390,7 @@ class _TokenIterator extends Iterator<_Token> {
     if (currentToken != null) return true;
     throw new WktParseError("Unrecognised token in string at position $strPos");
   }
-  
+
   _Token peekNext() {
     var strPos = currentToken != null ? currentToken.endPos : 0;
     while (strPos < input.length
@@ -391,14 +407,14 @@ class _TokenIterator extends Iterator<_Token> {
     if (nextToken != null) return nextToken;
     return null;
   }
-  
+
 }
 
 class _Token {
   final int position;
   //The index into the string at the end of the token
   final int endPos;
-  
+
   final dynamic value;
   _Token(this.value, int this.position, int this.endPos);
 }
@@ -414,20 +430,20 @@ class _WktKeyword extends _Token {
   static const String MULTILINESTRING_TAG = "MULTILINESTRING";
   static const String MULTIPOLYGON_TAG = "MULTIPOLYGON";
   static const String COLLECTION_TAG   = "GEOMETRYCOLLECTION";
-  
+
   static const String EMPTY            = "EMPTY";
-  
-  static const List<String> _kwds = 
-      const [ POINT_TAG, LINESTRING_TAG, LINEARRING_TAG, POLYGON_TAG, 
+
+  static const List<String> _kwds =
+      const [ POINT_TAG, LINESTRING_TAG, LINEARRING_TAG, POLYGON_TAG,
               MULTIPOINT_TAG, MULTILINESTRING_TAG, MULTIPOLYGON_TAG, COLLECTION_TAG,
               EMPTY
             ];
-  
+
   static final List<RegExp> _kwdRegexes =
       _kwds.map((kw) => new RegExp(kw, caseSensitive: false)).toList();
-  
+
   _WktKeyword(value, int startPos, int endPos): super(value, startPos, endPos);
-  
+
   static _WktKeyword next(String input, int strPos) {
     for (var i in range(_kwds.length)) {
       var kwdRegex = _kwdRegexes[i];
@@ -442,7 +458,7 @@ class _WktKeyword extends _Token {
 
 class _WktNumber extends _Token {
   _WktNumber(value, int startPos, int endPos) : super(value, startPos, endPos);
-  
+
   /**
    * A number in wkt is defined as follows:
    *      NUMBER           := MAYBE_SIGN (NaN | (INT_PART MAYBE_FLOAT_PART MAYBE_EXP_PART))
@@ -451,13 +467,13 @@ class _WktNumber extends _Token {
    *      MAYBE_FLOAT_PART := FLOAT_PART | ''
    *      FLOAT_PART       := '.' [0-9]+
    *      MAYBE_EXP_PART   := EXP_PART | ''
-   *      EXP_PART         := ('e' | 'E') MAYBE_SIGN [0-9]+    
+   *      EXP_PART         := ('e' | 'E') MAYBE_SIGN [0-9]+
    */
-  static final matchNumber = 
+  static final matchNumber =
       new RegExp( "[+-]?"
                   "([0-9]*\\.?[0-9]+([eE][+-]?[0-9]+)?)"
                   "|NaN");
-  
+
   static _WktNumber next(String input, int strPos) {
     var match = matchNumber.matchAsPrefix(input, strPos);
     if (match != null) {
@@ -472,9 +488,9 @@ class _WktDelimeter extends _Token {
   static const R_PARENS = 0x29;
   static const COMMA    = 0x2C;
   static const List<int> _DELIMETERS = const [L_PARENS, R_PARENS, COMMA];
-  
+
   _WktDelimeter(delim, int startPos, int endPos) : super(delim, startPos, endPos);
-  
+
   static _WktDelimeter next(String input, int strPos) {
     for (var delim in _DELIMETERS) {
       if (input.codeUnitAt(strPos) == delim) {
