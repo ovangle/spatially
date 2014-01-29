@@ -28,23 +28,21 @@ library spatially.operation.overlay;
 import 'dart:math' as math show max, min;
 
 import 'package:spatially/spatially.dart';
-import 'package:spatially/base/graph.dart';
+import 'package:spatially/base/linkedlist.dart';
 import 'package:spatially/base/tuple.dart';
 import 'package:spatially/geom/location.dart' as loc;
 import 'package:spatially/geomgraph/geometry_graph.dart';
 
 part 'src/overlay/builders.dart';
+part 'src/overlay/in_overlay.dart';
 part 'src/overlay/linestring_builder.dart';
 part 'src/overlay/point_builder.dart';
+part 'src/overlay/polygon_builder.dart';
 
 const int OVERLAY_INTERSECTION = 1;
 const int OVERLAY_UNION = 2;
 const int OVERLAY_DIFFERENCE = 3;
 const int OVERLAY_SYMMETRIC_DIFFERENCE = 4;
-
-
-
-
 
 Geometry overlayGeometries(Geometry g0, Geometry g1, int overlayType) {
   //Use the factory of the first geometry.

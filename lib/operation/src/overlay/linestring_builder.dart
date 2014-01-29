@@ -21,52 +21,94 @@ class _LinestringBuilder extends _OverlayBuilder {
 
   Geometry build() {
 
-    for (var fwdLabel in graph.forwardLabels.toList(growable:false)) {
-      var onLocations = fwdLabel.locationDatas.map((l) => l.on);
+    for (var edge in graph.edges.toList(growable:false)) {
+      var onLocations = edge.locations.map((l) => l.on);
       if (!_inOverlay(onLocations)) {
-        graph.removeForwardEdge(fwdLabel);
+        graph.removeEdge(edge);
       }
     }
 
-    for (var bwdLabel in graph.backwardLabels.toList(growable:false)) {
-      var onLocations = bwdLabel.locationDatas.map((l) => l.on);
-      if (!_inOverlay(onLocations)) {
-        graph.removeBackwardEdge(bwdLabel);
-      }
-    }
-
-    if (graph.edges.isEmpty) {
+    if (graph.edges.isEmpty)
       return geomFactory.createEmptyLinestring();
-    }
 
+    List<Linestring> lstrs = [];
     while (!graph.edges.isEmpty) {
       var edge = graph.edges.first;
+      lstrs.add(_buildLinestring(edge));
+    }
 
+    switch (lstrs.length) {
+      case 0:
+        return geomFactory.createEmptyLinestring();
+      case 1:
+        return lstrs.single;
+      default:
+        return geomFactory.createMultiLinestring(lstrs);
     }
   }
 
-  Linestring _buildLinestring() {
-    DirectedEdge edge;
-    if (graph.forwardEdges.isNotEmpty) {
-      edge = graph.forwardEdges.first;
-    } else if (graph.backwardEdges.isNotEmpty) {
-      edge = graph.backwardEdges.first;
-    }
+  Linestring _buildLinestring(Edge edge) {
+    LinkedList<Coordinate> lstrCoords = new LinkedList.from(edge.coordinates);
+    _extendStart(edge, edge.startNode, lstrCoords, false);
+    _extendEnd(edge, edge.endNode, lstrCoords);
+    return geomFactory.createLinestring(lstrCoords);
+  }
 
-    List<Coordinate> lstrCoords = new List.from((edge.label as EdgeLabel).coordinates);
-    Node nextStart = edge.startNode;
-    Node nextEnd = edge.endNode;
-    while (true) {
-      graph.removeEdge(edge.edge);
-      if (nextStart == nextEnd) {
-        //Looped node
-        return geomFactory.createLinestring(lstrCoords);
+  _extendStart(Edge edge, Node node, LinkedList<Coordinate> lstrCoords, [bool removeEdge=true]) {
+    bool foundEdge = false;
+    for (Edge e in node.terminatingEdges) {
+      if (e == edge) {
+        foundEdge = true;
+        continue;
       }
-      if (nextStart != null) {
-        var incomingStart = nextStart.incomingEdges;
+      if (foundEdge) {
+        var edgeBefore = e;
+        if (edgeBefore.coordinates.first == lstrCoords.first) {
+          edgeBefore.coordinates.skip(1).forEach(lstrCoords.addFirst);
+        } else {
+          edgeBefore.reversed.coordinates.skip(1).forEach(lstrCoords.addFirst);
+        }
+        if (node == edge.startNode) {
+          _extendStart(edgeBefore, edgeBefore.endNode, lstrCoords);
+        } else {
+          _extendStart(edgeBefore, edgeBefore.startNode, lstrCoords);
+        }
+        if (removeEdge) {
+          edge.graph.removeEdge(edge);
+        }
       }
     }
+  }
 
-
+  _extendEnd(Edge edge, Node node, LinkedList<Coordinate> lstrCoords) {
+    Edge prevEdge, edgeAfter;
+    for (Edge e in node.terminatingEdges) {
+      if (e == edge) {
+        if (prevEdge == null)
+          edgeAfter = node.terminatingEdges.last;
+          break;
+        edgeAfter = prevEdge;
+      }
+      prevEdge = e;
+    }
+    if (edgeAfter == edge) {
+      edge.graph.removeEdge(edge);
+      return;
+    }
+    if (edgeAfter.coordinates.first == lstrCoords.last) {
+      lstrCoords.addAll(edgeAfter.coordinates.skip(1));
+    } else {
+      lstrCoords.addAll(edgeAfter.reversed.coordinates.skip(1));
+    }
+    if (edgeAfter.startNode == edgeAfter.endNode) {
+      //Loop in graph.
+      graph.removeEdge(edgeAfter);
+    }
+    if (edgeAfter.startNode == node) {
+      _extendEnd(edgeAfter, edgeAfter.endNode, lstrCoords);
+    } else {
+      _extendEnd(edgeAfter, edgeAfter.startNode, lstrCoords);
+    }
+    graph.removeEdge(edgeAfter);
   }
 }

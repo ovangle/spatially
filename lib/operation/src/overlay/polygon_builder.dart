@@ -13,29 +13,22 @@
 //    You should have received a copy of the GNU Lesser General Public License
 //    along with Spatially.  If not, see <http://www.gnu.org/licenses/>.
 
-
 part of spatially.operation.overlay;
 
-class _PointBuilder extends _OverlayBuilder {
-  _PointBuilder(
-      GeometryGraph graph,
-      int overlayType) : super._(graph, overlayType);
+
+class _PolygonBuilder extends _OverlayBuilder {
+  _PolygonBuilder(graph, overlayType) : super._(graph, overlayType);
 
   Geometry build() {
-    List<Point> points = [];
-    for (var node in graph.nodes) {
-      var ons = node.locations.map((location) => location.on);
-      if (_inOverlay(ons)) {
-        points.add(geomFactory.createPoint(node.coordinate));
+    // TODO: implement build
+  }
+
+  Ring _maximalEdgeRing(GeometryGraph graph) {
+    for (var edge in graph.edges.toList(growable:false)) {
+      var onLocations = edge.locations.map((l) => l.on);
+      if (!_inOverlay(onLocations)) {
+        graph.removeEdge(edge);
       }
-    }
-    switch (points.length) {
-      case 0:
-        return geomFactory.createEmptyPoint();
-      case 1:
-        return points.single;
-      default:
-        return geomFactory.createMultiPoint(points);
     }
   }
 }
