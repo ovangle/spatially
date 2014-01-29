@@ -46,29 +46,41 @@ const EdgeSetIntersector _edgeSetIntersector =
               : MONOTONE_CHAIN_SWEEP_LINE_INTERSECTOR;
 
 class GeometryGraph {
-  Graph<Node,Edge> delegate;
+  Graph<Node,Edge> _delegate;
   final Tuple<Geometry,Geometry> geometries;
 
   GeometryGraph(Geometry geometry1, Geometry geometry2) :
     geometries = new Tuple(geometry1, geometry2),
-    delegate = new Graph<Node, Edge>();
+    _delegate = new Graph<Node, Edge>(starAtNode:true);
 
   Iterable<Node> get nodes =>
-      delegate.nodes.map((n) => n.label);
+      _delegate.nodes.map((n) => n.label);
 
   Iterable<Edge> get edges =>
-      delegate.edges.map((e) => e.label);
+      _delegate.edges.map((e) => e.label);
 
   Iterable<Node> get boundaryNodes =>
       nodes.where((n) => n.locations
                           .either((l) => l.on == loc.BOUNDARY));
 
   /**
+   * Adds both geometries to the graph, then nodes and labels the graph.
+   */
+  void initialise() {
+    for (var i in [1,2]) {
+      var geom = geometries.project(i);
+      addGeometry(geom);
+    }
+    nodeGraph();
+    labelGraph();
+  }
+
+  /**
    * Retrieve the [Node] given the coordinate.
    * Return `null` if no edge is found with the given coordinate.
    */
   Node nodeByCoordinate(Coordinate c) {
-     var graphNode = delegate.nodeByLabel(new Node._(null, c, null));
+     var graphNode = _delegate.nodeByLabel(new Node._(null, c, null));
      return graphNode != null ? graphNode.label : null;
   }
 
@@ -77,8 +89,12 @@ class GeometryGraph {
    * Return `null` if no edge is found with the given coordinate list.
    */
   Edge edgeByCoordinates(List<Coordinate> coords) {
-    var graphEdge = delegate.edgeByLabel(new Edge._(null, coords, null));
+    var graphEdge = _delegate.edgeByLabel(new Edge._(null, coords, null));
     return graphEdge != null ? graphEdge.label : null;
+  }
+
+  void removeEdge(Edge edge) {
+    _delegate.removeEdge(edge);
   }
 
   GraphNode<Node> _addCoordinate(int geomIdx, Coordinate c, {int on}) {
@@ -88,10 +104,18 @@ class GeometryGraph {
         .transform((on) => new Location(geometries.$1, on: on),
                    (on) => new Location(geometries.$2, on: on));
     var node = new Node._(this, c, locations);
-    return delegate.addNode(node);
+    return _delegate.addNode(node);
   }
 
-  GraphEdge<Edge> _addCoordinateList(int geomIdx, List<Coordinate> coords,
+
+  /**
+   * Adds a coordinate list as an undirected edge between startNode and endNode
+   * to the graph.
+   * If an existing, unequal connection is found between the start and edge of the edge,
+   * the coordinates for the edge are split and a dummy node is placed in the graph
+   * at the midpoint of the coordinate list.
+   */
+  void _addCoordinateList(int geomIdx, List<Coordinate> coords,
                                      GraphNode<Node> startNode, GraphNode<Node> endNode,
                                     {int on, int left, int right}) {
     var knownLocation   = new Location(geometries.project(geomIdx), on: on, left: left, right: right);
@@ -99,7 +123,35 @@ class GeometryGraph {
         geomIdx == 1 ? knownLocation : new Location.unknown(geometries.$1),
         geomIdx == 2 ? knownLocation : new Location.unknown(geometries.$2));
     var edge = new Edge._(this, coords, locations);
-    return delegate.addUndirectedEdge(edge, startNode, endNode);
+    //Test if there is an existing connection between the start and end nodes
+    var connection = startNode.connection(endNode);
+    if (connection != null) {
+      if (!_listEq.equals(connection.label._coordinates, coords)
+          && !_listEq.equals(connection.label._revCoordinates, coords)) {
+        //Add a dummy node and two edges representing the split coordinates.
+        var len = coords.length;
+        var mid = (len % 2 == 0)
+            ? new LineSegment(coords[len ~/ 2 - 1], coords[len ~/ 2]).midpoint
+            : coords[len ~/ 2];
+        var dummyNode = _addCoordinate(geomIdx, mid, on: on);
+        var initCoords =
+            concat([coords.take(len ~/ 2), [mid]])
+            .toList(growable: false);
+        _addCoordinateList(geomIdx,
+            concat([coords.take(coords.length ~/ 2), [mid]]).toList(growable: false),
+            startNode, dummyNode,
+            on: on, left: left, right: right);
+        var lastCoords =
+            concat([(len % 2 == 0) ? [mid] : [], coords.skip(len ~/ 2)])
+            .toList(growable: false);
+        _addCoordinateList(geomIdx,
+            concat([(len % 2 == 0 ? [mid] : []), coords.skip(coords.length ~/ 2)]).toList(growable: false),
+            dummyNode, endNode,
+            on: on, left: left, right: right);
+        return;
+      }
+    }
+    _delegate.addUndirectedEdge(edge, startNode, endNode);
   }
 
   void labelGraph() {
@@ -179,11 +231,12 @@ class GeometryGraph {
     poly.interiorRings.forEach((r) => addRingEdge(r, true));
   }
 
-  void addGeometryList(Geometry geom) {
+  void addGeometry(Geometry geom) {
     Geometry.dispatchToType(geom,
         applyPoint: addPoint,
         applyLinestring: addLinestring,
-        applyPolygon: addPolygon);
+        applyPolygon: addPolygon,
+        applyGeometryList: (geom) => geom.forEach(addGeometry));
   }
 
   int _geometryIndexOf(Geometry g) {

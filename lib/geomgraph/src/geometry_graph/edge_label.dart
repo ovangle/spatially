@@ -23,7 +23,7 @@ class Edge implements GraphEdgeLabel<Edge> {
    * The delegate edge which applies to this label.
    */
   GraphEdge<Edge> get _delegate =>
-      graph.delegate.edgeByLabel(this);
+      graph._delegate.edgeByLabel(this);
 
   final List<Coordinate> _coordinates;
   //Store the reversed coordinates on every label,
@@ -58,6 +58,9 @@ class Edge implements GraphEdgeLabel<Edge> {
   Iterable<Node> get terminatingNodes => _delegate.terminatingNodes.map((n) => n.label);
 
   bool get isDirected => _delegate.isDirected;
+
+  Edge asDirected({bool asForward: true}) =>
+      _delegate.asDirectedEdge(asForward: asForward).label;
 
   /**
    * Computes the (as yet unknown) location
@@ -131,35 +134,10 @@ class Edge implements GraphEdgeLabel<Edge> {
       knownLoc.right.ifPresent((v) {
         right = v;
       });
-      var connection = start.connection(end);
-      if (connection != null
-            && !_listEq.equals(connection.label.coordinates, coords)
-            && !_listEq.equals(connection.label._revCoordinates, coords)) {
-        //There's already an edge in the graph between these two nodes.
-        //Split the coordinates equally either side of the midpoint.
-        var len = coords.length;
-        var mid;
-        if (len % 2 == 0) {
-          mid = new LineSegment(coords[len ~/ 2 - 1], coords[len ~/ 2]).midpoint;
-        } else {
-          mid = coords[len ~/ 2];
-        }
-        var initCoords =
-            concat([coords.take(coords.length ~/ 2), [mid]])
-            .toList(growable: false);
-        print("INIT COORDS: $initCoords");
-        var lastCoords =
-            concat([[mid], coords.skip(coords.length ~/ 2)])
-            .toList(growable: false);
-        print("LAST COORDS: $lastCoords");
-        addSplitEdge(initCoords);
-        addSplitEdge(lastCoords);
-        return;
-      }
       graph._addCoordinateList(geomIndex, coords, start, end,
           on: knownLoc.on, left: left, right: right);
     }
-    graph.delegate.removeEdge(this);
+    graph._delegate.removeEdge(this);
     splitCoords.forEach(addSplitEdge);
   }
 
@@ -316,6 +294,39 @@ class Edge implements GraphEdgeLabel<Edge> {
       throw new ArgumentError("Can only merge labels with equal coords");
     }
     return new Edge._(graph, coordinates, mergedLocations);
+  }
+
+  /**
+   * Compares edges by the position around the node via a simple sweepline algorithm.
+   * The sweepline begins along the negative x-axis and sweeps in an anti-clockwise
+   * direction. Edges are ordered by the temporal order in which the sweepline
+   * crosses the first coordinate in the edge away from the node.
+   */
+  int compareOrientation(Node node, Edge edge) {
+    if (this == edge)
+      return 0;
+    //The line segment between the node and the ith
+    //coordinate of edge.
+    LineSegment _rayToCoord(Edge e, i) {
+      assert(e.terminatingNodes.contains(node));
+      var coord = (
+          node.coordinate == e._coordinates.first
+            ? e._revCoordinates[i]
+            : e._coordinates[i]);
+      return new LineSegment(node.coordinate, coord);
+    }
+    int i = 1;
+    var thisRay, otherRay;
+    while (i < this.coordinates.length
+           && i < edge.coordinates.length) {
+      thisRay = _rayToCoord(this, i);
+      otherRay = _rayToCoord(edge, i);
+      var cmp = thisRay.angle.compareTo(otherRay.angle);
+      if (cmp != 0)
+        return cmp;
+      i++;
+    }
+    return thisRay.magnitude.compareTo(otherRay.magnitude);
   }
 
   bool operator ==(Object other) =>

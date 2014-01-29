@@ -21,6 +21,11 @@ class Node implements GraphNodeLabel<Node> {
   final Coordinate coordinate;
   final Tuple<Location,Location> locations;
 
+  GraphNode<Node> get _delegate => graph._delegate.nodeByLabel(this);
+
+  Iterable<Edge> get terminatingEdges =>
+      _delegate.terminatingEdges.map((e) => e.label);
+
   Node._(this.graph, this.coordinate, this.locations);
 
   bool operator ==(Object other) =>
