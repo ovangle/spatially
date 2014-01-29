@@ -218,6 +218,27 @@ void main() {
 
 
     });
+
+
+  });
+
+  group("node connection", () {
+    var graph = new Graph();
+    var n0 = graph.addNode(new MockNodeLabel(0));
+    var n1 = graph.addNode(new MockNodeLabel(1));
+    var n2 = graph.addNode(new MockNodeLabel(2));
+    test("adding an edge should connect two nodes", () {
+      var e01 = graph.addUndirectedEdge(new MockEdgeLabel(0,1), n0, n1);
+      expect(n0.connection(n1), e01);
+      var e02 = graph.addUndirectedEdge(new MockEdgeLabel(0,2), n0, n2);
+      expect(n0.connection(n2), e02);
+    });
+
+    test("removing an edge should remove the connection between two nodes", () {
+      graph.removeEdge(new MockEdgeLabel(0,1));
+      expect(n0.connection(n1), null);
+      expect(n0.connection(n2).label, new MockEdgeLabel(0,2));
+    });
   });
 
 

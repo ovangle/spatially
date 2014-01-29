@@ -13,7 +13,7 @@ UnorderedIterableEquality<List> iterEq =
     new UnorderedIterableEquality<List>(new ListEquality());
 
 main() {
-  group("add geometries", () {
+  group("add geometries:", () {
     GeometryFactory geomFactory = new GeometryFactory();
     test("should be able to add an empty point to a geometry graph", () {
 

@@ -8,7 +8,7 @@ import 'package:spatially/geomgraph/intersector.dart';
 EdgeSetIntersector _edgeSetIntersector = SIMPLE_EDGE_SET_INTERSECTOR;
 
 main() {
-  group("edge splitting", () {
+  group("edge splitting:", () {
     GeometryFactory geomFactory = new GeometryFactory();
 
     test("should be able to edge split two linestrings", () {

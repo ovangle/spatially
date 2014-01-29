@@ -39,7 +39,7 @@ class Edge implements GraphEdgeLabel<Edge> {
          List<Coordinate> coords,
          Tuple<Location,Location> this.locations) :
     _coordinates = coords,
-    _revCoordinates = new List.from(coords, growable: false);
+    _revCoordinates = new List.from(coords.reversed, growable: false);
 
   Edge._from(Edge label) :
     graph = label.graph,
@@ -311,8 +311,8 @@ class Edge implements GraphEdgeLabel<Edge> {
       assert(e.terminatingNodes.contains(node));
       var coord = (
           node.coordinate == e._coordinates.first
-            ? e._revCoordinates[i]
-            : e._coordinates[i]);
+            ? e._coordinates[i]
+            : e._revCoordinates[i]);
       return new LineSegment(node.coordinate, coord);
     }
     int i = 1;
@@ -326,6 +326,10 @@ class Edge implements GraphEdgeLabel<Edge> {
         return cmp;
       i++;
     }
+    if (i < this.coordinates.length)
+      return -1;
+    if (i < edge.coordinates.length)
+      return 1;
     return thisRay.magnitude.compareTo(otherRay.magnitude);
   }
 

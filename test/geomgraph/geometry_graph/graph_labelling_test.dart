@@ -8,7 +8,7 @@ import 'package:spatially/geomgraph/geometry_graph.dart';
 import 'package:spatially/geomgraph/location.dart';
 
 void main() {
-  group("edge labelling", () {
+  group("edge labelling:", () {
     GeometryFactory geomFactory = new GeometryFactory();
     //No need to test points.
     test("should label the edges of a graph containing linestrings correctly", () {
@@ -165,10 +165,6 @@ void main() {
       geomGraph.nodeGraph();
       geomGraph.labelGraph();
 
-      for (var edge in geomGraph.edges) {
-        print(edge);
-      }
-
       var testEdges = geomGraph
           .edges.where((e) => e.coordinates.every((c) => c.x == 1));
       /*
@@ -177,8 +173,8 @@ void main() {
       */
       expect(testEdges.map((e) => e.locations),
           everyElement(
-             new Tuple(new Location(poly1, on: loc.BOUNDARY, left: loc.EXTERIOR, right: loc.INTERIOR),
-                       new Location(poly2, on: loc.BOUNDARY, left: loc.INTERIOR, right: loc.EXTERIOR))
+             new Tuple(new Location(poly1, on: loc.BOUNDARY, left: loc.INTERIOR, right: loc.EXTERIOR),
+                       new Location(poly2, on: loc.BOUNDARY, left: loc.EXTERIOR, right: loc.INTERIOR))
              ));
     });
   });

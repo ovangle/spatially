@@ -8,7 +8,7 @@ import 'package:spatially/geomgraph/geometry_graph.dart';
 import 'package:spatially/geomgraph/location.dart';
 
 void main() {
-  group("node", () {
+  group("edge noding:", () {
     GeometryFactory geomFactory = new GeometryFactory();
     test("should be able to node a graph of two points", () {
       var p1 = geomFactory.fromWkt("POINT(0 0)");
