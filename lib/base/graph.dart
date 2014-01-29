@@ -182,13 +182,15 @@ class Graph<N extends GraphNodeLabel, E extends GraphEdgeLabel> {
   }
 
   _addEdge(GraphEdge<E> edge) {
+    //Add the edge in first, because we might want to access it from the labels
+    //delegate if we have ordered labels.
+    _labelledEdges[edge.label] = edge;
     edge.startNode._outgoingEdges.add(edge);
     edge.endNode._incomingEdges.add(edge);
     if (!edge.isDirected) {
       edge.startNode._incomingEdges.add(edge);
       edge.endNode._outgoingEdges.add(edge);
     }
-    _labelledEdges[edge.label] = edge;
     return _labelledEdges[edge.label];
   }
 

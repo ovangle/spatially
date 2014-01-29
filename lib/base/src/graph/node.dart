@@ -28,8 +28,10 @@ class GraphNode<N extends GraphNodeLabel> {
     _incomingEdges = (graph.starAtNode ? new SplayTreeSet(_compareEdges) : new Set());
   }
 
-  UnmodifiableSetView<GraphEdge> get outgoingEdges => new UnmodifiableSetView(_outgoingEdges);
-  UnmodifiableSetView<GraphEdge> get incomingEdges => new UnmodifiableSetView(_incomingEdges);
+  UnmodifiableSetView<GraphEdge> get outgoingEdges =>
+      new UnmodifiableSetView(_outgoingEdges);
+  UnmodifiableSetView<GraphEdge> get incomingEdges =>
+      new UnmodifiableSetView(_incomingEdges);
 
   UnmodifiableSetView<GraphEdge> get terminatingEdges =>
       new UnmodifiableSetView(_outgoingEdges.union(_incomingEdges));
@@ -45,7 +47,9 @@ class GraphNode<N extends GraphNodeLabel> {
       commonEdges = terminatingEdges
           .where((e) => e.startNode == this && e.endNode == this);
     } else {
-      commonEdges = terminatingEdges.intersection(node.terminatingEdges);
+      commonEdges =
+          new HashSet.from(node.terminatingEdges)
+          .intersection(new HashSet.from(terminatingEdges));
     }
     if (commonEdges.isEmpty)
       return null;
