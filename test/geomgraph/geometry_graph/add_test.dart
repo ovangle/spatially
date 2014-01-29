@@ -141,7 +141,7 @@ main() {
           """);
       var geom2 = geomFactory.createEmptyPoint();
       var g = new GeometryGraph(geom1, geom2);
-      g.addGeometryList(geom1);
+      g.addGeometry(geom1);
       expect(g.nodes.map((n) => n.coordinate),
              unorderedEquals([ new Coordinate(0, 40),
                                new Coordinate(80, 0),
@@ -151,6 +151,22 @@ main() {
             [ [ new Coordinate(0, 40), new Coordinate(40, 40), new Coordinate(40, 0), new Coordinate(0, 0), new Coordinate(0,40)],
               [ new Coordinate(80, 0), new Coordinate(80, 80), new Coordinate(120, 40)
             ] ]));
+    });
+
+    test("should be able to add multiple geometries between the same coordinates which follow different paths", () {
+      var lstr1 = geomFactory.fromWkt("LINESTRING(0 0, 1 0, 1 1)");
+      var lstr2 = geomFactory.fromWkt("LINESTRING(0 0, 0 1, 1 1)");
+      var g = new GeometryGraph(lstr1, lstr2);
+      g.addLinestring(lstr1);
+      g.addLinestring(lstr2);
+      expect(g.nodes.map((n) => n.coordinate),
+             unorderedEquals([new Coordinate(0,0), new Coordinate(1,1), new Coordinate(0,1)]));
+      expect(g.edges.map((e) => e.coordinates),
+             unorderedEquals([ [ new Coordinate(0,0), new Coordinate(1,0), new Coordinate(1,1)],
+                               [ new Coordinate(0,0), new Coordinate(0,1)],
+                               [ new Coordinate(0,1), new Coordinate(1,1)]
+                             ]));
+
     });
   });
 }

@@ -169,12 +169,17 @@ void main() {
         print(edge);
       }
 
+      var testEdges = geomGraph
+          .edges.where((e) => e.coordinates.every((c) => c.x == 1));
+      /*
       var testEdge = geomGraph
           .edgeByCoordinates([new Coordinate(1,0), new Coordinate(1,1)]);
-
-      expect(testEdge.locations,
+      */
+      expect(testEdges.map((e) => e.locations),
+          everyElement(
              new Tuple(new Location(poly1, on: loc.BOUNDARY, left: loc.EXTERIOR, right: loc.INTERIOR),
-                       new Location(poly2, on: loc.BOUNDARY, left: loc.INTERIOR, right: loc.EXTERIOR)));
+                       new Location(poly2, on: loc.BOUNDARY, left: loc.INTERIOR, right: loc.EXTERIOR))
+             ));
     });
   });
 }

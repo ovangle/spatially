@@ -4,9 +4,12 @@ import 'add_test.dart' as add;
 import 'edge_splitting_test.dart' as edge_splitting;
 import 'graph_noding_test.dart' as graph_noding;
 import 'graph_labelling_test.dart' as graph_labelling;
+import 'node_sorting_test.dart' as node_sorting;
+
 void main() {
   add.main();
   edge_splitting.main();
   graph_noding.main();
   graph_labelling.main();
+  node_sorting.main();
 }
