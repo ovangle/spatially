@@ -41,7 +41,7 @@ import 'package:spatially/base/coordinate.dart';
  * -- multipolygon    -> [MultiPolygon]
  * -- geometrycollection -> [GeometryList]
  *
- * The other WKT tag types will cause a [WktParseError]
+ * The other WKT tag types will cause a [FormatException]
  * if encountered in the stream.
  *
  * The [Codec] also supports the non-standard tag
@@ -186,13 +186,13 @@ class WktDecoder extends Converter<String,Geometry> {
           case _WktKeyword.COLLECTION_TAG:
             return _parseGeometryCollection(tokens);
           default:
-            throw new WktParseError(
+            throw new FormatException(
                 "Unrecognised geometry tag (${currentToken.value}) "
                 "at position ${currentToken.position}");
         }
       }
     } else {
-      throw new WktParseError("Empty input");
+      throw new FormatException("Empty input");
     }
   }
 
@@ -201,7 +201,7 @@ class WktDecoder extends Converter<String,Geometry> {
     if (pointCoords.isEmpty)
       return factory.createEmptyPoint();
     if (pointCoords.length > 1) {
-      throw new WktParseError("Too many coordinates for valid Point geometry");
+      throw new FormatException("Too many coordinates for valid Point geometry");
     }
     return factory.createPoint(pointCoords.single);
   }
@@ -227,7 +227,7 @@ class WktDecoder extends Converter<String,Geometry> {
     var points = new List<Point>();
     for (var i in range(multipointCoords.length)) {
       if (multipointCoords[i].length != 1) {
-        throw new WktParseError("Point $i in multipoint has an invalid number of coordinates");
+        throw new FormatException("Point $i in multipoint has an invalid number of coordinates");
       }
       points.add(factory.createPoint(multipointCoords[i].single));
     }
@@ -244,7 +244,7 @@ class WktDecoder extends Converter<String,Geometry> {
     if (!tokens.moveNext()
          || (tokens.current.value != _WktDelimeter.L_PARENS
              && tokens.current.value != _WktKeyword.EMPTY)) {
-      throw new WktParseError("Expected the start of a list of ring coordinates "
+      throw new FormatException("Expected the start of a list of ring coordinates "
                               "at position ${tokens.current.endPos}");
     }
     if (tokens.current.value == _WktKeyword.EMPTY)
@@ -260,7 +260,7 @@ class WktDecoder extends Converter<String,Geometry> {
       if (!tokens.moveNext()
           || (tokens.current.value != _WktDelimeter.COMMA
               && tokens.current.value != _WktDelimeter.R_PARENS)) {
-        throw new WktParseError("Expected the end of a list of ring coordinates "
+        throw new FormatException("Expected the end of a list of ring coordinates "
                                 "at position ${tokens.current.endPos}");
       }
       if (tokens.current.value == _WktDelimeter.R_PARENS) {
@@ -273,7 +273,7 @@ class WktDecoder extends Converter<String,Geometry> {
     if (!tokens.moveNext()
          || (tokens.current.value != _WktDelimeter.L_PARENS
             && tokens.current.value != _WktKeyword.EMPTY)) {
-      throw new WktParseError("Expected the start of a GeometryList "
+      throw new FormatException("Expected the start of a GeometryList "
                               "at position ${tokens.current.position}");
     }
     GeometryList geomList = factory.createEmptyGeometryList();
@@ -284,7 +284,7 @@ class WktDecoder extends Converter<String,Geometry> {
       if (!tokens.moveNext()
           || (tokens.current.value != _WktDelimeter.R_PARENS
               && tokens.current.value != _WktDelimeter.COMMA)) {
-        throw new WktParseError("Expected the end of a GeometryList or another Geometry "
+        throw new FormatException("Expected the end of a GeometryList or another Geometry "
                                 "at position ${tokens.current.position}");
       }
       if (tokens.current.value == _WktDelimeter.R_PARENS) {
@@ -297,7 +297,7 @@ class WktDecoder extends Converter<String,Geometry> {
     if (!tokens.moveNext()
         || (tokens.current.value != _WktDelimeter.L_PARENS
            && tokens.current.value != _WktKeyword.EMPTY)) {
-      throw new WktParseError("Expected the start of a coordinate sequence list "
+      throw new FormatException("Expected the start of a coordinate sequence list "
                               "at position ${tokens.current.position}");
     }
     var coordSeqs = new List<List<Coordinate>>();
@@ -309,7 +309,7 @@ class WktDecoder extends Converter<String,Geometry> {
       if (!tokens.moveNext()
           || (tokens.current.value != _WktDelimeter.R_PARENS
               && tokens.current.value != _WktDelimeter.COMMA)) {
-        throw new WktParseError("Expected the end of a coordinate sequence list "
+        throw new FormatException("Expected the end of a coordinate sequence list "
                                 "or another coordinate sequence "
                                 "at position ${tokens.current.position}");
       }
@@ -323,7 +323,7 @@ class WktDecoder extends Converter<String,Geometry> {
     if (!tokens.moveNext()
         || (tokens.current.value != _WktDelimeter.L_PARENS
             && tokens.current.value != _WktKeyword.EMPTY)) {
-      throw new WktParseError("Expected start of coordinate sequence"
+      throw new FormatException("Expected start of coordinate sequence"
                               "at ${tokens.current.endPos}");
     }
     var coords = new List<Coordinate>();
@@ -334,7 +334,7 @@ class WktDecoder extends Converter<String,Geometry> {
       if (!tokens.moveNext()
           || (tokens.current.value != _WktDelimeter.R_PARENS
               && tokens.current.value != _WktDelimeter.COMMA)) {
-        throw new WktParseError("Expected next coordinate or end of list "
+        throw new FormatException("Expected next coordinate or end of list "
                                 "at ${tokens.current.endPos})");
       }
       if (tokens.current.value == _WktDelimeter.R_PARENS) {
@@ -356,7 +356,7 @@ class WktDecoder extends Converter<String,Geometry> {
   double parseOrdinate(_TokenIterator tokens) {
     if (!tokens.moveNext()
         || tokens.current is! _WktNumber) {
-      throw new WktParseError("Expected an ordinate at ${tokens.current.endPos}");
+      throw new FormatException("Expected an ordinate at ${tokens.current.endPos}");
     }
     return tokens.current.value;
   }
@@ -388,7 +388,7 @@ class _TokenIterator extends Iterator<_Token> {
     if (currentToken != null) return true;
     currentToken = _WktNumber.next(input, strPos);
     if (currentToken != null) return true;
-    throw new WktParseError("Unrecognised token in string at position $strPos");
+    throw new FormatException("Unrecognised token in string at position $strPos");
   }
 
   _Token peekNext() {
@@ -499,10 +499,4 @@ class _WktDelimeter extends _Token {
     }
     return null;
   }
-}
-
-class WktParseError extends Error {
-  String msg;
-  WktParseError(String this.msg) : super();
-  toString() => msg;
 }
