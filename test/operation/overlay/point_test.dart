@@ -5,9 +5,9 @@ import 'package:spatially/spatially.dart';
 import 'package:spatially/operation/overlay.dart';
 
 void main() {
-  group("overlay:", () {
+  group('point &', () {
     GeometryFactory geomFactory = new GeometryFactory();
-    group("point & point:", () {
+    group("point:", () {
       test("POINT EMPTY, POINT EMPTY", () {
         var g1 = geomFactory.createEmptyPoint();
         var g2 = geomFactory.createEmptyPoint();
@@ -47,6 +47,28 @@ void main() {
 
         expect(overlayGeometries(g1,g2, OVERLAY_SYMMETRIC_DIFFERENCE),
               g2,
+               reason: "symmetric difference");
+
+      });
+
+      test("POINT (0,0), POINT EMPTY", () {
+        var g1 = geomFactory.fromWkt("POINT (0 0)");
+        var g2 = geomFactory.createEmptyPoint();
+
+        expect(overlayGeometries(g1,g2, OVERLAY_INTERSECTION),
+            geomFactory.createEmptyPoint(),
+            reason: "intersection");
+
+        expect(overlayGeometries(g1,g2, OVERLAY_UNION),
+               g1,
+               reason: "union");
+
+        expect(overlayGeometries(g1,g2, OVERLAY_DIFFERENCE),
+               g1,
+               reason: "difference");
+
+        expect(overlayGeometries(g1,g2, OVERLAY_SYMMETRIC_DIFFERENCE),
+              g1,
                reason: "symmetric difference");
 
       });
@@ -93,7 +115,7 @@ void main() {
                reason: "symmetric difference");
       });
     });
-    group("point & linestring:", () {
+    group("linestring:", () {
       test("POINT EMPTY, LINESTRING EMPTY", () {
         var g1 = geomFactory.createEmptyPoint();
         var g2 = geomFactory.createEmptyLinestring();
@@ -155,7 +177,8 @@ void main() {
 
       });
     });
-    group("point & polygon:", () {
+
+    group("polygon:", () {
       //No intersection
       test("POINT(-1 0), Polygon(0 0, 1 0, 1 1, 0 1, 0 0)", () {
         var g1 = geomFactory.fromWkt("POINT(-1 0)");

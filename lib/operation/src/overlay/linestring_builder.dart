@@ -37,6 +37,10 @@ class _LinestringBuilder extends _OverlayBuilder {
       lstrs.add(_buildLinestring(edge));
     }
 
+    for (var node in graph.nodes) {
+      print(node);
+    }
+
     switch (lstrs.length) {
       case 0:
         return geomFactory.createEmptyLinestring();
@@ -78,6 +82,10 @@ class _LinestringBuilder extends _OverlayBuilder {
         }
       }
     }
+    if (node.isIsolated) {
+      print("removing: $node");
+      graph.removeNode(node);
+    }
   }
 
   _extendEnd(Edge edge, Node node, LinkedList<Coordinate> lstrCoords) {
@@ -110,5 +118,9 @@ class _LinestringBuilder extends _OverlayBuilder {
       _extendEnd(edgeAfter, edgeAfter.startNode, lstrCoords);
     }
     graph.removeEdge(edgeAfter);
+    if (node.isIsolated) {
+      print("removing: $node");
+      graph.removeNode(node);
+    }
   }
 }
