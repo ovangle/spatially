@@ -200,41 +200,55 @@ class Edge implements GraphEdgeLabel<Edge> {
     return uniqInfos;
   }
 
+  /**
+   * Splits the coordinates of the edge at each position where an
+   * intersection was recorded by the edge set intersector.
+   *
+   * Coordinates are split inclusively so the end of each split contains
+   * the start of the next one (and vice versa).
+   */
   Iterable<List<Coordinate>> splitCoordinates(Iterable<IntersectionInfo> infos) {
     var nextStartCoord;
     int splitStart = 0;
 
+    // Collects coordinates from the list of intersection infos
+    // begining with the end of the last intersection and ending
+    // at the start of the intersection.
     List<Coordinate> coordsBefore(IntersectionInfo info) {
+
       List<Coordinate> coordsBefore = [];
       if (nextStartCoord != null)
         coordsBefore.add(nextStartCoord);
       if (nextStartCoord == coordinates[splitStart]) {
         splitStart++;
       }
-      coordsBefore.addAll(coordinates.getRange(splitStart, info.segIndex0 + 1));
-      splitStart = info.segIndex0 + 1;
+
+      if (splitStart <= info.segIndex0)
+        coordsBefore.addAll(slice(coordinates, splitStart, info.segIndex0));
 
       var isect = _getIntersection(info);
       if (isect is Coordinate) {
-        if (isect != coordsBefore.last)
+        if (splitStart <= info.segIndex0
+              && isect != coordinates[info.segIndex0]) {
+          coordsBefore.add(coordinates[info.segIndex0]);
+        }
+        if (coordsBefore.isNotEmpty) {
           coordsBefore.add(isect);
+        }
         nextStartCoord = isect;
       } else if (isect is LineSegment) {
-        var start = coordinates[info.segIndex0];
-        if (isect.start != start) {
-          //The intersection starts midway down the
-          //current segment. There is still a coordinate
-          //to add to the segment
-          //Figure out the closest end of the segment
-          coordsBefore.add(isect.start);
-        } else if (coordsBefore.length <= 1) {
-          //The segment appears at the start of the segment
-          //and there was a previous intersection at the start
-          return [];
+        if (splitStart <= info.segIndex0
+              && isect.start != coordinates[info.segIndex0]) {
+          coordsBefore.add(coordinates[info.segIndex0]);
         }
+        if (coordsBefore.isNotEmpty) {
+          coordsBefore.add(isect.start);
+        }
+        nextStartCoord = isect.end;
       } else {
         assert(false);
       }
+      splitStart = info.segIndex0 + 1;
       return coordsBefore;
     }
 
@@ -246,7 +260,6 @@ class Edge implements GraphEdgeLabel<Edge> {
     List<Coordinate> coordsAt(IntersectionInfo info) {
       var isect = _getIntersection(info);
       if (isect is LineSegment) {
-        nextStartCoord = isect.end;
         return [isect.start, isect.end];
       }
       return [];
@@ -259,6 +272,11 @@ class Edge implements GraphEdgeLabel<Edge> {
         .expand((info) => [coordsBefore(info), coordsAt(info)])
         .where((coords) => coords.isNotEmpty)
         .toList();
+
+    //There was only one intersection, at the start of the first
+    //segment.
+    if (splitCoords.isEmpty)
+      return [coordinates];
 
     //Add the coords after the last intersection
     var remainingCoords =

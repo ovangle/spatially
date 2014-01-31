@@ -10,7 +10,6 @@ EdgeSetIntersector _edgeSetIntersector = SIMPLE_EDGE_SET_INTERSECTOR;
 main() {
   group("edge splitting:", () {
     GeometryFactory geomFactory = new GeometryFactory();
-
     test("should be able to edge split two linestrings", () {
       var lstr1 = geomFactory.fromWkt("LINESTRING(0 0, 1 1, 1 0, 0 1)");
       var lstr2 = geomFactory.fromWkt("Linestring(0.5 1, 1 0.5)");
@@ -43,9 +42,9 @@ main() {
       var testEdge1 = geomGraph
           .edgeByCoordinates([new Coordinate(0,0), new Coordinate(1,0), new Coordinate(1,1), new Coordinate(0,1)]);
       expect(testEdge1.splitCoordinates(infos),
-             [ [new Coordinate(0,0), new Coordinate(0.5, 0)],
-               [new Coordinate(0.5,0), new Coordinate(1,0), new Coordinate(1,1)],
-               [new Coordinate(1,1), new Coordinate(0,1)]
+             [ [ new Coordinate(0,0),  new Coordinate(0.5, 0) ],
+               [ new Coordinate(0.5,0), new Coordinate(1,0), new Coordinate(1,1) ],
+               [ new Coordinate(1,1),  new Coordinate(0,1) ]
              ],
              reason: "linestring 1");
 
@@ -59,6 +58,24 @@ main() {
              ],
              reason: "linestring 2");
 
+    });
+
+    test("linestrings intersect and end and strt", () {
+      var g1 = geomFactory.fromWkt("LINESTRING(0 0, 1 0)");
+      var g2 = geomFactory.fromWkt("LINESTRING(1 0, 0 1)");
+      var graph = new GeometryGraph(g1, g2);
+      graph.addLinestring(g1);
+      graph.addLinestring(g2);
+
+      Iterable<IntersectionInfo> infos = SIMPLE_EDGE_SET_INTERSECTOR(graph.edges.toList());
+
+      var e1 = graph.edgeByCoordinates([new Coordinate(0,0), new Coordinate(1,0)]);
+      expect(e1.splitCoordinates(infos),
+             [[ new Coordinate(0,0), new Coordinate(1,0) ]]);
+
+      var e2 = graph.edgeByCoordinates([new Coordinate(1,0), new Coordinate(0,1)]);
+      expect(e2.splitCoordinates(infos),
+             [[new Coordinate(1,0), new Coordinate(0,1)]]);
     });
 
     test("segment intersection as last segment of polygon", () {

@@ -24,6 +24,7 @@ import 'package:spatially/spatially.dart';
 import 'package:spatially/base/graph.dart';
 import 'package:spatially/base/linkedlist.dart';
 import 'package:spatially/base/tuple.dart';
+import 'package:spatially/base/iterables.dart' show slice;
 
 import 'package:spatially/algorithm/cg_algorithms.dart' as cg_algorithms show isCounterClockwise;
 import 'package:spatially/algorithm/coordinate_locator.dart' show locateCoordinateIn;
