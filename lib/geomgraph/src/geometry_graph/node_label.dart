@@ -28,11 +28,14 @@ class Node implements GraphNodeLabel<Node> {
 
   Node._(this.graph, this.coordinate, this.locations);
 
+  bool get isIsolated => _delegate.isIsolated;
+
   bool operator ==(Object other) =>
       other is Node && other.coordinate == coordinate;
 
   int get hashCode => coordinate.hashCode;
 
   String toString() => "node: $coordinate";
+
 
 }
