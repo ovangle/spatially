@@ -28,6 +28,31 @@ part 'src/graph/node.dart';
 
 const UnorderedIterableEquality _setEq = const UnorderedIterableEquality();
 
+/**
+ * A [Graph] abstractly represents the connectivity between elements of a set of objects.
+ *
+ * Each of the elements is represented by a [GraphNode], and each connection,
+ * which can be either directed or undirected, is represented by a [GraphEdge].
+ * There can be at most one [GraphEdge] between any two [GraphNode]s in the graph.
+ *
+ * A strong seperation is preserved between the data underlying the connections
+ * and the connectivity. Every node and edge is labelled by an [GraphNodeLabel] or
+ * [GraphEdgeLabel] respectively.
+ *
+ * Every edge and node in the graph must be labelled, and this label is expected
+ * to serve as a unique identifier for the graph element. This way the connectivity
+ * by the elements of the graph can be analysed without requiring knowledge of the
+ * implementation domain.
+ *
+ * Typically, when implementing a [Graph], the implementing class would identify
+ * nodes and edges from the implementation domain and define node and edge labels
+ * which inherit from [GraphNodeLabel] and [GraphEdgeLabel] respectively.
+ *
+ * Thus a user of the implementing class sees the edges and nodes as they appear
+ * in the dataset, but the implementation can delegate all information about
+ * connectivity to the underlying [Graph], exposing methods from the [Graph]
+ * which are appropriate to the domain.
+ */
 class Graph<N extends GraphNodeLabel, E extends GraphEdgeLabel> {
   final BiMap<GraphNodeLabel<N>,GraphNode<N>> _labelledNodes;
   final BiMap<GraphEdgeLabel<E>, GraphEdge<E>> _labelledEdges;

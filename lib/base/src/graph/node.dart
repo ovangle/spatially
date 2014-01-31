@@ -56,6 +56,11 @@ class GraphNode<N extends GraphNodeLabel> {
     return commonEdges.single;
   }
 
+  /**
+   * A [GraphNode] is isolated if no edges in the graph terminate at the node.
+   */
+  bool get isIsolated => terminatingEdges.isEmpty;
+
   bool operator ==(Object other) =>
       other is GraphNode<N> && other.label == label;
 
