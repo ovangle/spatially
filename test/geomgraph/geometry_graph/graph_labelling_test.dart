@@ -177,5 +177,32 @@ void main() {
                        new Location(poly2, on: loc.BOUNDARY, left: loc.EXTERIOR, right: loc.INTERIOR))
              ));
     });
+
+    test("should be able to label the edges of two overlapping linestrins", () {
+      var g1 = geomFactory.fromWkt("LINESTRING(0 0, 1 0, 1 1)");
+      var g2 = geomFactory.fromWkt("LINESTRING(0.5 0, 1 0, 1 0.5)");
+      var geomGraph = new GeometryGraph(g1, g2);
+      geomGraph.addLinestring(g1);
+      geomGraph.addLinestring(g2);
+      geomGraph.nodeGraph();
+      geomGraph.labelGraph();
+
+      var e1 = geomGraph.edgeByCoordinates([new Coordinate(0,0), new Coordinate(0.5, 0)]);
+      expect(e1.locations,
+             new Tuple(new Location(g1, on: loc.INTERIOR),
+                       new Location(g2, on: loc.EXTERIOR)));
+
+      var e2 = geomGraph.edgeByCoordinates([new Coordinate(0.5,0), new Coordinate(1,0), new Coordinate(1,0.5)]);
+      expect(e2.locations,
+             new Tuple(new Location(g1, on: loc.INTERIOR),
+                       new Location(g2, on: loc.INTERIOR)));
+
+      var e3 = geomGraph.edgeByCoordinates([new Coordinate(1, 0.5), new Coordinate(1,1)]);
+      expect(e3.locations,
+             new Tuple(new Location(g1, on: loc.INTERIOR),
+                       new Location(g2, on: loc.EXTERIOR)));
+
+
+    });
   });
 }

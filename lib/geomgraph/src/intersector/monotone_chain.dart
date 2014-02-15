@@ -22,7 +22,7 @@ part of spatially.geomgraph.intersector;
  * Although having the same worst case complexity of the simple intersector,
  * the average case should perform a lot faster.
  */
-Set<IntersectionInfo> _monotoneChainSweepLineIntersector(
+IntersectionSet _monotoneChainSweepLineIntersector(
     List<Edge> edges,
     { bool testAll: false }) {
   /* FIXME: currently the testAll argument is ignored */
@@ -49,7 +49,7 @@ Set<IntersectionInfo> _monotoneChainSweepLineIntersector(
   var deleteEvtIdxs =
       range(events.length).where((i) => events[i].evtType == SweeplineEvent.DELETE_EVT);
 
-  Set<IntersectionInfo> intersections = new Set();
+  IntersectionSet intersections = new IntersectionSet();
   for (var i in insertEvtIdxs) {
     var insertEvent = events[i];
     //drop all delete events before i. We're not interested in them any more
@@ -85,7 +85,7 @@ Set<IntersectionInfo> _intersectionsBetween(List<SweeplineEvent> events,
  * * The envelope of the chain is equal to the envelope generated
  *   from the first and last coordinates of the chain.
  */
-class MonotoneChain extends Object with IterableMixin<Coordinate> {
+class MonotoneChain extends IterableBase<Coordinate> {
   final MonotoneChainPartition _mchains;
   /**
    * The index into the list of edge coordinates.
@@ -124,33 +124,34 @@ class MonotoneChain extends Object with IterableMixin<Coordinate> {
    */
   Envelope get envelope => new Envelope.fromCoordinates(first, last);
 
-  Iterable<IntersectionInfo> intersectionsWith(MonotoneChain mc1) {
+  IntersectionSet intersectionsWith(MonotoneChain mc1) {
     //No intersections with self.
-    if (this == mc1) return new Set();
+    if (this == mc1) return new IntersectionSet();
     //If the envelopes don't intersect, the chains can't intersect.
-    if (!envelope.intersectsEnvelope(mc1.envelope)) return new Set();
-    return _searchSubchains(edge, start, end, mc1.edge, mc1.start, mc1.end)
-           .where((info) => info.isPresent)
-           .map((info) => info.value);
+    if (!envelope.intersectsEnvelope(mc1.envelope)) return new IntersectionSet();
+    return _searchSubchains(edge, start, end, mc1.edge, mc1.start, mc1.end);
   }
 
-  Set<Optional<IntersectionInfo>> _searchSubchains(Edge e0, int start0, int end0,
-                                                   Edge e1, int start1, int end1) {
+  IntersectionSet _searchSubchains(Edge e0, int start0, int end0,
+                                    Edge e1, int start1, int end1) {
     if (end0 - start0 == 1 && end1 - start1 == 1) {
-      Set infos = new Set();
-      infos.add(_getIntersectionInfo(e0, start0, e1, start1));
+      IntersectionSet infos = new IntersectionSet();
+      var intersection = new IntersectionInfo(e0,start0,e1,start1);
+      if (intersection != null) {
+        infos.add(intersection);
+      }
       return infos;
     }
     var subchain1 = new MonotoneChain._(_mchains, start0, end0);
     var subchain2 = new MonotoneChain._(_mchains, start0, end0);
 
     if (!subchain1.envelope.intersectsEnvelope(subchain2.envelope)) {
-      return new Set();
+      return new IntersectionSet();
     }
     var mid0 = (start0 + end0) ~/ 2;
     var mid1 = (start1 + end1) ~/ 2;
 
-    var infos = new Set();
+    var infos = new IntersectionSet();
     if (end0 - start0 > 1) {
       if (mid0 > start0) infos.addAll(_searchSubchains(e0, start0, mid0, e1, start1, end1));
       if (mid0 < end0)   infos.addAll(_searchSubchains(e0, mid0,   end0, e1, start1, end1));

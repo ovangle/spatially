@@ -102,6 +102,12 @@ class GeometryGraph {
     _delegate.removeNode(node);
   }
 
+  void removeIfIsolated(Node node) {
+    if (node.isIsolated) {
+      _delegate.removeNode(node);
+    }
+  }
+
   GraphNode<Node> _addCoordinate(int geomIdx, Coordinate c, {int on}) {
     var locations = new Tuple(
             geomIdx == 1 ? on : locateCoordinateIn(c, geometries.$1),

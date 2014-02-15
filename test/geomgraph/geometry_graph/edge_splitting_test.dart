@@ -47,7 +47,6 @@ main() {
                [ new Coordinate(1,1),  new Coordinate(0,1) ]
              ],
              reason: "linestring 1");
-
       var testEdge2 = geomGraph
           .edgeByCoordinates([new Coordinate(-1,0), new Coordinate(0.5,0), new Coordinate(1,1), new Coordinate(2,1)]);
       expect(testEdge2.splitCoordinates(infos),
@@ -58,6 +57,22 @@ main() {
              ],
              reason: "linestring 2");
 
+    });
+    test("overlapping linestrings", () {
+      var g1 = geomFactory.fromWkt("LINESTRING(0 0, 1 0, 1 1)");
+      var g2 = geomFactory.fromWkt("LINESTRING(0.5 0, 1 0, 1 0.5)");
+
+      var geomGraph = new GeometryGraph(g1,g2);
+      geomGraph.addGeometry(g1);
+      geomGraph.addGeometry(g2);
+
+      Iterable infos = SIMPLE_EDGE_SET_INTERSECTOR(new List.from(geomGraph.edges));
+      var e1 = geomGraph.edgeByCoordinates([new Coordinate(0,0), new Coordinate(1,0), new Coordinate(1,1)]);
+      expect(e1.splitCoordinates(infos),
+             [ [new Coordinate(0,0), new Coordinate(0.5, 0)],
+               [new Coordinate(0.5, 0), new Coordinate(1, 0), new Coordinate(1, 0.5)],
+               [new Coordinate(1, 0.5), new Coordinate(1,1)]
+             ]);
     });
 
     test("linestrings intersect and end and strt", () {
@@ -90,12 +105,10 @@ main() {
       var testEdge =
           geomGraph
           .edgeByCoordinates([new Coordinate(1,0), new Coordinate(2,0), new Coordinate(2,1), new Coordinate(1,1), new Coordinate(1,0)]);
-
       expect(testEdge.splitCoordinates(infos),
              [ [new Coordinate(1, 0), new Coordinate(2, 0), new Coordinate(2,1), new Coordinate(1,1)],
                [new Coordinate(1, 1), new Coordinate(1, 0)]
              ]);
-
       var testEdge2 =
           geomGraph
           .edgeByCoordinates([new Coordinate(0,0), new Coordinate(1,0), new Coordinate(1,1), new Coordinate(0,1), new Coordinate(0,0)]);
@@ -104,6 +117,31 @@ main() {
               [new Coordinate(1, 0), new Coordinate(1, 1)],
               [new Coordinate(1, 1), new Coordinate(0, 1), new Coordinate(0,0)]
             ], reason: "poly2 split coords");
+    });
+
+    test("partially overlapping polygons", () {
+      var poly1 = geomFactory.fromWkt(
+          """POLYGON( 
+              (0 0, 3 0, 3 3, 0 3, 0 0),
+              (1 1, 2 1, 2 2, 1 2, 1 1) )
+          """);
+      var poly2 = geomFactory.fromWkt(
+          """POLYGON(
+              (1.5 1.5, 4.5 1.5, 4.5 4.5, 1.5 4.5, 1.5 1.5),
+              (2.5 2.5, 3.5 2.5, 3.5 3.5, 2.5 3.5, 2.5 2.5))
+          """);
+      var geomGraph = new GeometryGraph(poly1, poly2);
+      geomGraph.addPolygon(poly1);
+      geomGraph.addPolygon(poly2);
+
+      Iterable<IntersectionInfo> infos = SIMPLE_EDGE_SET_INTERSECTOR(geomGraph.edges.toList());
+
+      var e1 = geomGraph.edgeByCoordinates([new Coordinate(1,1), new Coordinate(2,1), new Coordinate(2,2), new Coordinate(1,2), new Coordinate(1,1)]);
+      expect(e1.splitCoordinates(infos),
+            [ [ new Coordinate(1, 1), new Coordinate(2,1), new Coordinate(2, 1.5)],
+              [ new Coordinate(2, 1.5), new Coordinate(2,2), new Coordinate(1.5, 2)],
+              [ new Coordinate(1.5, 2), new Coordinate(1, 2), new Coordinate(1,1)]
+            ]);
     });
   });
 

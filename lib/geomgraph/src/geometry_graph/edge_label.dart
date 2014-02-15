@@ -141,65 +141,6 @@ class Edge implements GraphEdgeLabel<Edge> {
     splitCoords.forEach(addSplitEdge);
   }
 
-
-  /**
-   * Retrieve the intersection from the info.
-   * If necessary, reorient the linesegment intersection so that the start of the line
-   * segment is closest to the start of the intersecting segment.
-   * Assumes that `this` is the edge at info.edge0
-   */
-  dynamic /* Coordinate | LineSegment */ _getIntersection(IntersectionInfo info) {
-    var isect = info.intersection;
-    assert(identical(this, info.edge0));
-    if (isect is LineSegment) {
-      var start = coordinates[info.segIndex0];
-      if (isect.start.distanceSqr(start) > isect.end.distanceSqr(start))
-        isect = isect.reversed;
-    }
-    return isect;
-  }
-
-  /**
-   * Sorts the intersections by their position along the edge and removes any
-   * non-unique infos from the list.
-   */
-  Iterable<IntersectionInfo> _sortInfos(Iterable<IntersectionInfo> infos) {
-    var sortedInfos = infos
-        .map((info) => identical(info.edge0, this) ? info : info.symmetric)
-        .where((info) => identical(info.edge0, this))
-        .toList(growable: false)
-        ..sort((info1, info2) {
-          var cmpSegs = info1.segIndex0.compareTo(info2.segIndex0);
-          if (cmpSegs != 0) return cmpSegs;
-          return info1.edgeDistance0.compareTo(info2.edgeDistance0);
-        });
-
-    var lastSegStart, lastSegEnd;
-    LinkedList<IntersectionInfo> uniqInfos = new LinkedList();
-    for (var info in sortedInfos) {
-      var isect = _getIntersection(info);
-      if (isect is Coordinate) {
-        if (isect == lastSegStart || isect == lastSegEnd)
-          continue;
-        lastSegStart = lastSegEnd = isect;
-        uniqInfos.add(info);
-      } else if (isect is LineSegment) {
-        if (isect.start == lastSegEnd) {
-          //Keep line segments, remove coordinates.
-          uniqInfos.removeLast();
-        }
-        if (info.segIndex0 == coordinates.length - 2
-            && isect.end == coordinates[0]) {
-          uniqInfos.removeFirst();
-        }
-        uniqInfos.add(info);
-        lastSegStart = isect.start;
-        lastSegEnd = isect.end;
-      }
-    }
-    return uniqInfos;
-  }
-
   /**
    * Splits the coordinates of the edge at each position where an
    * intersection was recorded by the edge set intersector.
@@ -207,48 +148,45 @@ class Edge implements GraphEdgeLabel<Edge> {
    * Coordinates are split inclusively so the end of each split contains
    * the start of the next one (and vice versa).
    */
-  Iterable<List<Coordinate>> splitCoordinates(Iterable<IntersectionInfo> infos) {
+  Iterable<List<Coordinate>> splitCoordinates(IntersectionSet infos) {
     var nextStartCoord;
     int splitStart = 0;
+    //print('================');
 
     // Collects coordinates from the list of intersection infos
     // begining with the end of the last intersection and ending
     // at the start of the intersection.
     List<Coordinate> coordsBefore(IntersectionInfo info) {
-
+      if (splitStart >= coordinates.length) return [];
       List<Coordinate> coordsBefore = [];
       if (nextStartCoord != null)
         coordsBefore.add(nextStartCoord);
-      if (nextStartCoord == coordinates[splitStart]) {
-        splitStart++;
-      }
 
-      if (splitStart <= info.segIndex0)
+      if (splitStart <= info.segIndex0) {
         coordsBefore.addAll(slice(coordinates, splitStart, info.segIndex0));
 
-      var isect = _getIntersection(info);
-      if (isect is Coordinate) {
-        if (splitStart <= info.segIndex0
-              && isect != coordinates[info.segIndex0]) {
+        if (info.start != coordinates[info.segIndex0]) {
           coordsBefore.add(coordinates[info.segIndex0]);
         }
-        if (coordsBefore.isNotEmpty) {
-          coordsBefore.add(isect);
+
+        //If the next start coordinate was a coordinate in the
+        //middle of a segment, we want to ignore it when incrementing
+        //the start pointer.
+        if (nextStartCoord != null
+            && coordinates[splitStart] != nextStartCoord) {
+          splitStart--;
         }
-        nextStartCoord = isect;
-      } else if (isect is LineSegment) {
-        if (splitStart <= info.segIndex0
-              && isect.start != coordinates[info.segIndex0]) {
-          coordsBefore.add(coordinates[info.segIndex0]);
-        }
-        if (coordsBefore.isNotEmpty) {
-          coordsBefore.add(isect.start);
-        }
-        nextStartCoord = isect.end;
-      } else {
-        assert(false);
+
+        //Increment the pointer to the start of the next split
+        //by the number of edge coordinates we've taken.
+        splitStart += coordsBefore.length;
       }
-      splitStart = info.segIndex0 + 1;
+
+      if (coordsBefore.isNotEmpty) {
+        coordsBefore.add(info.start);
+      }
+      nextStartCoord = info.end;
+
       return coordsBefore;
     }
 
@@ -257,10 +195,16 @@ class Edge implements GraphEdgeLabel<Edge> {
      * to create another split covering the portion of the line
      * which intersects
      */
-    List<Coordinate> coordsAt(IntersectionInfo info) {
-      var isect = _getIntersection(info);
-      if (isect is LineSegment) {
-        return [isect.start, isect.end];
+    Iterable<Coordinate> coordsAt(IntersectionInfo info) {
+      if (info.isLineIntersection) {
+        var i = 0;
+        //Advance the pointer to the start of the next segment over any coordinates
+        //contained in the segment.
+        while (splitStart + (++i) < coordinates.length
+               && i < info.coordinates.length
+               && coordinates[splitStart + i] == info.coordinates[i]);
+        splitStart += i;
+        return info.coordinates;
       }
       return [];
     }
@@ -268,7 +212,7 @@ class Edge implements GraphEdgeLabel<Edge> {
     if (infos.isEmpty) return [coordinates];
 
     var splitCoords =
-        _sortInfos(infos)
+        new EdgeIntersectionList(infos, this)
         .expand((info) => [coordsBefore(info), coordsAt(info)])
         .where((coords) => coords.isNotEmpty)
         .toList();
