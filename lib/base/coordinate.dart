@@ -18,10 +18,6 @@ library base.coordinate;
 
 import 'dart:math' as math;
 
-import 'package:quiver/iterables.dart';
-
-part 'src/coordinate/coordinate_array.dart';
-
 /**
   * A [Coordinate] represents a single location in the 2d cartesian plane
   * Unlike [Point] objects, which contain additional information such as
