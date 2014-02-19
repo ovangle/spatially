@@ -60,21 +60,44 @@ const int COLLINEAR = 0;
 const int STRAIGHT = COLLINEAR;
 
 /**
- * The index of the direction of the point [:q:] relative
- * to the vector defined by [:c1:] -> [:c2:]
+ * If the first argument is a [LineSegment], then two arguments are expected.
+ * Returns the orientation of the second argument to the coordinate.
+ *
+ * If the first argument is a [Coordinate], then three arguments are expected.
+ * Returns the orientation of the third coordinate relative to the linesegment
+ * defined by the first two arguments.
  *
  * Returns
  * `1` if the point is counter-clockwise (left) of [:c1:]->[:c2:]
  * `-1` if the point is clockwise (right) of [:c1:]->[:c2:]
  * `0` if the point is collinear with [:c1:]->[:c2:]
  */
-int orientationIndex(LineSegment lseg, Coordinate q) {
-  longdouble start_x = new longdouble(lseg.start.x);
-  longdouble start_y = new longdouble(lseg.start.y);
-  longdouble end_x = new longdouble(lseg.end.x);
-  longdouble end_y = new longdouble(lseg.end.y);
-  longdouble qx  = new longdouble(q.x);
-  longdouble qy  = new longdouble(q.y);
+int orientationIndex(var /*LineSegment | Coordinate*/ c1, Coordinate c2, [Coordinate q]) {
+  longdouble start_x, start_y, end_x, end_y;
+  longdouble qx, qy;
+  if (c1 is LineSegment) {
+    if (q != null) {
+      throw new ArgumentError("Expected two arguments");
+    }
+    start_x = new longdouble(c1.start.x);
+    start_y = new longdouble(c1.start.y);
+    end_x = new longdouble(c1.end.x);
+    end_y = new longdouble(c1.end.y);
+    qx  = new longdouble(c2.x);
+    qy  = new longdouble(c2.y);
+  } else if (c1 is Coordinate) {
+    if (q == null) {
+      throw new ArgumentError("Expected three arguments");
+    }
+    start_x = new longdouble(c1.x);
+    start_y = new longdouble(c1.y);
+    end_x = new longdouble(c2.x);
+    end_y = new longdouble(c2.y);
+    qx  = new longdouble(q.x);
+    qy  = new longdouble(q.y);
+  } else {
+    throw new TypeError();
+  }
 
   final dx1 = start_x - end_x;
   final dy1 = start_y - end_y;

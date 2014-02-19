@@ -1,3 +1,5 @@
+
+
 //This file is part of Spatially.
 //
 //    Spatially is free software: you can redistribute it and/or modify
@@ -13,10 +15,16 @@
 //    You should have received a copy of the GNU Lesser General Public License
 //    along with Spatially.  If not, see <http://www.gnu.org/licenses/>.
 
+/**
+ * Utility methods for dealing with lists of coordinates
+ */
+library spatially.algorithm.coordinate_arrays;
 
-part of base.coordinate;
+import 'package:quiver/iterables.dart';
 
-// Utility methods for dealing with Array<Coordinate>s
+import 'package:spatially/base/coordinate.dart';
+import 'cg_algorithms.dart' as cg_algorithms;
+
 /**
  * Tests whether the [CoordinateArray] forms a ring,
  * by checking its [:length:] and closure.
@@ -72,6 +80,28 @@ List<Coordinate> removeRepeatedCoordinates(List<Coordinate> coords) =>
       growable: false);
 
 /**
+ * If any triple of adjacent coordinates in [:coords:] forms a collinear
+ * triple, removes the middle coordinate from the list.
+ * Stronger result than [:removeRepeatedCoordinates:]
+ */
+List<Coordinate> removeCollinearTriples(List<Coordinate> coords) {
+  if (coords.length < 2) {
+    return removeRepeatedCoordinates(coords);
+  }
+  var li = new List<Coordinate>();
+  li.add(coords.first);
+  for (var i in range(1, coords.length - 1)) {
+    var orientation = cg_algorithms.orientationIndex(coords[i - 1], coords[i], coords[i+1]);
+    if (orientation == cg_algorithms.COLLINEAR) {
+      continue;
+    }
+    li.add(coords[i]);
+  }
+  li.add(coords.last);
+  return li;
+}
+
+/**
  * Shifts the positions of coordinates until [:coord:] is the
  * first element of `this`.
  * The scroll is performed in-place on the array.
@@ -104,8 +134,6 @@ int directionOfIncrease(List<Coordinate> coords) {
   //palindromic arrays are positive
   return 1;
 }
-
-
 
 /**
  * A [Comparator] which compares two coordinate arrays coordinate-wise
