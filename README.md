@@ -16,7 +16,7 @@ All basic utility functions are exported via
      
 which provides implementations for the standard 
 * `Point`
-* `Linestring
+* `Linestring`
 * `Polygon`
 * `MultiPoint`
 * `MultiLinestring`
